@@ -1,10 +1,26 @@
+import { ReactNode } from "react";
+
 type CardProps = {
-  children: React.ReactNode;
+  children: ReactNode;
+  className?: string;
 };
 
-export default function Card({ children }: CardProps) {
+export default function Card({
+  children,
+  className = "",
+}: CardProps) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-violet-500/40">
+    <div
+      className={`
+        rounded-3xl
+        border
+        border-slate-800
+        bg-[#111827]
+        shadow-xl
+        p-6
+        ${className}
+      `}
+    >
       {children}
     </div>
   );

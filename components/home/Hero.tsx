@@ -1,16 +1,14 @@
-import Button from "@/components/ui/Button";
+import { Button } from "@/components/ui/button";
 import Container from "@/components/ui/Container";
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden">
+      <div className="absolute left-[-200px] top-[-200px] h-[500px] w-[500px] rounded-full bg-violet-700/20 blur-3xl" />
 
-      <div className="absolute left-[-200px] top-[-200px] h-[500px] w-[500px] rounded-full bg-violet-700/20 blur-3xl"></div>
-
-      <div className="absolute right-[-250px] bottom-[-200px] h-[500px] w-[500px] rounded-full bg-cyan-500/20 blur-3xl"></div>
+      <div className="absolute right-[-250px] bottom-[-200px] h-[500px] w-[500px] rounded-full bg-cyan-500/20 blur-3xl" />
 
       <Container>
-
         <div className="flex min-h-[90vh] flex-col items-center justify-center text-center">
 
           <div className="rounded-full border border-violet-500/30 bg-violet-500/10 px-5 py-2 text-violet-300">
@@ -33,21 +31,17 @@ export default function Hero() {
           </p>
 
           <div className="mt-14 flex flex-wrap justify-center gap-5">
-
-            <Button>
+            <Button size="lg">
               Попробовать бесплатно
             </Button>
 
-            <Button variant="secondary">
+            <Button variant="secondary" size="lg">
               Смотреть демо
             </Button>
-
           </div>
 
         </div>
-
       </Container>
-
     </section>
   );
 }
