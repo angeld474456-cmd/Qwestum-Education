@@ -3,29 +3,15 @@ export interface Quest {
 
   title: string;
 
-  description: string;
+  description: string | null;
 
-  subject: string;
+  subject_id: string;
 
-  grade: number;
+  author_id: string;
 
-  language: string;
+  difficulty: number;
 
-  difficulty: "easy" | "medium" | "hard";
+  is_public: boolean;
 
-  duration: number;
-
-  price: number;
-
-  image: string;
-
-  author: string;
-
-  premium: boolean;
-
-  tags: string[];
-
-  createdAt: string;
-
-  updatedAt: string;
+  created_at: string;
 }
