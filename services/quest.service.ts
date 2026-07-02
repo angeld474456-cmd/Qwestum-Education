@@ -32,9 +32,7 @@ export interface QuestTask {
 }
 
 export async function createQuest(data: CreateQuestData) {
-  return await supabase
-    .from("quests")
-    .insert(data);
+  return await supabase.from("quests").insert(data);
 }
 
 export async function getQuests() {
@@ -64,6 +62,16 @@ export async function createTask(data: Omit<QuestTask, "id">) {
   return await supabase
     .from("quest_tasks")
     .insert(data);
+}
+
+export async function updateTask(
+  id: string,
+  data: Partial<QuestTask>
+) {
+  return await supabase
+    .from("quest_tasks")
+    .update(data)
+    .eq("id", id);
 }
 
 export async function deleteTask(id: string) {

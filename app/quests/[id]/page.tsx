@@ -3,47 +3,44 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { getQuest, Quest } from "@/services/quest.service";
+import { getQuest, getQuestTasks, Quest, QuestTask } from "@/services/quest.service";
 
 export default function QuestPage() {
   const params = useParams();
   const id = params.id as string;
 
   const [quest, setQuest] = useState<Quest | null>(null);
+  const [tasks, setTasks] = useState<QuestTask[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!id) return;
 
-    async function loadQuest() {
-      const { data, error } = await getQuest(id);
-
-      if (error) {
-        console.error(error);
-        alert("Квест не найден");
-        setLoading(false);
-        return;
-      }
-
-      setQuest(data);
-      setLoading(false);
-    }
-
     loadQuest();
+    loadTasks();
   }, [id]);
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
-        <h2 className="text-2xl">Загрузка...</h2>
-      </main>
-    );
+  async function loadQuest() {
+    const { data, error } = await getQuest(id);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setQuest(data);
+    setLoading(false);
   }
 
-  if (!quest) {
+  async function loadTasks() {
+    const { data } = await getQuestTasks(id);
+    setTasks(data ?? []);
+  }
+
+  if (loading || !quest) {
     return (
       <main className="min-h-screen bg-[#070B14] text-white flex items-center justify-center">
-        <h2 className="text-2xl">Квест не найден</h2>
+        Загрузка...
       </main>
     );
   }
@@ -55,6 +52,7 @@ export default function QuestPage() {
         <div className="flex items-center justify-between">
 
           <div>
+
             <h1 className="text-4xl font-bold">
               {quest.title}
             </h1>
@@ -62,20 +60,22 @@ export default function QuestPage() {
             <p className="mt-3 text-slate-400">
               {quest.description}
             </p>
+
           </div>
 
           <Link
             href="/quests"
-            className="rounded-xl bg-slate-700 px-6 py-3 hover:bg-slate-600 transition"
+            className="rounded-xl bg-slate-700 px-6 py-3"
           >
             ← Назад
           </Link>
 
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-3">
+        <div className="mt-10 grid grid-cols-3 gap-6">
 
           <div className="rounded-2xl bg-[#111827] p-6">
+
             <p className="text-slate-400">
               Сложность
             </p>
@@ -83,9 +83,11 @@ export default function QuestPage() {
             <h2 className="mt-3 text-3xl font-bold">
               {quest.difficulty}
             </h2>
+
           </div>
 
           <div className="rounded-2xl bg-[#111827] p-6">
+
             <p className="text-slate-400">
               Статус
             </p>
@@ -93,16 +95,19 @@ export default function QuestPage() {
             <h2 className="mt-3 text-2xl font-bold">
               {quest.is_public ? "🌍 Публичный" : "🔒 Приватный"}
             </h2>
+
           </div>
 
           <div className="rounded-2xl bg-[#111827] p-6">
+
             <p className="text-slate-400">
-              Задания
+              Заданий
             </p>
 
             <h2 className="mt-3 text-3xl font-bold">
-              0
+              {tasks.length}
             </h2>
+
           </div>
 
         </div>
@@ -112,26 +117,65 @@ export default function QuestPage() {
           <div className="flex items-center justify-between">
 
             <h2 className="text-3xl font-bold">
-              Задания квеста
+              Задания
             </h2>
 
-            <button
-              className="rounded-xl bg-violet-600 px-6 py-3 font-semibold hover:bg-violet-700 transition"
+            <Link
+              href={`/quests/${id}/tasks`}
+              className="rounded-xl bg-violet-600 px-6 py-3 font-semibold hover:bg-violet-700"
             >
               + Добавить задание
-            </button>
+            </Link>
 
           </div>
 
-          <div className="mt-10 rounded-2xl border border-dashed border-slate-600 p-10 text-center">
+          <div className="mt-8">
 
-            <h3 className="text-2xl font-semibold">
-              Пока нет заданий
-            </h3>
+            {tasks.length === 0 ? (
 
-            <p className="mt-3 text-slate-400">
-              Добавьте первое задание в этот квест.
-            </p>
+              <div className="rounded-xl border border-dashed border-slate-600 p-8 text-center">
+
+                Пока заданий нет
+
+              </div>
+
+            ) : (
+
+              <div className="space-y-4">
+
+                {tasks.map((task, index) => (
+
+                  <div
+                    key={task.id}
+                    className="rounded-xl bg-[#1B2435] p-5 flex items-center justify-between"
+                  >
+
+                    <div>
+
+                      <h3 className="font-bold">
+                        {index + 1}. {task.title}
+                      </h3>
+
+                      <p className="text-slate-400 mt-2">
+                        {task.description}
+                      </p>
+
+                    </div>
+
+                    <Link
+                      href={`/quests/${id}/tasks`}
+                      className="rounded-lg bg-violet-600 px-4 py-2"
+                    >
+                      Открыть
+                    </Link>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+            )}
 
           </div>
 

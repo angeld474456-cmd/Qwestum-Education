@@ -2,21 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+
+import TaskForm from "@/components/tasks/TaskForm";
+import TaskList from "@/components/tasks/TaskList";
+import TaskEditor from "@/components/tasks/TaskEditor";
+
 import {
+  QuestTask,
   getQuestTasks,
   createTask,
-  QuestTask,
+  deleteTask,
+  updateTask,
 } from "@/services/quest.service";
+
+import { uploadQuestImage } from "@/services/storage.service";
 
 export default function QuestTasksPage() {
   const params = useParams();
   const questId = params.id as string;
 
   const [tasks, setTasks] = useState<QuestTask[]>([]);
+  const [selectedTask, setSelectedTask] = useState<QuestTask | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
 
   useEffect(() => {
     if (questId) {
@@ -29,38 +36,56 @@ export default function QuestTasksPage() {
 
     const { data, error } = await getQuestTasks(questId);
 
-    console.log("========== QUEST TASKS ==========");
-    console.log("Quest ID:", questId);
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
-
     if (error) {
       alert(JSON.stringify(error, null, 2));
       setLoading(false);
       return;
     }
 
-    setTasks(data ?? []);
+    const loadedTasks = data ?? [];
+
+    setTasks(loadedTasks);
+
+    if (loadedTasks.length > 0) {
+      if (!selectedTask) {
+        setSelectedTask(loadedTasks[0]);
+      } else {
+        const current = loadedTasks.find(
+          (t) => t.id === selectedTask.id
+        );
+
+        if (current) {
+          setSelectedTask(current);
+        } else {
+          setSelectedTask(loadedTasks[0]);
+        }
+      }
+    } else {
+      setSelectedTask(null);
+    }
+
     setLoading(false);
   }
 
-  async function handleCreateTask() {
-    if (!title.trim()) {
-      alert("Введите название задания");
-      return;
-    }
-
+  async function handleCreateTask(task: {
+    title: string;
+    description: string;
+    answer: string;
+    hint: string;
+    points: number;
+    taskType: string;
+  }) {
     const { error } = await createTask({
       quest_id: questId,
-      title,
-      description,
-      answer: "",
-      hint: "",
+      title: task.title,
+      description: task.description,
+      answer: task.answer,
+      hint: task.hint,
       image_url: "",
       video_url: "",
       audio_url: "",
-      points: 1,
-      task_type: "text",
+      points: task.points,
+      task_type: task.taskType,
       sort_order: tasks.length + 1,
     });
 
@@ -69,110 +94,115 @@ export default function QuestTasksPage() {
       return;
     }
 
-    setTitle("");
-    setDescription("");
+    await loadTasks();
+  }
 
-    loadTasks();
+  async function handleSaveTask(
+    id: string,
+    title: string,
+    description: string
+  ) {
+    const { error } = await updateTask(id, {
+      title,
+      description,
+    });
+
+    if (error) {
+      alert(JSON.stringify(error, null, 2));
+      return;
+    }
+
+    await loadTasks();
+
+    alert("✅ Изменения сохранены");
+  }
+
+  async function handleUploadImage(
+    taskId: string,
+    file: File
+  ) {
+    const { url, error } = await uploadQuestImage(file);
+
+    if (error || !url) {
+      alert(JSON.stringify(error, null, 2));
+      return;
+    }
+
+    const { error: updateError } = await updateTask(taskId, {
+      image_url: url,
+    });
+
+    if (updateError) {
+      alert(JSON.stringify(updateError, null, 2));
+      return;
+    }
+
+    await loadTasks();
+
+    alert("🖼 Изображение загружено");
+  }
+
+  async function handleDeleteTask(id: string) {
+    if (!confirm("Удалить задание?")) return;
+
+    const { error } = await deleteTask(id);
+
+    if (error) {
+      alert(JSON.stringify(error, null, 2));
+      return;
+    }
+
+    await loadTasks();
   }
 
   return (
     <main className="min-h-screen bg-[#070B14] text-white p-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
 
         <h1 className="text-4xl font-bold">
-          Конструктор заданий
+          Конструктор Questum
         </h1>
 
         <p className="mt-3 text-slate-400">
-          Создание заданий для квеста
+          Управление заданиями
         </p>
 
-        <div className="mt-10 rounded-3xl bg-[#111827] p-8">
-
-          <h2 className="text-2xl font-bold">
-            Новое задание
-          </h2>
-
-          <input
-            className="mt-6 w-full rounded-xl bg-[#1B2435] p-4"
-            placeholder="Название задания"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
-          <textarea
-            rows={5}
-            className="mt-4 w-full rounded-xl bg-[#1B2435] p-4"
-            placeholder="Описание задания"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-
-          <button
-            onClick={handleCreateTask}
-            className="mt-6 rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700"
-          >
-            Добавить задание
-          </button>
-
+        <div className="mt-8">
+          <TaskForm onSave={handleCreateTask} />
         </div>
 
-        <div className="mt-10">
+        <div className="mt-10 grid grid-cols-12 gap-6">
 
-          <h2 className="mb-6 text-3xl font-bold">
-            Задания
-          </h2>
+          <div className="col-span-4">
 
-          {loading ? (
+            <h2 className="mb-4 text-2xl font-bold">
+              Задания
+            </h2>
 
-            <div className="rounded-2xl bg-[#111827] p-8">
-              Загрузка...
-            </div>
+            {loading ? (
+              <div className="rounded-xl bg-[#111827] p-8">
+                Загрузка...
+              </div>
+            ) : (
+              <TaskList
+                tasks={tasks}
+                selectedTaskId={selectedTask?.id ?? null}
+                onSelectTask={setSelectedTask}
+                onDelete={handleDeleteTask}
+              />
+            )}
 
-          ) : tasks.length === 0 ? (
+          </div>
 
-            <div className="rounded-2xl bg-[#111827] p-8">
-              Пока заданий нет.
-            </div>
+          <div className="col-span-8">
 
-          ) : (
+            <TaskEditor
+              task={selectedTask}
+              onSave={handleSaveTask}
+              onUploadImage={handleUploadImage}
+            />
 
-            <div className="grid gap-5">
-
-              {tasks.map((task) => (
-
-                <div
-                  key={task.id}
-                  className="rounded-2xl bg-[#111827] p-6"
-                >
-
-                  <h3 className="text-2xl font-bold">
-                    {task.title}
-                  </h3>
-
-                  <p className="mt-3 text-slate-400">
-                    {task.description}
-                  </p>
-
-                  <div className="mt-5 flex gap-5 text-sm">
-
-                    <span>
-                      Тип: {task.task_type}
-                    </span>
-
-                    <span>
-                      Баллы: {task.points}
-                    </span>
-
-                  </div>
-
-                </div>
-
-              ))}
-
-            </div>
-
-          )}
+          </div>
 
         </div>
 
