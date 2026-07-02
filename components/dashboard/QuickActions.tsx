@@ -1,33 +1,27 @@
-const actions = [
-  "➕ Создать новый квест",
-  "🤖 AI Генератор",
-  "📚 Открыть каталог",
-  "👨‍🎓 Добавить класс",
-];
-
 export default function QuickActions() {
   return (
-    <section className="mt-10">
-
-      <h2 className="mb-8 text-3xl font-black">
+    <div className="rounded-3xl bg-[#111827] p-6">
+      <h2 className="mb-6 text-2xl font-bold text-white">
         Быстрые действия
       </h2>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
+        <button className="rounded-xl bg-violet-600 p-5 text-white hover:bg-violet-700">
+          Создать квест
+        </button>
 
-        {actions.map((action) => (
+        <button className="rounded-xl bg-slate-700 p-5 text-white hover:bg-slate-600">
+          AI Генератор
+        </button>
 
-          <button
-            key={action}
-            className="rounded-3xl border border-white/10 bg-white/5 p-8 text-left text-xl backdrop-blur transition hover:border-violet-500 hover:bg-violet-600"
-          >
-            {action}
-          </button>
+        <button className="rounded-xl bg-slate-700 p-5 text-white hover:bg-slate-600">
+          Добавить класс
+        </button>
 
-        ))}
-
+        <button className="rounded-xl bg-slate-700 p-5 text-white hover:bg-slate-600">
+          Пригласить учителя
+        </button>
       </div>
-
-    </section>
+    </div>
   );
 }

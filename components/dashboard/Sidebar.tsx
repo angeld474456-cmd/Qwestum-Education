@@ -1,98 +1,34 @@
-"use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  BookOpen,
-  BrainCircuit,
-  GraduationCap,
-  School,
-  Settings,
-  User,
-} from "lucide-react";
-
-const menu = [
-  {
-    title: "Главная",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Каталог квестов",
-    href: "/catalog",
-    icon: BookOpen,
-  },
-  {
-    title: "AI Studio",
-    href: "/ai",
-    icon: BrainCircuit,
-  },
-  {
-    title: "Ученики",
-    href: "/students",
-    icon: GraduationCap,
-  },
-  {
-    title: "Школы",
-    href: "/schools",
-    icon: School,
-  },
-  {
-    title: "Профиль",
-    href: "/profile",
-    icon: User,
-  },
-  {
-    title: "Настройки",
-    href: "/settings",
-    icon: Settings,
-  },
-];
-
 export default function Sidebar() {
-  const pathname = usePathname();
-
   return (
-    <aside className="w-72 border-r border-slate-800 bg-[#0B1220]">
+    <aside className="w-64 bg-[#0B1220] border-r border-slate-800 p-6">
+      <h2 className="text-3xl font-bold text-white">
+        Questum
+      </h2>
 
-      <div className="p-8">
+      <p className="mt-2 text-slate-400">
+        Education Platform
+      </p>
 
-        <h1 className="text-3xl font-black text-white">
-          Questum
-        </h1>
+      <nav className="mt-10 space-y-4">
+        <a href="/dashboard" className="block text-slate-300 hover:text-white">
+          🏠 Главная
+        </a>
 
-        <p className="mt-2 text-slate-400">
-          Education Platform
-        </p>
+        <a href="/catalog" className="block text-slate-300 hover:text-white">
+          📚 Каталог
+        </a>
 
-      </div>
+        <a href="/students" className="block text-slate-300 hover:text-white">
+          👨‍🎓 Ученики
+        </a>
 
-      <nav className="px-4">
+        <a href="/schools" className="block text-slate-300 hover:text-white">
+          🏫 Школы
+        </a>
 
-        {menu.map((item) => {
-          const Icon = item.icon;
-
-          const active = pathname === item.href;
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`mb-2 flex items-center gap-4 rounded-2xl px-5 py-4 transition
-
-              ${
-                active
-                  ? "bg-violet-600 text-white"
-                  : "text-slate-400 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Icon size={22} />
-
-              {item.title}
-            </Link>
-          );
-        })}
+        <a href="/settings" className="block text-slate-300 hover:text-white">
+          ⚙ Настройки
+        </a>
       </nav>
     </aside>
   );
