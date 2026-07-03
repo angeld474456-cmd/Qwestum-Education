@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { QuestTask } from "@/services/quest.service";
-import ImageUploader from "@/components/media/ImageUploader";
+
+import TaskGeneralSection from "./editor/TaskGeneralSection";
+import TaskAnswerSection from "./editor/TaskAnswerSection";
+import TaskSettingsSection from "./editor/TaskSettingsSection";
+import TaskMediaSection from "./editor/TaskMediaSection";
 
 interface TaskEditorProps {
   task: QuestTask | null;
+
   onSave: (
     id: string,
     title: string,
-    description: string
+    description: string,
+    answer: string,
+    hint: string,
+    points: number,
+    taskType: string
   ) => Promise<void>;
 
   onUploadImage: (
@@ -25,109 +35,97 @@ export default function TaskEditor({
 }: TaskEditorProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [hint, setHint] = useState("");
+  const [points, setPoints] = useState(1);
+  const [taskType, setTaskType] = useState("text");
 
   useEffect(() => {
     if (!task) {
       setTitle("");
       setDescription("");
+      setAnswer("");
+      setHint("");
+      setPoints(1);
+      setTaskType("text");
       return;
     }
 
     setTitle(task.title);
     setDescription(task.description ?? "");
+    setAnswer(task.answer ?? "");
+    setHint(task.hint ?? "");
+    setPoints(task.points);
+    setTaskType(task.task_type);
   }, [task]);
 
   if (!task) {
     return (
-      <div className="rounded-2xl bg-[#111827] p-8 h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center rounded-2xl bg-[#111827] p-10">
+
         <div className="text-center">
-          <h2 className="text-2xl font-bold">
+
+          <h2 className="text-3xl font-bold">
             Выберите задание
           </h2>
 
           <p className="mt-3 text-slate-400">
-            Нажмите на карточку задания слева для редактирования.
+            Нажмите на карточку задания слева.
           </p>
+
         </div>
+
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl bg-[#111827] p-8">
+    <div className="space-y-6">
 
-      <h2 className="text-3xl font-bold">
-        Редактор задания
-      </h2>
+      <TaskGeneralSection
+        title={title}
+        description={description}
+        onTitleChange={setTitle}
+        onDescriptionChange={setDescription}
+      />
 
-      <div className="mt-8 space-y-6">
+      <TaskAnswerSection
+        answer={answer}
+        hint={hint}
+        onAnswerChange={setAnswer}
+        onHintChange={setHint}
+      />
 
-        <div>
-          <label className="mb-2 block text-slate-300">
-            Название
-          </label>
+      <TaskSettingsSection
+        taskType={taskType}
+        points={points}
+        onTaskTypeChange={setTaskType}
+        onPointsChange={setPoints}
+      />
 
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full rounded-xl bg-[#1B2435] p-4"
-          />
-        </div>
+      <TaskMediaSection
+        imageUrl={task.image_url}
+        onUpload={(file) => onUploadImage(task.id, file)}
+      />
 
-        <div>
-          <label className="mb-2 block text-slate-300">
-            Описание
-          </label>
+      <div className="flex justify-end">
 
-          <textarea
-            rows={6}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full rounded-xl bg-[#1B2435] p-4"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-
-          <div>
-            <label className="mb-2 block text-slate-300">
-              Тип задания
-            </label>
-
-            <input
-              value={task.task_type}
-              readOnly
-              className="w-full rounded-xl bg-[#1B2435] p-4"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-slate-300">
-              Баллы
-            </label>
-
-            <input
-              value={task.points}
-              readOnly
-              className="w-full rounded-xl bg-[#1B2435] p-4"
-            />
-          </div>
-
-        </div>
-
-        <ImageUploader
-          imageUrl={task.image_url}
-          onUpload={(file) => onUploadImage(task.id, file)}
-        />
-
-        <div className="pt-4">
-          <button
-            onClick={() => onSave(task.id, title, description)}
-            className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 transition"
-          >
-            💾 Сохранить
-          </button>
-        </div>
+        <button
+          onClick={() =>
+            onSave(
+              task.id,
+              title,
+              description,
+              answer,
+              hint,
+              points,
+              taskType
+            )
+          }
+          className="rounded-xl bg-violet-600 px-8 py-4 font-semibold transition hover:bg-violet-700"
+        >
+          💾 Сохранить изменения
+        </button>
 
       </div>
 

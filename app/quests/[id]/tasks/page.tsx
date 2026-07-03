@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 
 import TaskForm from "@/components/tasks/TaskForm";
 import TaskList from "@/components/tasks/TaskList";
@@ -34,37 +35,34 @@ export default function QuestTasksPage() {
   async function loadTasks() {
     setLoading(true);
 
-    const { data, error } = await getQuestTasks(questId);
+    try {
+      const { data, error } = await getQuestTasks(questId);
 
-    if (error) {
-      alert(JSON.stringify(error, null, 2));
-      setLoading(false);
-      return;
-    }
+      if (error) throw error;
 
-    const loadedTasks = data ?? [];
+      const loadedTasks = data ?? [];
 
-    setTasks(loadedTasks);
+      setTasks(loadedTasks);
 
-    if (loadedTasks.length > 0) {
-      if (!selectedTask) {
-        setSelectedTask(loadedTasks[0]);
-      } else {
-        const current = loadedTasks.find(
-          (t) => t.id === selectedTask.id
-        );
-
-        if (current) {
-          setSelectedTask(current);
-        } else {
+      if (loadedTasks.length > 0) {
+        if (!selectedTask) {
           setSelectedTask(loadedTasks[0]);
-        }
-      }
-    } else {
-      setSelectedTask(null);
-    }
+        } else {
+          const current = loadedTasks.find(
+            (t) => t.id === selectedTask.id
+          );
 
-    setLoading(false);
+          setSelectedTask(current ?? loadedTasks[0]);
+        }
+      } else {
+        setSelectedTask(null);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось загрузить задания");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleCreateTask(task: {
@@ -75,84 +73,103 @@ export default function QuestTasksPage() {
     points: number;
     taskType: string;
   }) {
-    const { error } = await createTask({
-      quest_id: questId,
-      title: task.title,
-      description: task.description,
-      answer: task.answer,
-      hint: task.hint,
-      image_url: "",
-      video_url: "",
-      audio_url: "",
-      points: task.points,
-      task_type: task.taskType,
-      sort_order: tasks.length + 1,
-    });
+    try {
+      const { error } = await createTask({
+        quest_id: questId,
+        title: task.title,
+        description: task.description,
+        answer: task.answer,
+        hint: task.hint,
+        image_url: "",
+        video_url: "",
+        audio_url: "",
+        points: task.points,
+        task_type: task.taskType,
+        sort_order: tasks.length + 1,
+      });
 
-    if (error) {
-      alert(JSON.stringify(error, null, 2));
-      return;
+      if (error) throw error;
+
+      await loadTasks();
+
+      toast.success("Задание успешно создано");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось создать задание");
     }
-
-    await loadTasks();
   }
 
   async function handleSaveTask(
     id: string,
     title: string,
-    description: string
+    description: string,
+    answer: string,
+    hint: string,
+    points: number,
+    taskType: string
   ) {
-    const { error } = await updateTask(id, {
-      title,
-      description,
-    });
+    try {
+      const { error } = await updateTask(id, {
+        title,
+        description,
+        answer,
+        hint,
+        points,
+        task_type: taskType,
+      });
 
-    if (error) {
-      alert(JSON.stringify(error, null, 2));
-      return;
+      if (error) throw error;
+
+      await loadTasks();
+
+      toast.success("Изменения сохранены");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось сохранить изменения");
     }
-
-    await loadTasks();
-
-    alert("✅ Изменения сохранены");
   }
 
   async function handleUploadImage(
     taskId: string,
     file: File
   ) {
-    const { url, error } = await uploadQuestImage(file);
+    try {
+      const { url, error } = await uploadQuestImage(file);
 
-    if (error || !url) {
-      alert(JSON.stringify(error, null, 2));
-      return;
+      if (error || !url) {
+        throw error ?? new Error("URL изображения не получен");
+      }
+
+      const { error: updateError } = await updateTask(taskId, {
+        image_url: url,
+      });
+
+      if (updateError) throw updateError;
+
+      await loadTasks();
+
+      toast.success("Изображение успешно загружено");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось загрузить изображение");
     }
-
-    const { error: updateError } = await updateTask(taskId, {
-      image_url: url,
-    });
-
-    if (updateError) {
-      alert(JSON.stringify(updateError, null, 2));
-      return;
-    }
-
-    await loadTasks();
-
-    alert("🖼 Изображение загружено");
   }
 
   async function handleDeleteTask(id: string) {
     if (!confirm("Удалить задание?")) return;
 
-    const { error } = await deleteTask(id);
+    try {
+      const { error } = await deleteTask(id);
 
-    if (error) {
-      alert(JSON.stringify(error, null, 2));
-      return;
+      if (error) throw error;
+
+      await loadTasks();
+
+      toast.success("Задание удалено");
+    } catch (error) {
+      console.error(error);
+      toast.error("Не удалось удалить задание");
     }
-
-    await loadTasks();
   }
 
   return (
