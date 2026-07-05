@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAutosave } from "./hooks/useAutosave";
 import { QuestTask } from "@/services/quest.service";
 import ImageUploader from "@/components/media/ImageUploader";
 import SaveStatus from "./editor/SaveStatus";
@@ -50,20 +51,25 @@ export default function TaskEditor({
 
     try {
       setSaveStatus("saving");
-
       await onSave(task.id, title, description);
-
       setSaveStatus("saved");
 
-      setTimeout(() => {
+      window.clearTimeout((handleSave as any)._timer);
+      (handleSave as any)._timer = window.setTimeout(() => {
         setSaveStatus("idle");
       }, 2000);
-
     } catch (error) {
       console.error(error);
       setSaveStatus("error");
     }
   }
+
+  useAutosave({
+    enabled: task !== null,
+    delay: 1000,
+    deps: [title, description],
+    onSave: handleSave,
+  });
 
   if (!task) {
     return (
