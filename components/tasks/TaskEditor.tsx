@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { QuestTask } from "@/services/quest.service";
 import ImageUploader from "@/components/media/ImageUploader";
+import SaveStatus from "./editor/SaveStatus";
 
 interface TaskEditorProps {
   task: QuestTask | null;
+
   onSave: (
     id: string,
     title: string,
@@ -26,20 +28,46 @@ export default function TaskEditor({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 
+  const [saveStatus, setSaveStatus] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+
   useEffect(() => {
     if (!task) {
       setTitle("");
       setDescription("");
+      setSaveStatus("idle");
       return;
     }
 
     setTitle(task.title);
     setDescription(task.description ?? "");
+    setSaveStatus("idle");
   }, [task]);
+
+  async function handleSave() {
+    if (!task) return;
+
+    try {
+      setSaveStatus("saving");
+
+      await onSave(task.id, title, description);
+
+      setSaveStatus("saved");
+
+      setTimeout(() => {
+        setSaveStatus("idle");
+      }, 2000);
+
+    } catch (error) {
+      console.error(error);
+      setSaveStatus("error");
+    }
+  }
 
   if (!task) {
     return (
-      <div className="rounded-2xl bg-[#111827] p-8 h-full flex items-center justify-center">
+      <div className="flex h-full items-center justify-center rounded-2xl bg-[#111827] p-8">
         <div className="text-center">
           <h2 className="text-2xl font-bold">
             Выберите задание
@@ -59,6 +87,10 @@ export default function TaskEditor({
       <h2 className="text-3xl font-bold">
         Редактор задания
       </h2>
+
+      <div className="mt-6">
+        <SaveStatus status={saveStatus} />
+      </div>
 
       <div className="mt-8 space-y-6">
 
@@ -122,8 +154,8 @@ export default function TaskEditor({
 
         <div className="pt-4">
           <button
-            onClick={() => onSave(task.id, title, description)}
-            className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 transition"
+            onClick={handleSave}
+            className="rounded-xl bg-violet-600 px-8 py-4 font-semibold transition hover:bg-violet-700"
           >
             💾 Сохранить
           </button>
