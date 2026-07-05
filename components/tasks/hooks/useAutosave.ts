@@ -15,20 +15,19 @@ export function useAutosave({
   deps,
   onSave,
 }: UseAutosaveOptions) {
-  const firstRender = useRef(true);
+  const onSaveRef = useRef(onSave);
+
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
-    }
-
     const timer = setTimeout(() => {
-      void onSave();
+      void onSaveRef.current();
     }, delay);
 
     return () => clearTimeout(timer);
-  }, [enabled, delay, onSave, ...deps]);
+  }, [enabled, delay, deps]);
 }

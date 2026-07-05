@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 import TaskForm from "@/components/tasks/TaskForm";
@@ -17,6 +17,15 @@ import {
 
 import { uploadQuestImage } from "@/services/storage.service";
 
+interface NewTaskFormData {
+  title: string;
+  description: string;
+  answer: string;
+  hint: string;
+  points: number;
+  taskType: string;
+}
+
 export default function QuestTasksPage() {
   const params = useParams();
   const questId = params.id as string;
@@ -25,15 +34,24 @@ export default function QuestTasksPage() {
   const [selectedTask, setSelectedTask] = useState<QuestTask | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (questId) {
-      loadTasks();
-    }
-  }, [questId]);
+  const applyTaskPatch = useCallback(
+    (taskId: string, patch: Partial<QuestTask>) => {
+      setTasks((currentTasks) =>
+        currentTasks.map((task) =>
+          task.id === taskId ? { ...task, ...patch } : task
+        )
+      );
 
-  async function loadTasks() {
-    setLoading(true);
+      setSelectedTask((currentTask) =>
+        currentTask?.id === taskId
+          ? { ...currentTask, ...patch }
+          : currentTask
+      );
+    },
+    []
+  );
 
+  const loadTasks = useCallback(async () => {
     const { data, error } = await getQuestTasks(questId);
 
     if (error) {
@@ -45,120 +63,152 @@ export default function QuestTasksPage() {
     const loadedTasks = data ?? [];
 
     setTasks(loadedTasks);
-
-    if (loadedTasks.length > 0) {
-      if (!selectedTask) {
-        setSelectedTask(loadedTasks[0]);
-      } else {
-        const current = loadedTasks.find(
-          (t) => t.id === selectedTask.id
-        );
-
-        if (current) {
-          setSelectedTask(current);
-        } else {
-          setSelectedTask(loadedTasks[0]);
-        }
+    setSelectedTask((currentTask) => {
+      if (loadedTasks.length === 0) {
+        return null;
       }
-    } else {
-      setSelectedTask(null);
-    }
+
+      if (!currentTask) {
+        return loadedTasks[0];
+      }
+
+      return (
+        loadedTasks.find((task) => task.id === currentTask.id) ??
+        loadedTasks[0]
+      );
+    });
 
     setLoading(false);
-  }
+  }, [questId]);
 
-  async function handleCreateTask(task: {
-    title: string;
-    description: string;
-    answer: string;
-    hint: string;
-    points: number;
-    taskType: string;
-  }) {
-    const { error } = await createTask({
-      quest_id: questId,
-      title: task.title,
-      description: task.description,
-      answer: task.answer,
-      hint: task.hint,
-      image_url: "",
-      video_url: "",
-      audio_url: "",
-      points: task.points,
-      task_type: task.taskType,
-      sort_order: tasks.length + 1,
-    });
+  useEffect(() => {
+    if (!questId) return;
 
-    if (error) {
-      alert(JSON.stringify(error, null, 2));
-      return;
+    let isActive = true;
+
+    async function loadInitialTasks() {
+      const { data, error } = await getQuestTasks(questId);
+
+      if (!isActive) return;
+
+      if (error) {
+        alert(JSON.stringify(error, null, 2));
+        setLoading(false);
+        return;
+      }
+
+      const loadedTasks = data ?? [];
+
+      setTasks(loadedTasks);
+      setSelectedTask((currentTask) => {
+        if (loadedTasks.length === 0) {
+          return null;
+        }
+
+        if (!currentTask) {
+          return loadedTasks[0];
+        }
+
+        return (
+          loadedTasks.find((task) => task.id === currentTask.id) ??
+          loadedTasks[0]
+        );
+      });
+
+      setLoading(false);
     }
 
-    await loadTasks();
-  }
+    void loadInitialTasks();
 
-  async function handleSaveTask(
-    id: string,
-    title: string,
-    description: string
-  ) {
-    const { error } = await updateTask(id, {
-      title,
-      description,
-    });
+    return () => {
+      isActive = false;
+    };
+  }, [questId]);
 
-    if (error) {
-      alert(JSON.stringify(error, null, 2));
-      return;
-    }
+  const handleCreateTask = useCallback(
+    async (task: NewTaskFormData) => {
+      const { error } = await createTask({
+        quest_id: questId,
+        title: task.title,
+        description: task.description,
+        answer: task.answer,
+        hint: task.hint,
+        image_url: "",
+        video_url: "",
+        audio_url: "",
+        points: task.points,
+        task_type: task.taskType,
+        sort_order: tasks.length + 1,
+      });
 
-    await loadTasks();
+      if (error) {
+        alert(JSON.stringify(error, null, 2));
+        return;
+      }
 
-    alert("✅ Изменения сохранены");
-  }
+      setLoading(true);
+      await loadTasks();
+    },
+    [loadTasks, questId, tasks.length]
+  );
 
-  async function handleUploadImage(
-    taskId: string,
-    file: File
-  ) {
-    const { url, error } = await uploadQuestImage(file);
+  const handleSaveTask = useCallback(
+    async (id: string, title: string, description: string) => {
+      const taskPatch = { title, description };
+      const { error } = await updateTask(id, taskPatch);
 
-    if (error || !url) {
-      alert(JSON.stringify(error, null, 2));
-      return;
-    }
+      if (error) {
+        throw error;
+      }
 
-    const { error: updateError } = await updateTask(taskId, {
-      image_url: url,
-    });
+      applyTaskPatch(id, taskPatch);
+    },
+    [applyTaskPatch]
+  );
 
-    if (updateError) {
-      alert(JSON.stringify(updateError, null, 2));
-      return;
-    }
+  const handleUploadImage = useCallback(
+    async (taskId: string, file: File) => {
+      const { url, error } = await uploadQuestImage(file);
 
-    await loadTasks();
+      if (error || !url) {
+        alert(JSON.stringify(error, null, 2));
+        return;
+      }
 
-    alert("🖼 Изображение загружено");
-  }
+      const { error: updateError } = await updateTask(taskId, {
+        image_url: url,
+      });
 
-  async function handleDeleteTask(id: string) {
-    if (!confirm("Удалить задание?")) return;
+      if (updateError) {
+        alert(JSON.stringify(updateError, null, 2));
+        return;
+      }
 
-    const { error } = await deleteTask(id);
+      applyTaskPatch(taskId, { image_url: url });
+    },
+    [applyTaskPatch]
+  );
 
-    if (error) {
-      alert(JSON.stringify(error, null, 2));
-      return;
-    }
+  const handleDeleteTask = useCallback(
+    async (id: string) => {
+      if (!confirm("Удалить задание?")) return;
 
-    await loadTasks();
-  }
+      const { error } = await deleteTask(id);
+
+      if (error) {
+        alert(JSON.stringify(error, null, 2));
+        return;
+      }
+
+      setLoading(true);
+      await loadTasks();
+    },
+    [loadTasks]
+  );
 
   return (
     <main className="min-h-screen bg-[#070B14] text-white p-8">
       <div className="mx-auto max-w-7xl">
-
         <h1 className="text-4xl font-bold">
           Конструктор Questum
         </h1>
@@ -172,9 +222,7 @@ export default function QuestTasksPage() {
         </div>
 
         <div className="mt-10 grid grid-cols-12 gap-6">
-
           <div className="col-span-4">
-
             <h2 className="mb-4 text-2xl font-bold">
               Задания
             </h2>
@@ -191,21 +239,16 @@ export default function QuestTasksPage() {
                 onDelete={handleDeleteTask}
               />
             )}
-
           </div>
 
           <div className="col-span-8">
-
             <TaskEditor
               task={selectedTask}
               onSave={handleSaveTask}
               onUploadImage={handleUploadImage}
             />
-
           </div>
-
         </div>
-
       </div>
     </main>
   );

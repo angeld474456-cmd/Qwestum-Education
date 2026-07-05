@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAutosave } from "./hooks/useAutosave";
 import { QuestTask } from "@/services/quest.service";
 import ImageUploader from "@/components/media/ImageUploader";
@@ -21,56 +21,13 @@ interface TaskEditorProps {
   ) => Promise<void>;
 }
 
+type SaveStatusValue = "idle" | "saving" | "saved" | "error";
+
 export default function TaskEditor({
   task,
   onSave,
   onUploadImage,
 }: TaskEditorProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-
-  const [saveStatus, setSaveStatus] = useState<
-    "idle" | "saving" | "saved" | "error"
-  >("idle");
-
-  useEffect(() => {
-    if (!task) {
-      setTitle("");
-      setDescription("");
-      setSaveStatus("idle");
-      return;
-    }
-
-    setTitle(task.title);
-    setDescription(task.description ?? "");
-    setSaveStatus("idle");
-  }, [task]);
-
-  async function handleSave() {
-    if (!task) return;
-
-    try {
-      setSaveStatus("saving");
-      await onSave(task.id, title, description);
-      setSaveStatus("saved");
-
-      window.clearTimeout((handleSave as any)._timer);
-      (handleSave as any)._timer = window.setTimeout(() => {
-        setSaveStatus("idle");
-      }, 2000);
-    } catch (error) {
-      console.error(error);
-      setSaveStatus("error");
-    }
-  }
-
-  useAutosave({
-    enabled: task !== null,
-    delay: 1000,
-    deps: [title, description],
-    onSave: handleSave,
-  });
-
   if (!task) {
     return (
       <div className="flex h-full items-center justify-center rounded-2xl bg-[#111827] p-8">
@@ -86,6 +43,86 @@ export default function TaskEditor({
       </div>
     );
   }
+
+  return (
+    <TaskEditorForm
+      key={task.id}
+      task={task}
+      onSave={onSave}
+      onUploadImage={onUploadImage}
+    />
+  );
+}
+
+function TaskEditorForm({
+  task,
+  onSave,
+  onUploadImage,
+}: {
+  task: QuestTask;
+  onSave: TaskEditorProps["onSave"];
+  onUploadImage: TaskEditorProps["onUploadImage"];
+}) {
+  const initialValues = useMemo(
+    () => ({
+      title: task.title,
+      description: task.description ?? "",
+    }),
+    [task.description, task.title]
+  );
+
+  const [title, setTitle] = useState(initialValues.title);
+  const [description, setDescription] = useState(initialValues.description);
+  const [savedValues, setSavedValues] = useState(initialValues);
+  const [saveStatus, setSaveStatus] = useState<SaveStatusValue>("idle");
+  const statusTimerRef = useRef<number | null>(null);
+
+  const isDirty =
+    title !== savedValues.title ||
+    description !== savedValues.description;
+
+  const autosaveDeps = useMemo(
+    () => [task.id, title, description],
+    [description, task.id, title]
+  );
+
+  const clearStatusTimer = useCallback(() => {
+    if (statusTimerRef.current) {
+      window.clearTimeout(statusTimerRef.current);
+      statusTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return clearStatusTimer;
+  }, [clearStatusTimer]);
+
+  const handleSave = useCallback(async () => {
+    if (!isDirty) return;
+
+    try {
+      clearStatusTimer();
+      setSaveStatus("saving");
+      await onSave(task.id, title, description);
+      setSavedValues({ title, description });
+      setSaveStatus("saved");
+
+      statusTimerRef.current = window.setTimeout(() => {
+        setSaveStatus("idle");
+        statusTimerRef.current = null;
+      }, 2000);
+    } catch (error) {
+      console.error(error);
+      setSaveStatus("error");
+    }
+  }, [clearStatusTimer, description, isDirty, onSave, task.id, title]);
+
+  useAutosave({
+    enabled: isDirty,
+    delay: 1000,
+    deps: autosaveDeps,
+    onSave: handleSave,
+  });
 
   return (
     <div className="rounded-2xl bg-[#111827] p-8">
