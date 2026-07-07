@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { QuestTask } from "@/services/quest.service";
 import ImageUploader from "@/components/media/ImageUploader";
 
@@ -23,20 +23,6 @@ export default function TaskEditor({
   onSave,
   onUploadImage,
 }: TaskEditorProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-
-  useEffect(() => {
-    if (!task) {
-      setTitle("");
-      setDescription("");
-      return;
-    }
-
-    setTitle(task.title);
-    setDescription(task.description ?? "");
-  }, [task]);
-
   if (!task) {
     return (
       <div className="rounded-2xl bg-[#111827] p-8 h-full flex items-center justify-center">
@@ -52,6 +38,28 @@ export default function TaskEditor({
       </div>
     );
   }
+
+  return (
+    <TaskEditorFields
+      key={task.id}
+      task={task}
+      onSave={onSave}
+      onUploadImage={onUploadImage}
+    />
+  );
+}
+
+function TaskEditorFields({
+  task,
+  onSave,
+  onUploadImage,
+}: {
+  task: QuestTask;
+  onSave: TaskEditorProps["onSave"];
+  onUploadImage: TaskEditorProps["onUploadImage"];
+}) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description ?? "");
 
   return (
     <div className="rounded-2xl bg-[#111827] p-8">

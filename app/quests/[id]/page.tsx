@@ -16,26 +16,26 @@ export default function QuestPage() {
   useEffect(() => {
     if (!id) return;
 
+    async function loadQuest() {
+      const { data, error } = await getQuest(id);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      setQuest(data);
+      setLoading(false);
+    }
+
+    async function loadTasks() {
+      const { data } = await getQuestTasks(id);
+      setTasks(data ?? []);
+    }
+
     loadQuest();
     loadTasks();
   }, [id]);
-
-  async function loadQuest() {
-    const { data, error } = await getQuest(id);
-
-    if (error) {
-      console.error(error);
-      return;
-    }
-
-    setQuest(data);
-    setLoading(false);
-  }
-
-  async function loadTasks() {
-    const { data } = await getQuestTasks(id);
-    setTasks(data ?? []);
-  }
 
   if (loading || !quest) {
     return (

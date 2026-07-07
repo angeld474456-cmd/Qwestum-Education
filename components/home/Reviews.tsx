@@ -52,7 +52,7 @@ export default function Reviews() {
               </div>
 
               <p className="mt-6 leading-8 text-gray-300">
-                "{review.text}"
+                &quot;{review.text}&quot;
               </p>
 
               <div className="mt-10">

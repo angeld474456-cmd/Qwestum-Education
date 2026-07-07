@@ -9,21 +9,21 @@ export default function QuestsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadQuests();
-  }, []);
+    async function loadQuests() {
+      const { data, error } = await getQuests();
 
-  async function loadQuests() {
-    const { data, error } = await getQuests();
-
-    if (error) {
-      console.error(error);
+      if (error) {
+        console.error(error);
       alert("Ошибка загрузки квестов");
-      return;
+        return;
     }
 
-    setQuests(data ?? []);
-    setLoading(false);
-  }
+      setQuests(data ?? []);
+      setLoading(false);
+      }
+
+    loadQuests();
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#070B14] text-white p-8">
