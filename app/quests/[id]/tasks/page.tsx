@@ -26,9 +26,47 @@ export default function QuestTasksPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (questId) {
-      loadTasks();
+    if (!questId) return;
+
+    async function loadInitialTasks() {
+      setLoading(true);
+
+      const { data, error } = await getQuestTasks(questId);
+
+      if (error) {
+        alert(JSON.stringify(error, null, 2));
+        setLoading(false);
+        return;
+      }
+
+      const loadedTasks = data ?? [];
+
+      setTasks(loadedTasks);
+
+      setSelectedTask((currentTask) => {
+        if (loadedTasks.length > 0) {
+          if (!currentTask) {
+            return loadedTasks[0];
+          }
+
+          const current = loadedTasks.find(
+            (t) => t.id === currentTask.id
+          );
+
+          if (current) {
+            return current;
+          }
+
+          return loadedTasks[0];
+        }
+
+        return null;
+      });
+
+      setLoading(false);
     }
+
+    loadInitialTasks();
   }, [questId]);
 
   async function loadTasks() {
@@ -46,23 +84,25 @@ export default function QuestTasksPage() {
 
     setTasks(loadedTasks);
 
-    if (loadedTasks.length > 0) {
-      if (!selectedTask) {
-        setSelectedTask(loadedTasks[0]);
-      } else {
+    setSelectedTask((currentTask) => {
+      if (loadedTasks.length > 0) {
+        if (!currentTask) {
+          return loadedTasks[0];
+        }
+
         const current = loadedTasks.find(
-          (t) => t.id === selectedTask.id
+          (t) => t.id === currentTask.id
         );
 
         if (current) {
-          setSelectedTask(current);
-        } else {
-          setSelectedTask(loadedTasks[0]);
+          return current;
         }
+
+        return loadedTasks[0];
       }
-    } else {
-      setSelectedTask(null);
-    }
+
+      return null;
+    });
 
     setLoading(false);
   }

@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface ImageUploaderProps {
   imageUrl?: string | null;
   onUpload: (file: File) => Promise<void>;
@@ -27,9 +29,12 @@ export default function ImageUploader({
       </h3>
 
       {imageUrl ? (
-        <img
+        <Image
           src={imageUrl}
           alt="Task"
+          width={1200}
+          height={675}
+          unoptimized
           className="mt-4 w-full rounded-xl border border-slate-700"
         />
       ) : (
