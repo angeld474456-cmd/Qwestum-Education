@@ -156,8 +156,8 @@ export default function QuestTasksPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#070B14] text-white p-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="h-screen overflow-y-auto bg-[#070B14] text-white p-8">
+      <div className="mx-auto max-w-7xl pb-8">
 
         <h1 className="text-4xl font-bold">
           Конструктор Questum
