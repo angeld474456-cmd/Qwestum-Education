@@ -1,13 +1,11 @@
-import SingleChoiceTaskPreview, {
-  SingleChoicePreviewOption,
-} from "./SingleChoiceTaskPreview";
-import TextTaskPreview from "./TextTaskPreview";
+import TaskRenderer from "@/components/tasks/runtime/TaskRenderer";
+import { SingleChoiceRuntimeOption } from "@/components/tasks/runtime/SingleChoiceTaskRenderer";
 
 interface TaskPreviewProps {
   taskType: string;
   title: string;
   description: string;
-  options?: SingleChoicePreviewOption[];
+  options?: SingleChoiceRuntimeOption[];
   correctOptionId?: string;
 }
 
@@ -18,21 +16,13 @@ export default function TaskPreview({
   options = [],
   correctOptionId = "",
 }: TaskPreviewProps) {
-  if (taskType === "single_choice") {
-    return (
-      <SingleChoiceTaskPreview
-        title={title}
-        description={description}
-        options={options}
-        correctOptionId={correctOptionId}
-      />
-    );
-  }
-
   return (
-    <TextTaskPreview
+    <TaskRenderer
+      taskType={taskType}
       title={title}
       description={description}
+      options={options}
+      correctOptionId={correctOptionId}
     />
   );
 }
