@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ImageUploader from "@/components/media/ImageUploader";
+import TaskPreview from "@/components/tasks/preview/TaskPreview";
 import { QuestTask } from "@/services/quest.service";
 import { TextTaskEditorProps } from "./TextTaskEditor";
 
@@ -73,6 +74,17 @@ export default function SingleChoiceTaskEditor({
   const [correctOptionId, setCorrectOptionId] = useState(
     initialContent.correctOptionId
   );
+  const hasCorrectOption = options.some(
+    (option) => option.id === correctOptionId
+  );
+  const validationMessages = [
+    options.length < 2 ? "Добавьте минимум два варианта ответа." : null,
+    !hasCorrectOption ? "Выберите один правильный ответ." : null,
+    options.some((option) => !option.text.trim())
+      ? "Заполните текст каждого варианта ответа."
+      : null,
+  ].filter((message): message is string => Boolean(message));
+  const isValid = validationMessages.length === 0;
 
   function handleAddOption() {
     setOptions((currentOptions) => [
@@ -208,15 +220,38 @@ export default function SingleChoiceTaskEditor({
         onUpload={(file) => onUploadImage(task.id, file)}
       />
 
+      <div>
+        <label className="mb-2 block text-slate-300">
+          Предпросмотр
+        </label>
+
+        <TaskPreview
+          taskType={task.task_type}
+          title={title}
+          description={description}
+          options={options}
+          correctOptionId={correctOptionId}
+        />
+      </div>
+
+      {validationMessages.length > 0 && (
+        <div className="rounded-xl bg-red-950/40 p-4 text-sm text-red-200">
+          {validationMessages.map((message) => (
+            <p key={message}>{message}</p>
+          ))}
+        </div>
+      )}
+
       <div className="pt-4">
         <button
+          disabled={!isValid}
           onClick={() =>
             onSave(task.id, title, description, {
               options,
               correctOptionId,
             })
           }
-          className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 transition"
+          className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50 transition"
         >
           💾 Сохранить
         </button>
