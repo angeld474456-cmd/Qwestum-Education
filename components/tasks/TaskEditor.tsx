@@ -1,6 +1,6 @@
 "use client";
 
-import { QuestTask } from "@/services/quest.service";
+import { QuestTask, TaskContent } from "@/services/quest.service";
 import {
   fallbackTaskEditor,
   taskTypeRegistry,
@@ -11,7 +11,8 @@ interface TaskEditorProps {
   onSave: (
     id: string,
     title: string,
-    description: string
+    description: string,
+    content?: TaskContent | null
   ) => Promise<void>;
 
   onUploadImage: (

@@ -8,6 +8,7 @@ import TaskList from "@/components/tasks/TaskList";
 import TaskEditor from "@/components/tasks/TaskEditor";
 
 import {
+  TaskContent,
   QuestTask,
   getQuestTasks,
   createTask,
@@ -140,11 +141,13 @@ export default function QuestTasksPage() {
   async function handleSaveTask(
     id: string,
     title: string,
-    description: string
+    description: string,
+    content?: TaskContent | null
   ) {
     const { error } = await updateTask(id, {
       title,
       description,
+      ...(content !== undefined ? { content } : {}),
     });
 
     if (error) {

@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import ImageUploader from "@/components/media/ImageUploader";
-import { QuestTask } from "@/services/quest.service";
+import { QuestTask, TaskContent } from "@/services/quest.service";
 
 export interface TextTaskEditorProps {
   task: QuestTask;
   onSave: (
     id: string,
     title: string,
-    description: string
+    description: string,
+    content?: TaskContent | null
   ) => Promise<void>;
   onUploadImage: (
     taskId: string,
