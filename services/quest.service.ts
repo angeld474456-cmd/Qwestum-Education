@@ -16,6 +16,8 @@ export interface CreateQuestData {
   is_public: boolean;
 }
 
+export type TaskContent = Record<string, unknown>;
+
 export interface QuestTask {
   id: string;
   quest_id: string;
@@ -26,6 +28,7 @@ export interface QuestTask {
   image_url: string | null;
   video_url: string | null;
   audio_url: string | null;
+  content?: TaskContent | null;
   points: number;
   task_type: string;
   sort_order: number;
