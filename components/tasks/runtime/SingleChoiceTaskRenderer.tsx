@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 export interface SingleChoiceRuntimeOption {
   id: string;
   text: string;
@@ -8,6 +12,8 @@ export interface SingleChoiceTaskRendererProps {
   description: string;
   options: SingleChoiceRuntimeOption[];
   correctOptionId: string;
+  mode?: "preview" | "play";
+  onAnswerChange?: (optionId: string) => void;
 }
 
 export default function SingleChoiceTaskRenderer({
@@ -15,7 +21,16 @@ export default function SingleChoiceTaskRenderer({
   description,
   options,
   correctOptionId,
+  mode = "preview",
+  onAnswerChange,
 }: SingleChoiceTaskRendererProps) {
+  const [selectedOptionId, setSelectedOptionId] = useState("");
+
+  function handleOptionChange(optionId: string) {
+    setSelectedOptionId(optionId);
+    onAnswerChange?.(optionId);
+  }
+
   return (
     <div className="rounded-2xl bg-[#1B2435] p-6">
       <h3 className="text-2xl font-bold">
@@ -29,20 +44,25 @@ export default function SingleChoiceTaskRenderer({
       <div className="mt-5 space-y-3">
         {options.length > 0 ? (
           options.map((option) => (
-            <div
+            <label
               key={option.id}
               className="flex items-center gap-3 rounded-xl bg-[#111827] p-4"
             >
               <input
                 type="radio"
-                checked={correctOptionId === option.id}
-                readOnly
+                checked={
+                  mode === "preview"
+                    ? correctOptionId === option.id
+                    : selectedOptionId === option.id
+                }
+                readOnly={mode === "preview"}
+                onChange={() => handleOptionChange(option.id)}
               />
 
               <span>
                 {option.text || "Вариант ответа"}
               </span>
-            </div>
+            </label>
           ))
         ) : (
           <div className="rounded-xl border border-dashed border-slate-600 p-4 text-slate-400">

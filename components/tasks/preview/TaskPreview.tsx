@@ -18,6 +18,7 @@ export default function TaskPreview({
 }: TaskPreviewProps) {
   return (
     <TaskRenderer
+      mode="preview"
       taskType={taskType}
       title={title}
       description={description}
