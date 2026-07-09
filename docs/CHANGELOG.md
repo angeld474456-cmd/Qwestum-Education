@@ -1,5 +1,24 @@
 # Changelog
 
+## Sprint 12 Teacher Experience
+
+- `36e5d94` Add teacher quest library page.
+  - Added `/dashboard/quests`.
+  - Loads quests with `getQuests()` and task counts with `getAllQuestTasks()`.
+  - Shows title, description, difficulty, Public/Draft from `is_public`, `created_at`, and task count.
+- `7b5e7c8` Add teacher preview and play routes.
+  - Added `/dashboard/quests/[id]/preview` and `/dashboard/quests/[id]/play`.
+  - Preview renders tasks read-only with `TaskRenderer` in `mode="preview"`.
+  - Play/Test mounts `QuestRunner`; answers/results are not persisted yet.
+- `e9b8466` Add teacher quest settings page.
+  - Added `/dashboard/quests/[id]/settings`.
+  - Editable fields are `title`, `description`, `difficulty`, and `is_public`.
+  - Saves through `updateQuest(id, { title, description, difficulty, is_public })`.
+- `640ca49` Add teacher quest workspace navigation.
+  - Added `components/dashboard/QuestWorkspaceNav.tsx`.
+  - Reused it in settings, preview, and play pages.
+  - Task editor intentionally remains at `/quests/[id]/tasks`.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

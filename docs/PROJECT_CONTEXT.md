@@ -35,6 +35,32 @@ Implemented task types:
 - `text`
 - `single_choice`
 
+## Teacher Experience Status
+
+Completed Sprint 12 work:
+
+- Sprint 12.1 — Teacher Quest Library at `/dashboard/quests`.
+  - Loads quests with `getQuests()`.
+  - Loads task counts with `getAllQuestTasks()`.
+  - Shows `title`, `description`, `difficulty`, Public/Draft from `is_public`, `created_at`, and task count.
+  - Links to settings, edit tasks, preview, and play/test.
+- Sprint 12.2 — Teacher Preview / Play Routes.
+  - `/dashboard/quests/[id]/preview` renders all tasks read-only with `TaskRenderer` in `mode="preview"`.
+  - `/dashboard/quests/[id]/play` mounts `QuestRunner`.
+  - Answers and results are not persisted yet.
+- Sprint 12.3 — Teacher Quest Settings / Publish Controls.
+  - `/dashboard/quests/[id]/settings` edits only `title`, `description`, `difficulty`, and `is_public`.
+  - Saves through `updateQuest(id, { title, description, difficulty, is_public })`.
+  - `is_public = true` means Public; `is_public = false` means Draft.
+  - No `status` field and no migration were added.
+- Sprint 12.4 — Teacher Quest Workspace Navigation.
+  - `components/dashboard/QuestWorkspaceNav.tsx` is used in settings, preview, and play pages.
+  - Task editing intentionally remains at `/quests/[id]/tasks`.
+
+Next sprint:
+
+- Sprint 12.5 — Teacher Task Editor Dashboard Integration.
+
 ## Stack
 
 - Next.js 16

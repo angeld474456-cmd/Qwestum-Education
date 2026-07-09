@@ -65,6 +65,29 @@ Key files:
 
 Do not bypass `RuntimeContext` for core runtime state unless the architecture is intentionally changed.
 
+## Teacher Experience Routes
+
+Teacher-facing quest management currently lives under dashboard routes:
+
+- `/dashboard/quests` — Teacher Quest Library.
+- `/dashboard/quests/[id]/settings` — basic quest metadata and publish controls.
+- `/dashboard/quests/[id]/preview` — read-only teacher preview using `TaskRenderer` in preview mode.
+- `/dashboard/quests/[id]/play` — teacher test flow using `QuestRunner`.
+
+The task editor remains on the existing non-dashboard route:
+
+- `/quests/[id]/tasks`
+
+`components/dashboard/QuestWorkspaceNav.tsx` centralizes teacher workspace links:
+
+- Back to library
+- Settings
+- Edit tasks
+- Preview
+- Play/Test
+
+Sprint 12.5 should analyze whether to add this navigation directly to the existing task editor route, create a dashboard task-editor route later, or leave the editor untouched.
+
 ## Data Layer
 
 Supabase tables currently used by the app include:

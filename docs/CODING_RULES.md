@@ -10,6 +10,15 @@
 - Avoid broad cleanup while implementing a feature.
 - Work with any existing uncommitted changes; do not revert user work.
 
+## Active Sprint Rules
+
+- Do not commit or push without explicit approval.
+- Always run `npm.cmd run lint` and `npm.cmd run build` before finishing implementation work.
+- Always review `git diff --name-only` and `git diff --stat` before finalizing.
+- Prefer English UI labels in new dashboard pages to reduce encoding risk.
+- Do not touch task editor, task runtime, `TaskTypeRegistry`, or JSONB content architecture unless explicitly approved.
+- Keep changes small, scoped, and aligned with existing architecture.
+
 ## Required Checks
 
 Always run before finishing:
