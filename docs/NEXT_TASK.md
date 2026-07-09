@@ -6,21 +6,22 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by planning task editor dashboard integration without reworking the completed task editor or quest runtime architecture.
+Continue teacher-facing quest management by analyzing route consistency and workspace polish without reworking the completed task editor or quest runtime architecture.
 
 ## Next Task
 
-Sprint 12.5.1 — Teacher Task Editor Dashboard Integration Analysis.
+Sprint 12.6.1 - Teacher Workspace Polish / Route Consistency Analysis.
 
 This task is analysis only. Do not write code.
 
 Analyze:
 
-- `app/quests/[id]/tasks/page.tsx`.
-- Whether to add `QuestWorkspaceNav` directly there.
+- Whether `/quests/[id]` should remain as a legacy/detail route.
+- Whether Open / Edit quest in `/dashboard/quests` should point to `/dashboard/quests/[id]/settings` instead of `/quests/[id]`.
+- Whether teacher routes need breadcrumbs or clearer page titles.
 - Whether to create `/dashboard/quests/[id]/tasks` later.
-- Whether to leave the existing task editor route untouched for now.
-- Risks around scroll behavior, autosave, task selection, image upload, `TaskEditor` state, client/server mismatch, route duplication, mojibake, lint, and build.
+- Route consistency between dashboard and non-dashboard pages.
+- Risks of changing existing `/quests` routes.
 
 ## Constraints
 

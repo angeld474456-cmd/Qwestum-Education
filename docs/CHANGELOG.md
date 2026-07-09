@@ -18,6 +18,11 @@
   - Added `components/dashboard/QuestWorkspaceNav.tsx`.
   - Reused it in settings, preview, and play pages.
   - Task editor intentionally remains at `/quests/[id]/tasks`.
+- `226237d` Add workspace navigation to task editor.
+  - Added `QuestWorkspaceNav` to `app/quests/[id]/tasks/page.tsx`.
+  - Kept the existing `/quests/[id]/tasks` route.
+  - Did not create a dashboard task route.
+  - Did not refactor editor logic, task components, services, runtime, migrations, or JSONB architecture.
 
 ## Current State On `feature/next-work`
 

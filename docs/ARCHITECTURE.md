@@ -78,6 +78,8 @@ The task editor remains on the existing non-dashboard route:
 
 - `/quests/[id]/tasks`
 
+Sprint 12.5 integrated this existing task editor route into the teacher workspace by rendering `QuestWorkspaceNav` with `active="tasks"` directly on the page. The editor was not moved to `/dashboard`, and no new `/dashboard/quests/[id]/tasks` route exists yet.
+
 `components/dashboard/QuestWorkspaceNav.tsx` centralizes teacher workspace links:
 
 - Back to library
@@ -86,7 +88,7 @@ The task editor remains on the existing non-dashboard route:
 - Preview
 - Play/Test
 
-Sprint 12.5 should analyze whether to add this navigation directly to the existing task editor route, create a dashboard task-editor route later, or leave the editor untouched.
+Sprint 12.6 should analyze route consistency across `/dashboard/quests/*` and existing `/quests/*` routes before moving or replacing existing pages.
 
 ## Data Layer
 

@@ -34,12 +34,19 @@ Completed:
 - Sprint 12.4 — Teacher Quest Workspace Navigation.
   - Added `components/dashboard/QuestWorkspaceNav.tsx`.
   - Reused it on settings, preview, and play pages.
+- Sprint 12.5 - Teacher Task Editor Dashboard Integration.
+  - Added `QuestWorkspaceNav` to `/quests/[id]/tasks` with `active="tasks"`.
+  - Kept the existing task editor route in place.
+  - Did not create `/dashboard/quests/[id]/tasks`.
+  - Did not refactor editor logic, task components, services, runtime, migrations, or JSONB architecture.
 
 Next:
 
-- Sprint 12.5 — Teacher Task Editor Dashboard Integration.
-  - First task: Sprint 12.5.1 analysis only.
-  - Analyze `app/quests/[id]/tasks/page.tsx`, `QuestWorkspaceNav` integration, and whether a future `/dashboard/quests/[id]/tasks` route is needed.
+- Sprint 12.6 - Teacher Workspace Polish / Route Consistency Analysis.
+  - First task: Sprint 12.6.1 analysis only.
+  - Analyze whether /quests/[id] should remain as a legacy/detail route.
+  - Analyze whether Open / Edit quest in /dashboard/quests should point to settings instead of /quests/[id].
+  - Analyze breadcrumbs, page titles, future /dashboard/quests/[id]/tasks, route consistency, and risks of changing existing /quests routes.
 
 ## Suggested Future Milestones
 
