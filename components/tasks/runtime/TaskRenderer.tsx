@@ -10,6 +10,7 @@ export interface TaskRendererProps {
   description: string;
   options?: SingleChoiceRuntimeOption[];
   correctOptionId?: string;
+  answer?: string;
   onTextAnswerChange?: (answer: string) => void;
   onSingleChoiceAnswerChange?: (optionId: string) => void;
 }
@@ -21,6 +22,7 @@ export default function TaskRenderer({
   description,
   options = [],
   correctOptionId = "",
+  answer = "",
   onTextAnswerChange,
   onSingleChoiceAnswerChange,
 }: TaskRendererProps) {
@@ -32,6 +34,7 @@ export default function TaskRenderer({
         options={options}
         correctOptionId={correctOptionId}
         mode={mode}
+        answer={answer}
         onAnswerChange={onSingleChoiceAnswerChange}
       />
     );
@@ -42,6 +45,7 @@ export default function TaskRenderer({
       title={title}
       description={description}
       mode={mode}
+      answer={answer}
       onAnswerChange={onTextAnswerChange}
     />
   );

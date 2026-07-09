@@ -6,6 +6,7 @@ export interface TextTaskRendererProps {
   title: string;
   description: string;
   mode?: "preview" | "play";
+  answer?: string;
   onAnswerChange?: (answer: string) => void;
 }
 
@@ -13,12 +14,13 @@ export default function TextTaskRenderer({
   title,
   description,
   mode = "preview",
+  answer = "",
   onAnswerChange,
 }: TextTaskRendererProps) {
-  const [answer, setAnswer] = useState("");
+  const [currentAnswer, setCurrentAnswer] = useState(answer);
 
   function handleAnswerChange(value: string) {
-    setAnswer(value);
+    setCurrentAnswer(value);
     onAnswerChange?.(value);
   }
 
@@ -35,7 +37,7 @@ export default function TextTaskRenderer({
       {mode === "play" && (
         <textarea
           rows={4}
-          value={answer}
+          value={currentAnswer}
           onChange={(e) => handleAnswerChange(e.target.value)}
           className="mt-5 w-full rounded-xl bg-[#111827] p-4"
         />

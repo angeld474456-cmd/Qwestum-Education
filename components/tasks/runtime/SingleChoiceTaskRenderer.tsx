@@ -13,6 +13,7 @@ export interface SingleChoiceTaskRendererProps {
   options: SingleChoiceRuntimeOption[];
   correctOptionId: string;
   mode?: "preview" | "play";
+  answer?: string;
   onAnswerChange?: (optionId: string) => void;
 }
 
@@ -22,9 +23,10 @@ export default function SingleChoiceTaskRenderer({
   options,
   correctOptionId,
   mode = "preview",
+  answer = "",
   onAnswerChange,
 }: SingleChoiceTaskRendererProps) {
-  const [selectedOptionId, setSelectedOptionId] = useState("");
+  const [selectedOptionId, setSelectedOptionId] = useState(answer);
 
   function handleOptionChange(optionId: string) {
     setSelectedOptionId(optionId);
