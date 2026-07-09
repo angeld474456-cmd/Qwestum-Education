@@ -176,6 +176,13 @@ export default function TeacherQuestLibraryPage() {
                     </Link>
 
                     <Link
+                      href={`/dashboard/quests/${quest.id}/settings`}
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
+                    >
+                      Settings
+                    </Link>
+
+                    <Link
                       href={`/quests/${quest.id}/tasks`}
                       className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
                     >
