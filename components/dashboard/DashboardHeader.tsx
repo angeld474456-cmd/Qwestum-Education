@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function DashboardHeader() {
   return (
     <header className="border-b border-slate-800 bg-[#0B1220] px-8 py-6">
@@ -12,9 +14,12 @@ export default function DashboardHeader() {
           </p>
         </div>
 
-        <button className="rounded-xl bg-violet-600 px-6 py-3 text-white hover:bg-violet-700">
-          + Создать квест
-        </button>
+        <Link
+          href="/quests/new"
+          className="rounded-xl bg-violet-600 px-6 py-3 text-white hover:bg-violet-700"
+        >
+          Создать квест
+        </Link>
       </div>
     </header>
   );

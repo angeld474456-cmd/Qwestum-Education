@@ -45,6 +45,22 @@ export async function getQuests() {
     .order("created_at", { ascending: false });
 }
 
+export async function updateQuest(
+  id: string,
+  data: Partial<CreateQuestData>
+) {
+  return await supabase
+    .from("quests")
+    .update(data)
+    .eq("id", id);
+}
+
+export async function getAllQuestTasks() {
+  return await supabase
+    .from("quest_tasks")
+    .select("id, quest_id, points");
+}
+
 export async function getQuest(id: string) {
   return await supabase
     .from("quests")

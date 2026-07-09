@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-[#0B1220] border-r border-slate-800 p-6">
+    <aside className="w-64 border-r border-slate-800 bg-[#0B1220] p-6">
       <h2 className="text-3xl font-bold text-white">
         Questum
       </h2>
@@ -10,25 +12,29 @@ export default function Sidebar() {
       </p>
 
       <nav className="mt-10 space-y-4">
-        <a href="/dashboard" className="block text-slate-300 hover:text-white">
-          🏠 Главная
-        </a>
+        <Link href="/dashboard" className="block text-slate-300 hover:text-white">
+          Главная
+        </Link>
 
-        <a href="/catalog" className="block text-slate-300 hover:text-white">
-          📚 Каталог
-        </a>
+        <Link href="/dashboard/quests" className="block text-slate-300 hover:text-white">
+          Библиотека квестов
+        </Link>
 
-        <a href="/students" className="block text-slate-300 hover:text-white">
-          👨‍🎓 Ученики
-        </a>
+        <Link href="/catalog" className="block text-slate-300 hover:text-white">
+          Каталог
+        </Link>
 
-        <a href="/schools" className="block text-slate-300 hover:text-white">
-          🏫 Школы
-        </a>
+        <Link href="/students" className="block text-slate-300 hover:text-white">
+          Ученики
+        </Link>
 
-        <a href="/settings" className="block text-slate-300 hover:text-white">
-          ⚙ Настройки
-        </a>
+        <Link href="/schools" className="block text-slate-300 hover:text-white">
+          Школы
+        </Link>
+
+        <Link href="/settings" className="block text-slate-300 hover:text-white">
+          Настройки
+        </Link>
       </nav>
     </aside>
   );
