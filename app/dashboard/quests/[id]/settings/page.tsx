@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import Card from "@/components/ui/Card";
 import { getQuest, Quest, updateQuest } from "@/services/quest.service";
 
@@ -147,32 +148,7 @@ export default function TeacherQuestSettingsPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard/quests"
-            className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
-          >
-            Back to library
-          </Link>
-          <Link
-            href={`/dashboard/quests/${id}/preview`}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Preview
-          </Link>
-          <Link
-            href={`/dashboard/quests/${id}/play`}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Play/Test
-          </Link>
-          <Link
-            href={`/quests/${id}/tasks`}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
-          >
-            Edit tasks
-          </Link>
-        </div>
+        <QuestWorkspaceNav questId={id} active="settings" />
       </div>
 
       <Card>

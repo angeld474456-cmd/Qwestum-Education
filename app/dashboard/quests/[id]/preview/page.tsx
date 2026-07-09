@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import Card from "@/components/ui/Card";
 import TaskRenderer from "@/components/tasks/runtime/TaskRenderer";
 import {
@@ -127,26 +128,7 @@ export default async function TeacherQuestPreviewPage({
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/dashboard/quests"
-            className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
-          >
-            Back to library
-          </Link>
-          <Link
-            href={`/quests/${id}/tasks`}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
-          >
-            Edit tasks
-          </Link>
-          <Link
-            href={`/dashboard/quests/${id}/play`}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-          >
-            Play/Test
-          </Link>
-        </div>
+        <QuestWorkspaceNav questId={id} active="preview" />
       </div>
 
       {tasks.length === 0 ? (
