@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
+import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import TaskForm from "@/components/tasks/TaskForm";
 import TaskList from "@/components/tasks/TaskList";
 import TaskEditor from "@/components/tasks/TaskEditor";
@@ -209,6 +210,10 @@ export default function QuestTasksPage() {
         <p className="mt-3 text-slate-400">
           Управление заданиями
         </p>
+
+        <div className="mt-6">
+          <QuestWorkspaceNav questId={questId} active="tasks" />
+        </div>
 
         <div className="mt-8">
           <TaskForm onSave={handleCreateTask} />
