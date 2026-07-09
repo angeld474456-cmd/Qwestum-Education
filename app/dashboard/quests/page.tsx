@@ -182,21 +182,19 @@ export default function TeacherQuestLibraryPage() {
                       Edit tasks
                     </Link>
 
-                    <button
-                      type="button"
-                      disabled
-                      className="cursor-not-allowed rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-slate-400"
+                    <Link
+                      href={`/dashboard/quests/${quest.id}/preview`}
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
                     >
-                      Preview coming soon
-                    </button>
+                      Preview
+                    </Link>
 
-                    <button
-                      type="button"
-                      disabled
-                      className="cursor-not-allowed rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-slate-400"
+                    <Link
+                      href={`/dashboard/quests/${quest.id}/play`}
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
                     >
-                      Play/Test coming soon
-                    </button>
+                      Play/Test
+                    </Link>
                   </div>
                 </div>
               </Card>
