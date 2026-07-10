@@ -39,14 +39,17 @@ Completed:
   - Kept the existing task editor route in place.
   - Did not create `/dashboard/quests/[id]/tasks`.
   - Did not refactor editor logic, task components, services, runtime, migrations, or JSONB architecture.
+- Sprint 12.6 - Teacher Workspace Polish / Route Consistency.
+  - Completed route consistency analysis.
+  - Updated `Open / Edit quest` in `/dashboard/quests` to point to `/dashboard/quests/[id]/settings`.
+  - Removed the duplicate `Settings` action from quest cards.
+  - Preserved `/quests/[id]` and `/quests/[id]/tasks` as existing routes.
 
 Next:
 
-- Sprint 12.6 - Teacher Workspace Polish / Route Consistency Analysis.
-  - First task: Sprint 12.6.1 analysis only.
-  - Analyze whether /quests/[id] should remain as a legacy/detail route.
-  - Analyze whether Open / Edit quest in /dashboard/quests should point to settings instead of /quests/[id].
-  - Analyze breadcrumbs, page titles, future /dashboard/quests/[id]/tasks, route consistency, and risks of changing existing /quests routes.
+- Sprint 12.7 - Teacher Workspace Breadcrumbs / Page Title Analysis.
+  - First task: Sprint 12.7.1 analysis only.
+  - Analyze shared breadcrumbs, consistent page titles, and whether `QuestWorkspaceNav` needs current quest context.
 
 ## Suggested Future Milestones
 

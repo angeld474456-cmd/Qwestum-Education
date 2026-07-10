@@ -169,17 +169,10 @@ export default function TeacherQuestLibraryPage() {
 
                   <div className="flex flex-wrap gap-3">
                     <Link
-                      href={`/quests/${quest.id}`}
+                      href={`/dashboard/quests/${quest.id}/settings`}
                       className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
                     >
                       Open / Edit quest
-                    </Link>
-
-                    <Link
-                      href={`/dashboard/quests/${quest.id}/settings`}
-                      className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
-                    >
-                      Settings
                     </Link>
 
                     <Link

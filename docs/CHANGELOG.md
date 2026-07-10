@@ -23,6 +23,15 @@
   - Kept the existing `/quests/[id]/tasks` route.
   - Did not create a dashboard task route.
   - Did not refactor editor logic, task components, services, runtime, migrations, or JSONB architecture.
+- Sprint 12.6.1 - Teacher Workspace Route Consistency Analysis.
+  - Confirmed `/quests/[id]` should remain a legacy/detail route for now.
+  - Recommended using dashboard settings as the primary teacher edit route.
+  - Recommended keeping `/quests/[id]/tasks` until a dashboard task route is intentionally planned.
+- Sprint 12.6.2 - Teacher Library Primary Action Polish.
+  - Updated `Open / Edit quest` in `/dashboard/quests` to point to `/dashboard/quests/[id]/settings`.
+- Sprint 12.6.3 - Teacher Library Action Cleanup.
+  - Removed the duplicate `Settings` action from quest cards.
+  - Current library actions are `Open / Edit quest`, `Edit tasks`, `Preview`, and `Play/Test`.
 
 ## Current State On `feature/next-work`
 

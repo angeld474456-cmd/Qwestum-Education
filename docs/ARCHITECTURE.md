@@ -74,6 +74,8 @@ Teacher-facing quest management currently lives under dashboard routes:
 - `/dashboard/quests/[id]/preview` — read-only teacher preview using `TaskRenderer` in preview mode.
 - `/dashboard/quests/[id]/play` — teacher test flow using `QuestRunner`.
 
+In the Teacher Quest Library, the primary `Open / Edit quest` action points to `/dashboard/quests/[id]/settings`. Quest cards also link to edit tasks, preview, and play/test. The duplicate `Settings` action was removed in Sprint 12.6.
+
 The task editor remains on the existing non-dashboard route:
 
 - `/quests/[id]/tasks`
@@ -88,7 +90,7 @@ Sprint 12.5 integrated this existing task editor route into the teacher workspac
 - Preview
 - Play/Test
 
-Sprint 12.6 should analyze route consistency across `/dashboard/quests/*` and existing `/quests/*` routes before moving or replacing existing pages.
+Future route work should analyze breadcrumbs, page titles, and whether a dashboard task route is needed before moving or replacing existing `/quests/*` pages.
 
 ## Data Layer
 

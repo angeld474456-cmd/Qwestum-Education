@@ -62,10 +62,16 @@ Completed Sprint 12 work:
   - No dashboard task route was created.
   - No editor logic, task components, services, runtime, migrations, or JSONB architecture were changed.
   - The task editor route intentionally remains outside `/dashboard` for now to avoid breaking the existing working editor.
+- Sprint 12.6 - Teacher Workspace Polish / Route Consistency.
+  - Completed route consistency analysis.
+  - `Open / Edit quest` in `/dashboard/quests` now points to `/dashboard/quests/[id]/settings`.
+  - Removed the duplicate `Settings` action from quest cards.
+  - Current library actions are `Open / Edit quest`, `Edit tasks`, `Preview`, and `Play/Test`.
+  - Legacy routes `/quests/[id]` and `/quests/[id]/tasks` are intentionally preserved.
 
 Next sprint:
 
-- Sprint 12.6 - Teacher Workspace Polish / Route Consistency Analysis.
+- Sprint 12.7 - Teacher Workspace Breadcrumbs / Page Title Analysis.
 
 ## Stack
 

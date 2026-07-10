@@ -6,22 +6,21 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by analyzing route consistency and workspace polish without reworking the completed task editor or quest runtime architecture.
+Continue teacher-facing quest management by planning the next workspace polish step without reworking the completed task editor or quest runtime architecture.
 
 ## Next Task
 
-Sprint 12.6.1 - Teacher Workspace Polish / Route Consistency Analysis.
+Sprint 12.7.1 - Teacher Workspace Breadcrumbs / Page Title Analysis.
 
 This task is analysis only. Do not write code.
 
 Analyze:
 
-- Whether `/quests/[id]` should remain as a legacy/detail route.
-- Whether Open / Edit quest in `/dashboard/quests` should point to `/dashboard/quests/[id]/settings` instead of `/quests/[id]`.
-- Whether teacher routes need breadcrumbs or clearer page titles.
-- Whether to create `/dashboard/quests/[id]/tasks` later.
-- Route consistency between dashboard and non-dashboard pages.
-- Risks of changing existing `/quests` routes.
+- Whether teacher workspace pages need shared breadcrumbs.
+- Whether page titles should be standardized across settings, task editor, preview, and play/test.
+- Whether `QuestWorkspaceNav` needs additional context such as the current quest title.
+- How to improve navigation clarity without touching editor/runtime/JSONB architecture.
+- Risks around Russian UI text, client/server component boundaries, layout shifts, and route duplication.
 
 ## Constraints
 
