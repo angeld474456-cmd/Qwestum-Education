@@ -67,12 +67,19 @@ Completed:
   - Documented that `author_id` appears intended but is not actively used by current quest services/pages.
   - Documented future RLS boundaries for `quests`, `quest_tasks`, `quest_attempts`, and `quest_attempt_answers`.
   - Deferred persisted student attempts and private teacher analytics until auth, ownership, and RLS are designed.
+- Sprint 12.11 - Supabase Schema / RLS Audit.
+  - Completed a read-only live Supabase audit using the configured anon client.
+  - Confirmed live `quests.author_id` exists, but all 3 visible quests have `author_id IS NULL`.
+  - Confirmed live `quest_tasks` is anon-readable and has 10 visible rows.
+  - Confirmed live `quest_tasks.content` does not exist, despite local migration/code/runtime expectations.
+  - Confirmed anonymous reads can access `quests` and `quest_tasks`.
+  - Deferred auth/ownership implementation until schema repair planning is complete.
 
 Next:
 
-- Sprint 12.11 - Auth / Ownership Implementation Planning.
-  - First task: Sprint 12.11.1 analysis only.
-  - Confirm live Supabase schema and plan the smallest safe ownership/auth implementation before changing services or routes.
+- Sprint 12.12 - Schema Repair / Migration Planning.
+  - First task: Sprint 12.12.1 analysis only.
+  - Plan how to repair live/local schema mismatch before auth/ownership code changes.
 
 ## Suggested Future Milestones
 

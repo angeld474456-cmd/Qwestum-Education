@@ -93,10 +93,18 @@ Completed Sprint 12 work:
   - Future teacher dashboard queries should be scoped to owned quests.
   - Future public/student catalog queries should be scoped to public or assigned quests.
   - Real student attempts and private teacher analytics must wait for auth, ownership, and RLS design.
+- Sprint 12.11 - Supabase Schema / RLS Audit.
+  - A read-only live Supabase probe confirmed `quests.author_id` exists.
+  - All 3 visible live quests currently have `author_id IS NULL`, so owned-only teacher queries would hide existing quests until backfill/ownership is planned.
+  - Live `quest_tasks` is readable through the anon client and has 10 visible rows.
+  - Live `quest_tasks.content` does not exist, despite local migration/code/runtime expectations.
+  - Anonymous reads can access `quests` and `quest_tasks`, so RLS is either disabled or policies allow broad anon reads.
+  - Storage bucket/policy state for `quest-images` is not confirmed.
+  - Do not implement auth/ownership, RLS policies, or attempt persistence until schema repair planning is complete.
 
 Next sprint:
 
-- Sprint 12.11 - Auth / Ownership Implementation Planning.
+- Sprint 12.12 - Schema Repair / Migration Planning.
 
 ## Stack
 

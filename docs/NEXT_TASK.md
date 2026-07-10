@@ -6,23 +6,24 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by planning the smallest safe auth and ownership implementation before adding persisted attempts or private teacher analytics.
+Continue teacher-facing quest management by planning schema repair before auth, ownership, persisted attempts, or private teacher analytics.
 
 ## Next Task
 
-Sprint 12.11.1 - Auth / Ownership Implementation Planning.
+Sprint 12.12.1 - Schema Repair / Migration Planning.
 
 This task is analysis only. Do not write code.
 
 Analyze:
 
-- Whether `quests.author_id` exists in the live Supabase schema and migrations.
-- How quest creation should set `author_id = auth.uid()` when ownership is implemented.
-- How `getQuests()`, `getQuest(id)`, `updateQuest(id)`, and task helpers should be scoped after RLS is in place.
-- Which dashboard routes should require an authenticated teacher session first.
-- Whether public/student quest reads need separate service helpers to avoid exposing answer data.
-- What migration or policy work is needed before persisted student attempts.
-- Risks around changing current `/quests` and `/dashboard/quests` behavior.
+- Why live `quest_tasks.content` is missing even though local migration/code/runtime expect it.
+- Whether local migrations should be repaired, replaced, or supplemented with a new forward migration.
+- How to safely add or confirm `quest_tasks.content jsonb` in live Supabase.
+- How to handle existing tasks after adding `content`.
+- How to backfill or assign ownership for existing quests where `author_id IS NULL`.
+- Whether `quests.author_id` type, nullability, and foreign key should be confirmed or changed.
+- Which RLS policies should be planned after schema repair.
+- Risks around applying migrations to live data.
 
 ## Constraints
 

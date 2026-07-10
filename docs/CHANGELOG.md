@@ -60,6 +60,14 @@
   - Confirmed `app/quests/new/page.tsx` creates quests without setting `author_id`.
   - Recommended active MVP roles of teacher and student, with admin and school/organization roles deferred.
   - Recommended designing ownership and RLS before real student attempts or private teacher analytics are implemented.
+- Sprint 12.11.2 - Supabase Schema / RLS Audit.
+  - Ran a read-only live Supabase probe with the configured anon client.
+  - Confirmed live `quests` is anon-readable, has 3 visible rows, includes `author_id`, and all visible quests have `author_id IS NULL`.
+  - Confirmed live `quest_tasks` is anon-readable and has 10 visible rows.
+  - Confirmed live `quest_tasks.content` does not exist, which conflicts with local migration/code/runtime expectations.
+  - Confirmed broad anon reads are currently possible for `quests` and `quest_tasks`, meaning RLS is either disabled or policies allow broad anon reads.
+  - Storage bucket/policy state for `quest-images` remains unconfirmed.
+  - Recommended schema repair planning before auth/ownership code changes.
 
 ## Current State On `feature/next-work`
 

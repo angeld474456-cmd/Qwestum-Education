@@ -218,3 +218,49 @@ Important risks:
 - Attempt answers may contain sensitive student data.
 - Storage upload paths may need owner-aware policies later.
 - School/admin roles require careful scoping and should wait.
+
+## Live Schema / RLS Audit Notes
+
+Sprint 12.11.2 ran a read-only live Supabase probe using the configured anon client. It did not print row contents or secret values.
+
+Live `quests` findings:
+
+- `quests` is readable through the anon client.
+- Visible quest count: 3.
+- Visible columns include `id`, `title`, `description`, `subject_id`, `author_id`, `difficulty`, `is_public`, and `created_at`.
+- `author_id` exists in the live table.
+- All 3 visible quests have `author_id IS NULL`.
+- `author_id` type, nullability, and foreign key relationship to `auth.users(id)` are not confirmed from anon access.
+
+Live `quest_tasks` findings:
+
+- `quest_tasks` is readable through the anon client.
+- Visible task count: 10.
+- Visible columns include `id`, `quest_id`, `sort_order`, `title`, `description`, `answer`, `points`, `created_at`, `hint`, `image_url`, `video_url`, `audio_url`, and `task_type`.
+- Live `quest_tasks.content` does not exist.
+- This conflicts with `database/migrations/002_add_task_content.sql` and current code/runtime expectations for JSONB task content.
+
+RLS and storage findings:
+
+- Anonymous reads can access `quests` and `quest_tasks`.
+- This means RLS is either disabled or policies allow broad anonymous reads.
+- Storage bucket and policy state for `quest-images` is not confirmed.
+- Local migrations do not fully represent live schema history.
+
+Decisions after audit:
+
+- Do not implement auth/ownership code yet.
+- Do not change `getQuests()`, `getQuest(id)`, `updateQuest(id)`, task helpers, dashboard layout, or quest creation yet.
+- Do not add RLS policies blindly.
+- Do not add attempt persistence yet.
+- Do not touch runtime/editor/JSONB architecture yet.
+- Next safe step is schema repair and migration planning.
+
+Schema mismatch risks:
+
+- Owned-only teacher queries would hide all existing quests because `author_id` is currently null.
+- Runtime or `single_choice` task behavior may be incomplete or broken against live data because `quest_tasks.content` is missing.
+- Broad anon reads are unsafe for production multi-user teacher data.
+- Storage upload/public policy state is unknown.
+- Local migrations are not a reliable source of truth for the live schema yet.
+- Adding auth code before schema repair could create false security or broken UX.
