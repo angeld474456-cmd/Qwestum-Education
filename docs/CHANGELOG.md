@@ -38,6 +38,15 @@
   - Kept current dashboard page titles as acceptable for MVP.
   - Left task editor title/text unchanged because `/quests/[id]/tasks` is still a legacy route with Russian UI text and mojibake risk.
   - Recommended revisiting shared headers or breadcrumbs only if the dashboard workspace grows.
+- Sprint 12.8.1 - Teacher Quest Analytics Analysis.
+  - Confirmed MVP analytics should be teacher-only content analytics.
+  - Confirmed student attempt/result analytics should wait until answer persistence exists.
+  - Recommended using existing `quests` and `quest_tasks` data without migrations.
+- `0d903f3` Add teacher library analytics summary.
+  - Added compact analytics cards to `/dashboard/quests`.
+  - Shows Total quests, Public quests, Draft quests, Total tasks, and Total points.
+  - Uses existing `getQuests()` and `getAllQuestTasks()`.
+  - Added no routes, migrations, services, runtime/editor changes, task editor changes, or JSONB inspection.
 
 ## Current State On `feature/next-work`
 

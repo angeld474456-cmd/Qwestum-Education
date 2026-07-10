@@ -102,3 +102,5 @@ Supabase tables currently used by the app include:
 - `quest_tasks`
 
 Important service functions are in `services/quest.service.ts`, including quest loading and task CRUD helpers.
+
+Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses existing `getQuests()` and `getAllQuestTasks()` data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.

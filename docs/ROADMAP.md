@@ -49,12 +49,18 @@ Completed:
   - Decided not to create a shared workspace header now.
   - Kept current dashboard page titles as acceptable for MVP.
   - Left task editor title/text unchanged because it remains on `/quests/[id]/tasks`.
+- Sprint 12.8 - Teacher Quest Analytics.
+  - Completed teacher analytics analysis.
+  - Added teacher-only content analytics summary to `/dashboard/quests`.
+  - Shows Total quests, Public quests, Draft quests, Total tasks, and Total points.
+  - Uses existing `quests` and `quest_tasks` data only.
+  - Did not add student attempt analytics, routes, migrations, services, runtime persistence, or JSONB inspection.
 
 Next:
 
-- Sprint 12.8 - Teacher Quest Analytics.
-  - First task: Sprint 12.8.1 analysis only.
-  - Analyze available quest/task analytics before adding routes, cards, or migrations.
+- Sprint 12.9 - Attempt Persistence / Student Analytics Analysis.
+  - First task: Sprint 12.9.1 analysis only.
+  - Analyze persisted attempts/results, privacy, RLS, auth boundaries, and schema needs before implementing student learning analytics.
 
 ## Suggested Future Milestones
 

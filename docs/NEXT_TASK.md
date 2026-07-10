@@ -6,21 +6,22 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by analyzing a minimal analytics surface without reworking the completed task editor or quest runtime architecture.
+Continue teacher-facing quest management by analyzing persisted attempts/results before adding student learning analytics.
 
 ## Next Task
 
-Sprint 12.8.1 - Teacher Quest Analytics Analysis.
+Sprint 12.9.1 - Attempt Persistence / Student Analytics Analysis.
 
 This task is analysis only. Do not write code.
 
 Analyze:
 
-- What analytics data is already available from `quests` and `quest_tasks`.
-- Whether MVP analytics can show task count, total points, difficulty, and publication state without new migrations.
-- Whether analytics should live in `/dashboard/quests`, a new dashboard route, or a card inside settings.
-- Whether student attempt/result analytics should wait until answer persistence exists.
-- Risks around unsupported fields, Supabase query shape, duplicated task-count logic, and future attempt data.
+- What data needs to be persisted for real student attempts and results.
+- Whether future analytics need `quest_attempts` and `quest_attempt_answers` tables.
+- How attempt persistence should relate to `QuestRunner`, `RuntimeContext`, and teacher Play/Test mode without disrupting current runtime behavior.
+- Which data should be teacher-only and which, if any, should be visible to students later.
+- Privacy, RLS, auth, schema, and migration risks.
+- Whether implementation should wait until authentication/authorization boundaries are clearer.
 
 ## Constraints
 

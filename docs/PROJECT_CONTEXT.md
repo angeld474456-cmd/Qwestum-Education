@@ -73,10 +73,16 @@ Completed Sprint 12 work:
   - No shared `QuestWorkspaceHeader` is planned yet.
   - Current dashboard page titles are acceptable for MVP: `Teacher Quest Library`, `Quest Settings`, `Teacher Preview`, and `Teacher Test Mode`.
   - Task editor title/text remains unchanged because `/quests/[id]/tasks` is a legacy route with Russian UI text and mojibake risk.
+- Sprint 12.8 - Teacher Quest Analytics.
+  - Added teacher-only content analytics summary to `/dashboard/quests`.
+  - Shows Total quests, Public quests, Draft quests, Total tasks, and Total points.
+  - Uses existing `getQuests()` and `getAllQuestTasks()` data only.
+  - No persisted attempts/results exist yet.
+  - Student learning analytics are deferred until answer persistence, auth, privacy, and schema decisions are made.
 
 Next sprint:
 
-- Sprint 12.8 - Teacher Quest Analytics.
+- Sprint 12.9 - Attempt Persistence / Student Analytics Analysis.
 
 ## Stack
 
