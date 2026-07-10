@@ -92,6 +92,8 @@ Sprint 12.5 integrated this existing task editor route into the teacher workspac
 
 Future route work should analyze breadcrumbs, page titles, and whether a dashboard task route is needed before moving or replacing existing `/quests/*` pages.
 
+Sprint 12.7 decision: do not add breadcrumbs or a shared `QuestWorkspaceHeader` yet. `QuestWorkspaceNav` already provides practical navigation, dashboard header duplication is still small, and the task editor remains on `/quests/[id]/tasks` with existing Russian UI text. Revisit shared headers or breadcrumbs only if the dashboard workspace grows.
+
 ## Data Layer
 
 Supabase tables currently used by the app include:

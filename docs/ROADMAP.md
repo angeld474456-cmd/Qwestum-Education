@@ -44,12 +44,17 @@ Completed:
   - Updated `Open / Edit quest` in `/dashboard/quests` to point to `/dashboard/quests/[id]/settings`.
   - Removed the duplicate `Settings` action from quest cards.
   - Preserved `/quests/[id]` and `/quests/[id]/tasks` as existing routes.
+- Sprint 12.7 - Teacher Workspace Breadcrumbs / Page Title Analysis.
+  - Decided not to add breadcrumbs now.
+  - Decided not to create a shared workspace header now.
+  - Kept current dashboard page titles as acceptable for MVP.
+  - Left task editor title/text unchanged because it remains on `/quests/[id]/tasks`.
 
 Next:
 
-- Sprint 12.7 - Teacher Workspace Breadcrumbs / Page Title Analysis.
-  - First task: Sprint 12.7.1 analysis only.
-  - Analyze shared breadcrumbs, consistent page titles, and whether `QuestWorkspaceNav` needs current quest context.
+- Sprint 12.8 - Teacher Quest Analytics.
+  - First task: Sprint 12.8.1 analysis only.
+  - Analyze available quest/task analytics before adding routes, cards, or migrations.
 
 ## Suggested Future Milestones
 

@@ -6,21 +6,21 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by planning the next workspace polish step without reworking the completed task editor or quest runtime architecture.
+Continue teacher-facing quest management by analyzing a minimal analytics surface without reworking the completed task editor or quest runtime architecture.
 
 ## Next Task
 
-Sprint 12.7.1 - Teacher Workspace Breadcrumbs / Page Title Analysis.
+Sprint 12.8.1 - Teacher Quest Analytics Analysis.
 
 This task is analysis only. Do not write code.
 
 Analyze:
 
-- Whether teacher workspace pages need shared breadcrumbs.
-- Whether page titles should be standardized across settings, task editor, preview, and play/test.
-- Whether `QuestWorkspaceNav` needs additional context such as the current quest title.
-- How to improve navigation clarity without touching editor/runtime/JSONB architecture.
-- Risks around Russian UI text, client/server component boundaries, layout shifts, and route duplication.
+- What analytics data is already available from `quests` and `quest_tasks`.
+- Whether MVP analytics can show task count, total points, difficulty, and publication state without new migrations.
+- Whether analytics should live in `/dashboard/quests`, a new dashboard route, or a card inside settings.
+- Whether student attempt/result analytics should wait until answer persistence exists.
+- Risks around unsupported fields, Supabase query shape, duplicated task-count logic, and future attempt data.
 
 ## Constraints
 

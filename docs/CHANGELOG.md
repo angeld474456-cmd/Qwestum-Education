@@ -32,6 +32,12 @@
 - Sprint 12.6.3 - Teacher Library Action Cleanup.
   - Removed the duplicate `Settings` action from quest cards.
   - Current library actions are `Open / Edit quest`, `Edit tasks`, `Preview`, and `Play/Test`.
+- Sprint 12.7.1 - Breadcrumbs / Page Title Analysis.
+  - Decided not to implement breadcrumbs now.
+  - Decided not to create a shared `QuestWorkspaceHeader` now.
+  - Kept current dashboard page titles as acceptable for MVP.
+  - Left task editor title/text unchanged because `/quests/[id]/tasks` is still a legacy route with Russian UI text and mojibake risk.
+  - Recommended revisiting shared headers or breadcrumbs only if the dashboard workspace grows.
 
 ## Current State On `feature/next-work`
 

@@ -68,10 +68,15 @@ Completed Sprint 12 work:
   - Removed the duplicate `Settings` action from quest cards.
   - Current library actions are `Open / Edit quest`, `Edit tasks`, `Preview`, and `Play/Test`.
   - Legacy routes `/quests/[id]` and `/quests/[id]/tasks` are intentionally preserved.
+- Sprint 12.7 - Breadcrumbs / Page Title Analysis.
+  - No breadcrumbs are planned for the current MVP.
+  - No shared `QuestWorkspaceHeader` is planned yet.
+  - Current dashboard page titles are acceptable for MVP: `Teacher Quest Library`, `Quest Settings`, `Teacher Preview`, and `Teacher Test Mode`.
+  - Task editor title/text remains unchanged because `/quests/[id]/tasks` is a legacy route with Russian UI text and mojibake risk.
 
 Next sprint:
 
-- Sprint 12.7 - Teacher Workspace Breadcrumbs / Page Title Analysis.
+- Sprint 12.8 - Teacher Quest Analytics.
 
 ## Stack
 
