@@ -53,6 +53,13 @@
   - Teacher Test Mode should remain local-only for now.
   - Future persistence should focus on real student attempts after auth, privacy, RLS, and schema decisions.
   - Documented future `quest_attempts` and `quest_attempt_answers` table shapes as deferred architecture.
+- Sprint 12.10.1 - Auth / RLS Boundaries Analysis.
+  - Confirmed the project has early auth pieces, including `lib/supabase.ts`, `components/auth/LoginForm.tsx`, role types in `types/user.ts`, and `author_id` in `types/quest.ts`.
+  - Confirmed dashboard routes do not currently enforce session, role, or quest ownership.
+  - Confirmed current quest services are broad/id-based: `getQuests()` selects all quests, and `getQuest(id)`, `updateQuest(id)`, and task helpers do not enforce owner checks at service level.
+  - Confirmed `app/quests/new/page.tsx` creates quests without setting `author_id`.
+  - Recommended active MVP roles of teacher and student, with admin and school/organization roles deferred.
+  - Recommended designing ownership and RLS before real student attempts or private teacher analytics are implemented.
 
 ## Current State On `feature/next-work`
 

@@ -153,3 +153,68 @@ Deferred future analytics routes:
 - `/dashboard/quests/[id]/analytics`
 - `/dashboard/quests/[id]/attempts`
 - `/dashboard/classes/[id]/analytics`
+
+## Auth, Roles, Ownership, And RLS
+
+Auth and RLS boundaries are not fully implemented yet. The codebase has early auth and role pieces:
+
+- `lib/supabase.ts` creates the Supabase client.
+- `components/auth/LoginForm.tsx` uses Supabase OTP login.
+- `types/user.ts` includes `teacher`, `student`, `school`, and `admin` roles.
+- `types/quest.ts` includes `author_id`.
+
+Current limitations:
+
+- Dashboard routes do not enforce session, role, or ownership.
+- `getQuests()` currently selects all quests.
+- `getQuest(id)`, `updateQuest(id)`, and task helpers are id-based and do not enforce owner checks at service level.
+- `app/quests/new/page.tsx` creates quests without setting `author_id`.
+- `author_id` appears intended but is not actively used by current quest services/pages.
+
+MVP roles:
+
+- `teacher` - owns quests, edits quest metadata, manages tasks, previews/tests quests, and later views attempts for owned quests.
+- `student` - views public or assigned quests and later submits real attempts.
+
+Deferred roles:
+
+- `admin`
+- `school` / organization admin
+
+Quest ownership recommendation:
+
+- Use `quests.author_id = auth.uid()` for teacher-owned quests if `author_id` is confirmed in the live schema.
+- Teacher dashboard queries should eventually return only quests owned by the current teacher.
+- Public/student catalog queries should eventually return only `is_public` quests or assigned quests.
+- Updates and deletes should eventually be allowed only to the owning teacher.
+
+Future RLS boundaries:
+
+- `quests`
+  - Teachers can select, insert, update, and delete only their own quests.
+  - Students and anonymous users can select public quests only.
+  - Draft/private quests are visible only to owners.
+- `quest_tasks`
+  - Teachers can manage tasks only for quests they own.
+  - Students can read tasks only for public or assigned quests.
+  - Students cannot update or delete tasks.
+  - `answer` fields and `content.correctOptionId` exposure require care before public/student reads.
+- Future `quest_attempts`
+  - Students can create and select their own attempts.
+  - Teachers can read attempts only for quests they own.
+  - Submitted attempts should not be casually mutable.
+- Future `quest_attempt_answers`
+  - Students can insert and select answers only for their own attempts.
+  - Teachers can read answers only for attempts tied to their owned quests.
+  - Attempt answers must never be public.
+
+Teacher Test Mode remains local-only until persistence is intentionally designed. Persisted student attempts, private teacher analytics, attempt services, and migrations must wait for auth, ownership, privacy, and RLS decisions.
+
+Important risks:
+
+- `getQuests()` returning all quests is unsafe once multiple users exist.
+- `updateQuest(id)` and task helpers need RLS/owner protection before production multi-user use.
+- Public quest reads may expose answer or `correctOptionId` data later.
+- Attempt answers may contain sensitive student data.
+- Storage upload paths may need owner-aware policies later.
+- School/admin roles require careful scoping and should wait.

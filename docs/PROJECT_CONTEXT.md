@@ -85,10 +85,18 @@ Completed Sprint 12 work:
   - Teacher Test Mode remains local-only for now.
   - Future persistence should target real student attempts after auth, RLS, privacy, and schema decisions.
   - Future table concepts: `quest_attempts` and `quest_attempt_answers`.
+- Sprint 12.10 - Auth / RLS Boundaries Architecture.
+  - Analysis confirmed the project has early auth pieces but no enforced session, role, or ownership boundary yet.
+  - Active MVP roles should be teacher and student.
+  - Admin and school/organization roles are deferred.
+  - `author_id` appears intended for quest ownership but is not actively used by current quest services/pages.
+  - Future teacher dashboard queries should be scoped to owned quests.
+  - Future public/student catalog queries should be scoped to public or assigned quests.
+  - Real student attempts and private teacher analytics must wait for auth, ownership, and RLS design.
 
 Next sprint:
 
-- Sprint 12.10 - Auth / RLS Boundaries Analysis.
+- Sprint 12.11 - Auth / Ownership Implementation Planning.
 
 ## Stack
 

@@ -6,22 +6,23 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by analyzing authentication, authorization, and RLS boundaries before adding persisted attempts or student analytics.
+Continue teacher-facing quest management by planning the smallest safe auth and ownership implementation before adding persisted attempts or private teacher analytics.
 
 ## Next Task
 
-Sprint 12.10.1 - Auth / RLS Boundaries Analysis.
+Sprint 12.11.1 - Auth / Ownership Implementation Planning.
 
 This task is analysis only. Do not write code.
 
 Analyze:
 
-- Current auth/login state and any role assumptions in the codebase.
-- Which teacher dashboard routes should be teacher-only.
-- Which future student attempt data should be visible to teachers, students, schools, and admins.
-- What RLS policies would be required before adding `quest_attempts` and `quest_attempt_answers`.
-- Whether assignments/classes must exist before student analytics can be implemented safely.
-- Risks around privacy, public quests, shared devices, and unauthenticated access.
+- Whether `quests.author_id` exists in the live Supabase schema and migrations.
+- How quest creation should set `author_id = auth.uid()` when ownership is implemented.
+- How `getQuests()`, `getQuest(id)`, `updateQuest(id)`, and task helpers should be scoped after RLS is in place.
+- Which dashboard routes should require an authenticated teacher session first.
+- Whether public/student quest reads need separate service helpers to avoid exposing answer data.
+- What migration or policy work is needed before persisted student attempts.
+- Risks around changing current `/quests` and `/dashboard/quests` behavior.
 
 ## Constraints
 

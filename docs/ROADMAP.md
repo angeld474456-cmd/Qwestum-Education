@@ -60,12 +60,19 @@ Completed:
   - Documented future `quest_attempts` and `quest_attempt_answers` table shapes.
   - Decided Teacher Test Mode remains local-only for now.
   - Deferred migrations, services, routes, runtime persistence, and student analytics until auth/RLS/privacy design is clearer.
+- Sprint 12.10 - Auth / RLS Boundaries Architecture.
+  - Completed auth, roles, ownership, and RLS boundary analysis.
+  - Confirmed active MVP roles should be teacher and student.
+  - Deferred admin and school/organization roles.
+  - Documented that `author_id` appears intended but is not actively used by current quest services/pages.
+  - Documented future RLS boundaries for `quests`, `quest_tasks`, `quest_attempts`, and `quest_attempt_answers`.
+  - Deferred persisted student attempts and private teacher analytics until auth, ownership, and RLS are designed.
 
 Next:
 
-- Sprint 12.10 - Auth / RLS Boundaries Analysis.
-  - First task: Sprint 12.10.1 analysis only.
-  - Analyze teacher/student/school/admin access rules before implementing attempt persistence or student analytics.
+- Sprint 12.11 - Auth / Ownership Implementation Planning.
+  - First task: Sprint 12.11.1 analysis only.
+  - Confirm live Supabase schema and plan the smallest safe ownership/auth implementation before changing services or routes.
 
 ## Suggested Future Milestones
 
