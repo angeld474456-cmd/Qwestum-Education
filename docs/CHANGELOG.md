@@ -47,6 +47,12 @@
   - Shows Total quests, Public quests, Draft quests, Total tasks, and Total points.
   - Uses existing `getQuests()` and `getAllQuestTasks()`.
   - Added no routes, migrations, services, runtime/editor changes, task editor changes, or JSONB inspection.
+- Sprint 12.9.1 - Attempt Persistence / Student Analytics Analysis.
+  - Decided not to implement attempt persistence yet.
+  - Decided not to create Supabase migrations, attempt services, routes, or runtime persistence yet.
+  - Teacher Test Mode should remain local-only for now.
+  - Future persistence should focus on real student attempts after auth, privacy, RLS, and schema decisions.
+  - Documented future `quest_attempts` and `quest_attempt_answers` table shapes as deferred architecture.
 
 ## Current State On `feature/next-work`
 

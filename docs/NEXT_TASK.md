@@ -6,22 +6,22 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by analyzing persisted attempts/results before adding student learning analytics.
+Continue teacher-facing quest management by analyzing authentication, authorization, and RLS boundaries before adding persisted attempts or student analytics.
 
 ## Next Task
 
-Sprint 12.9.1 - Attempt Persistence / Student Analytics Analysis.
+Sprint 12.10.1 - Auth / RLS Boundaries Analysis.
 
 This task is analysis only. Do not write code.
 
 Analyze:
 
-- What data needs to be persisted for real student attempts and results.
-- Whether future analytics need `quest_attempts` and `quest_attempt_answers` tables.
-- How attempt persistence should relate to `QuestRunner`, `RuntimeContext`, and teacher Play/Test mode without disrupting current runtime behavior.
-- Which data should be teacher-only and which, if any, should be visible to students later.
-- Privacy, RLS, auth, schema, and migration risks.
-- Whether implementation should wait until authentication/authorization boundaries are clearer.
+- Current auth/login state and any role assumptions in the codebase.
+- Which teacher dashboard routes should be teacher-only.
+- Which future student attempt data should be visible to teachers, students, schools, and admins.
+- What RLS policies would be required before adding `quest_attempts` and `quest_attempt_answers`.
+- Whether assignments/classes must exist before student analytics can be implemented safely.
+- Risks around privacy, public quests, shared devices, and unauthenticated access.
 
 ## Constraints
 

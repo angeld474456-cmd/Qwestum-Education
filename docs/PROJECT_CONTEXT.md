@@ -79,10 +79,16 @@ Completed Sprint 12 work:
   - Uses existing `getQuests()` and `getAllQuestTasks()` data only.
   - No persisted attempts/results exist yet.
   - Student learning analytics are deferred until answer persistence, auth, privacy, and schema decisions are made.
+- Sprint 12.9 - Attempt Persistence / Student Analytics Architecture.
+  - No attempt persistence is implemented yet.
+  - No migrations, attempt services, routes, runtime changes, task editor changes, or JSONB changes were added.
+  - Teacher Test Mode remains local-only for now.
+  - Future persistence should target real student attempts after auth, RLS, privacy, and schema decisions.
+  - Future table concepts: `quest_attempts` and `quest_attempt_answers`.
 
 Next sprint:
 
-- Sprint 12.9 - Attempt Persistence / Student Analytics Analysis.
+- Sprint 12.10 - Auth / RLS Boundaries Analysis.
 
 ## Stack
 

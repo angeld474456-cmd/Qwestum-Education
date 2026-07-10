@@ -55,12 +55,17 @@ Completed:
   - Shows Total quests, Public quests, Draft quests, Total tasks, and Total points.
   - Uses existing `quests` and `quest_tasks` data only.
   - Did not add student attempt analytics, routes, migrations, services, runtime persistence, or JSONB inspection.
+- Sprint 12.9 - Attempt Persistence / Student Analytics Architecture.
+  - Completed attempt persistence and student analytics analysis.
+  - Documented future `quest_attempts` and `quest_attempt_answers` table shapes.
+  - Decided Teacher Test Mode remains local-only for now.
+  - Deferred migrations, services, routes, runtime persistence, and student analytics until auth/RLS/privacy design is clearer.
 
 Next:
 
-- Sprint 12.9 - Attempt Persistence / Student Analytics Analysis.
-  - First task: Sprint 12.9.1 analysis only.
-  - Analyze persisted attempts/results, privacy, RLS, auth boundaries, and schema needs before implementing student learning analytics.
+- Sprint 12.10 - Auth / RLS Boundaries Analysis.
+  - First task: Sprint 12.10.1 analysis only.
+  - Analyze teacher/student/school/admin access rules before implementing attempt persistence or student analytics.
 
 ## Suggested Future Milestones
 

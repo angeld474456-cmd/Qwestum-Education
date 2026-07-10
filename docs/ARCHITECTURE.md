@@ -104,3 +104,52 @@ Supabase tables currently used by the app include:
 Important service functions are in `services/quest.service.ts`, including quest loading and task CRUD helpers.
 
 Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses existing `getQuests()` and `getAllQuestTasks()` data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
+
+## Deferred Attempt Persistence
+
+Attempt persistence is not implemented yet. Do not create migrations, attempt services, routes, runtime persistence, or student analytics until auth, RLS, privacy, and schema boundaries are approved.
+
+Teacher Test Mode should remain local-only for now. Future persistence should focus on real student attempts, not teacher QA/test runs.
+
+Future `quest_attempts` table concept:
+
+- `id`
+- `quest_id`
+- `user_id` or `student_id`
+- `assignment_id` nullable later
+- `team_id` nullable later
+- `mode`: `student` | `teacher_test`
+- `status`: `started` | `submitted` | `abandoned`
+- `started_at`
+- `submitted_at`
+- `score`
+- `max_score`
+- `completion_percent`
+- `created_at`
+
+Future `quest_attempt_answers` table concept:
+
+- `id`
+- `attempt_id`
+- `task_id`
+- `task_type`
+- `answer`
+- `is_correct`
+- `points_awarded`
+- `max_points`
+- `submitted_at`
+- optional `metadata` JSONB later
+
+Scoring notes:
+
+- `single_choice` can compare the selected option id to `content.correctOptionId`.
+- `text` can compare normalized answer text to `task.answer`, but may need teacher review later.
+- `task.points` is the max score for a task.
+- Unknown task types should be treated as ungraded/manual/0 until explicitly supported.
+- Do not redesign task JSONB content for attempt persistence yet.
+
+Deferred future analytics routes:
+
+- `/dashboard/quests/[id]/analytics`
+- `/dashboard/quests/[id]/attempts`
+- `/dashboard/classes/[id]/analytics`
