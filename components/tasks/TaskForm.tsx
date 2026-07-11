@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+type TaskType = "text" | "single_choice";
+
 interface TaskFormProps {
   onSave: (task: {
     title: string;
@@ -9,7 +11,7 @@ interface TaskFormProps {
     answer: string;
     hint: string;
     points: number;
-    taskType: string;
+    taskType: TaskType;
   }) => Promise<void>;
 }
 
@@ -19,7 +21,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
   const [answer, setAnswer] = useState("");
   const [hint, setHint] = useState("");
   const [points, setPoints] = useState(1);
-  const [taskType, setTaskType] = useState("text");
+  const [taskType, setTaskType] = useState<TaskType>("text");
 
   async function handleSubmit() {
     if (!title.trim()) {
@@ -85,14 +87,11 @@ export default function TaskForm({ onSave }: TaskFormProps) {
 
         <select
           value={taskType}
-          onChange={(e)=>setTaskType(e.target.value)}
+          onChange={(e)=>setTaskType(e.target.value as TaskType)}
           className="rounded-xl bg-[#1B2435] p-4"
         >
-          <option value="text">📝 Текст</option>
-          <option value="quiz">✅ Тест</option>
-          <option value="qr">📷 QR</option>
-          <option value="image">🖼 Изображение</option>
-          <option value="map">🗺 Карта</option>
+          <option value="text">Text</option>
+          <option value="single_choice">Single choice</option>
         </select>
 
         <input
