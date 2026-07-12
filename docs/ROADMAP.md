@@ -74,12 +74,24 @@ Completed:
   - Confirmed live `quest_tasks.content` does not exist, despite local migration/code/runtime expectations.
   - Confirmed anonymous reads can access `quests` and `quest_tasks`.
   - Deferred auth/ownership implementation until schema repair planning is complete.
+- Sprint 12.12 - Schema Repair / Migration.
+  - Planned the live/local schema repair.
+  - Added `database/migrations/003_add_quest_task_content.sql`.
+  - The migration was manually applied and verified in live Supabase.
+  - Confirmed `public.quest_tasks.content` now exists and is readable as JSONB.
+  - Existing legacy task rows may still have `content = null`.
+- Task Type Creation Fix.
+  - Added `single_choice` to the task creation flow in `components/tasks/TaskForm.tsx`.
+  - Task creation now exposes only implemented MVP types: `text` and `single_choice`.
+  - Manually verified single-choice creation, editor loading, option saving, correct answer saving, and refresh persistence.
+- Sprint 12.13.1 - Documentation Sync.
+  - Updated project documentation for schema repair and task type creation.
 
 Next:
 
-- Sprint 12.12 - Schema Repair / Migration Planning.
-  - First task: Sprint 12.12.1 analysis only.
-  - Plan how to repair live/local schema mismatch before auth/ownership code changes.
+- Sprint 12.14.1 - Quest Ownership / Auth Guard Planning.
+  - Analysis/planning only.
+  - Plan safe quest ownership, dashboard auth guard, author backfill, and RLS sequencing before implementation.
 
 ## Suggested Future Milestones
 

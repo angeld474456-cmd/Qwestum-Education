@@ -6,34 +6,35 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue teacher-facing quest management by planning schema repair before auth, ownership, persisted attempts, or private teacher analytics.
+Plan safe quest ownership and dashboard authentication boundaries before implementing owned-only teacher queries, RLS policies, persisted attempts, or private teacher analytics.
 
 ## Next Task
 
-Sprint 12.12.1 - Schema Repair / Migration Planning.
+Sprint 12.14.1 - Quest Ownership / Auth Guard Planning.
 
-This task is analysis only. Do not write code.
+This task is analysis/planning only. Do not write code.
 
 Analyze:
 
-- Why live `quest_tasks.content` is missing even though local migration/code/runtime expect it.
-- Whether local migrations should be repaired, replaced, or supplemented with a new forward migration.
-- How to safely add or confirm `quest_tasks.content jsonb` in live Supabase.
-- How to handle existing tasks after adding `content`.
-- How to backfill or assign ownership for existing quests where `author_id IS NULL`.
-- Whether `quests.author_id` type, nullability, and foreign key should be confirmed or changed.
-- Which RLS policies should be planned after schema repair.
-- Risks around applying migrations to live data.
+- Current quest ownership state, including existing live quests with `author_id IS NULL`.
+- Whether `quests.author_id` type, nullability, and foreign key to `auth.users(id)` are confirmed.
+- How to safely backfill or classify existing unowned/demo quests before owned-only dashboard queries.
+- Current dashboard routes that do not enforce authentication, role, or ownership.
+- How `/dashboard/quests`, settings, preview, play/test, and `/quests/[id]/tasks` should behave before and after auth guards.
+- How public/student routes should differ from teacher dashboard routes.
+- Current anonymous read exposure for `quests` and `quest_tasks`.
+- Storage bucket and image policy uncertainty for `quest-images`.
+- The safest implementation order for auth guard, quest creation ownership, owner-scoped queries, and RLS.
 
 ## Constraints
 
-- Do not refactor completed editor/runtime architecture without permission.
-- Do not touch editor, runtime, or JSONB architecture unless explicitly approved.
+- Do not implement auth, RLS, migrations, services, or route changes without separate approval.
+- Do not apply owned-only queries until existing `author_id IS NULL` quests have a safe plan.
+- Do not modify task editor, runtime, or JSONB architecture unless explicitly approved.
+- Do not create or modify Supabase data during analysis.
 - Preserve Russian UI text.
 - Prefer English UI labels in new dashboard pages to reduce encoding risk.
 - Keep changes minimal and scoped.
-- Reuse existing Supabase service helpers when possible.
-- Add small service helpers only when needed.
 
 ## Required Verification
 
@@ -47,5 +48,5 @@ npm.cmd run build
 Also check for mojibake before finalizing UI text changes:
 
 ```powershell
-rg -n "Р’|Рќ|Р |С‹|СЊ|рџ" components app docs
+rg -n "Р вЂ™|Р Сњ|Р  |РЎвЂ№|РЎРЉ|СЂСџ" components app docs
 ```

@@ -68,6 +68,17 @@
   - Confirmed broad anon reads are currently possible for `quests` and `quest_tasks`, meaning RLS is either disabled or policies allow broad anon reads.
   - Storage bucket/policy state for `quest-images` remains unconfirmed.
   - Recommended schema repair planning before auth/ownership code changes.
+- `57b8438` Add quest task content migration.
+  - Added `database/migrations/003_add_quest_task_content.sql` as a forward repair migration.
+  - The migration was manually applied in live Supabase after commit.
+  - Verified `public.quest_tasks.content` exists and is readable as JSONB.
+  - Verified existing 10 visible `quest_tasks` rows currently have `content = null`.
+  - Lint, production build, and schema health checks passed during verification.
+- `0941973` Add single choice task creation option.
+  - Updated task creation to expose only implemented MVP task types: `text` and `single_choice`.
+  - Kept `text` as the default task type.
+  - Manually verified single-choice creation, `SingleChoiceTaskEditor` loading, option saving, correct answer saving, and refresh persistence.
+  - Lint and production build passed before commit.
 
 ## Current State On `feature/next-work`
 

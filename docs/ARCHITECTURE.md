@@ -25,6 +25,13 @@ Key files:
 
 `TaskTypeRegistry` maps task type ids to editor components. New task types should be added by registering a new editor, not by rewriting the existing editor flow.
 
+Task creation is intentionally limited to implemented MVP task types:
+
+- `text`
+- `single_choice`
+
+`TaskTypeRegistry` maps `single_choice` to `SingleChoiceTaskEditor`.
+
 ## Task Content
 
 Task-specific data is stored in `quest_tasks.content` as JSONB.
@@ -35,6 +42,8 @@ Current usage:
 - `single_choice` tasks store options and the correct option id in `content`.
 
 Keep task-specific shape checks close to the editor/runtime code that consumes that shape.
+
+The live Supabase schema now includes `public.quest_tasks.content` after the forward migration `database/migrations/003_add_quest_task_content.sql` was manually applied and verified. Existing legacy task rows may still have `content = null`.
 
 ## Preview Layer
 
@@ -48,6 +57,8 @@ Key files:
 - `components/tasks/runtime/TaskRenderer.tsx`
 - `components/tasks/runtime/TextTaskRenderer.tsx`
 - `components/tasks/runtime/SingleChoiceTaskRenderer.tsx`
+
+Preview supports `single_choice` tasks through `TaskRenderer` by reading options and `correctOptionId` from `quest_tasks.content`.
 
 ## Quest Runtime
 
@@ -64,6 +75,8 @@ Key files:
 - `components/quest-runtime/QuestResults.tsx`
 
 Do not bypass `RuntimeContext` for core runtime state unless the architecture is intentionally changed.
+
+Teacher Play/Test supports `single_choice` tasks through `QuestRunner` and `TaskRenderer`. Teacher Test Mode remains local-only and does not persist answers.
 
 ## Teacher Experience Routes
 
@@ -237,8 +250,10 @@ Live `quest_tasks` findings:
 - `quest_tasks` is readable through the anon client.
 - Visible task count: 10.
 - Visible columns include `id`, `quest_id`, `sort_order`, `title`, `description`, `answer`, `points`, `created_at`, `hint`, `image_url`, `video_url`, `audio_url`, and `task_type`.
-- Live `quest_tasks.content` does not exist.
-- This conflicts with `database/migrations/002_add_task_content.sql` and current code/runtime expectations for JSONB task content.
+- Live `quest_tasks.content` was missing during the Sprint 12.11 audit.
+- `database/migrations/003_add_quest_task_content.sql` was added as a forward repair migration.
+- The migration was manually applied and verified; live `public.quest_tasks.content` now exists as JSONB.
+- Existing legacy task rows may still have `content = null`.
 
 RLS and storage findings:
 
@@ -254,12 +269,12 @@ Decisions after audit:
 - Do not add RLS policies blindly.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture yet.
-- Next safe step is schema repair and migration planning.
+- Next safe step is ownership/auth guard planning before changing dashboard query scope or RLS.
 
 Schema mismatch risks:
 
 - Owned-only teacher queries would hide all existing quests because `author_id` is currently null.
-- Runtime or `single_choice` task behavior may be incomplete or broken against live data because `quest_tasks.content` is missing.
+- Existing legacy tasks may still have `content = null`; single-choice content should be created and saved through the editor before expecting options in preview/play.
 - Broad anon reads are unsafe for production multi-user teacher data.
 - Storage upload/public policy state is unknown.
 - Local migrations are not a reliable source of truth for the live schema yet.

@@ -97,14 +97,23 @@ Completed Sprint 12 work:
   - A read-only live Supabase probe confirmed `quests.author_id` exists.
   - All 3 visible live quests currently have `author_id IS NULL`, so owned-only teacher queries would hide existing quests until backfill/ownership is planned.
   - Live `quest_tasks` is readable through the anon client and has 10 visible rows.
-  - Live `quest_tasks.content` does not exist, despite local migration/code/runtime expectations.
+  - Live `quest_tasks.content` was missing during the audit, despite local migration/code/runtime expectations.
   - Anonymous reads can access `quests` and `quest_tasks`, so RLS is either disabled or policies allow broad anon reads.
   - Storage bucket/policy state for `quest-images` is not confirmed.
-  - Do not implement auth/ownership, RLS policies, or attempt persistence until schema repair planning is complete.
+  - Do not implement auth/ownership, RLS policies, or attempt persistence until ownership and RLS planning is complete.
+- Sprint 12.12 - Schema Repair / Migration.
+  - Added `database/migrations/003_add_quest_task_content.sql`.
+  - The migration was manually applied and verified in live Supabase.
+  - `public.quest_tasks.content` now exists and is readable as JSONB.
+  - Existing legacy task rows may still have `content = null`.
+- Task Type Creation Fix.
+  - `components/tasks/TaskForm.tsx` now exposes only implemented MVP task types: `text` and `single_choice`.
+  - `text` remains the default task type.
+  - `single_choice` creation, editor loading, option saving, correct answer saving, and refresh persistence were manually verified.
 
 Next sprint:
 
-- Sprint 12.12 - Schema Repair / Migration Planning.
+- Sprint 12.14.1 - Quest Ownership / Auth Guard Planning.
 
 ## Stack
 
