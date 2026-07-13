@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import QuestRunner from "@/components/quest-runtime/QuestRunner";
 import Card from "@/components/ui/Card";
-import { getQuest, getQuestTasks } from "@/services/quest.service";
+import {
+  getOwnedQuest,
+  getOwnedQuestTasks,
+} from "@/services/teacher-quest.server";
 
 type PlayPageProps = {
   params: Promise<{
@@ -16,51 +20,17 @@ export default async function TeacherQuestPlayPage({
 }: PlayPageProps) {
   const { id } = await params;
 
-  const [questResult, tasksResult] = await Promise.all([
-    getQuest(id),
-    getQuestTasks(id),
-  ]);
+  const quest = await getOwnedQuest(id);
 
-  if (questResult.error || !questResult.data) {
-    return (
-      <section className="space-y-6 text-white">
-        <Card>
-          <h1 className="text-3xl font-bold">Quest not found</h1>
-          <p className="mt-3 text-slate-400">
-            The selected quest could not be loaded.
-          </p>
-          <Link
-            href="/dashboard/quests"
-            className="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
-          >
-            Back to library
-          </Link>
-        </Card>
-      </section>
-    );
+  if (!quest) {
+    notFound();
   }
 
-  if (tasksResult.error) {
-    return (
-      <section className="space-y-6 text-white">
-        <Card>
-          <h1 className="text-3xl font-bold">Unable to start test mode</h1>
-          <p className="mt-3 text-slate-400">
-            The quest loaded, but its tasks could not be loaded.
-          </p>
-          <Link
-            href="/dashboard/quests"
-            className="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
-          >
-            Back to library
-          </Link>
-        </Card>
-      </section>
-    );
-  }
+  const tasks = await getOwnedQuestTasks(id);
 
-  const quest = questResult.data;
-  const tasks = tasksResult.data ?? [];
+  if (!tasks) {
+    notFound();
+  }
 
   return (
     <section className="space-y-8 text-white">

@@ -1,0 +1,156 @@
+import "server-only";
+
+import type { User } from "@supabase/supabase-js";
+
+import { createClient } from "@/lib/supabase/server";
+
+export type TeacherQuest = {
+  id: string;
+  title: string;
+  description: string | null;
+  difficulty: number;
+  is_public: boolean;
+  created_at?: string;
+  author_id: string | null;
+};
+
+export type TeacherQuestTask = {
+  id: string;
+  quest_id: string;
+  title: string;
+  description: string | null;
+  answer: string | null;
+  hint: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  audio_url: string | null;
+  content?: Record<string, unknown> | null;
+  points: number;
+  task_type: string;
+  sort_order: number;
+};
+
+export type TeacherQuestTaskSummary = {
+  quest_id: string;
+  points: number | null;
+};
+
+async function getAuthenticatedContext() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return {
+    supabase,
+    user,
+  };
+}
+
+export async function getCurrentTeacherUser(): Promise<User | null> {
+  const { user } = await getAuthenticatedContext();
+
+  return user;
+}
+
+export async function getOwnedQuests(): Promise<TeacherQuest[]> {
+  const { supabase, user } = await getAuthenticatedContext();
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("quests")
+    .select("id, title, description, difficulty, is_public, created_at, author_id")
+    .eq("author_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as TeacherQuest[];
+}
+
+export async function getOwnedQuest(id: string): Promise<TeacherQuest | null> {
+  const { supabase, user } = await getAuthenticatedContext();
+
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("quests")
+    .select("id, title, description, difficulty, is_public, created_at, author_id")
+    .eq("id", id)
+    .eq("author_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return (data as TeacherQuest | null) ?? null;
+}
+
+export async function getOwnedQuestTasks(
+  questId: string
+): Promise<TeacherQuestTask[] | null> {
+  const { supabase, user } = await getAuthenticatedContext();
+
+  if (!user) return null;
+
+  const { data: quest, error: questError } = await supabase
+    .from("quests")
+    .select("id")
+    .eq("id", questId)
+    .eq("author_id", user.id)
+    .maybeSingle();
+
+  if (questError) {
+    throw questError;
+  }
+
+  if (!quest) return null;
+
+  const { data, error } = await supabase
+    .from("quest_tasks")
+    .select("*")
+    .eq("quest_id", questId)
+    .order("sort_order");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as TeacherQuestTask[];
+}
+
+export async function getOwnedQuestTaskSummary(): Promise<
+  TeacherQuestTaskSummary[]
+> {
+  const { supabase, user } = await getAuthenticatedContext();
+
+  if (!user) return [];
+
+  const { data: quests, error: questsError } = await supabase
+    .from("quests")
+    .select("id")
+    .eq("author_id", user.id);
+
+  if (questsError) {
+    throw questsError;
+  }
+
+  const questIds = (quests ?? []).map((quest) => quest.id);
+
+  if (questIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("quest_tasks")
+    .select("quest_id, points")
+    .in("quest_id", questIds);
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []) as TeacherQuestTaskSummary[];
+}

@@ -1,20 +1,10 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import Card from "@/components/ui/Card";
 import {
-  getAllQuestTasks,
-  getQuests,
-  Quest,
-} from "@/services/quest.service";
-
-type QuestTaskCountSource = {
-  id: string;
-  quest_id: string;
-  points?: number | null;
-};
+  getOwnedQuests,
+  getOwnedQuestTaskSummary,
+} from "@/services/teacher-quest.server";
 
 function formatCreatedAt(value?: string) {
   if (!value) return "Not available";
@@ -32,66 +22,35 @@ function formatCreatedAt(value?: string) {
   }).format(date);
 }
 
-export default function TeacherQuestLibraryPage() {
-  const [quests, setQuests] = useState<Quest[]>([]);
-  const [tasks, setTasks] = useState<QuestTaskCountSource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
+export default async function TeacherQuestLibraryPage() {
+  const [quests, tasks] = await Promise.all([
+    getOwnedQuests(),
+    getOwnedQuestTaskSummary(),
+  ]);
 
-  useEffect(() => {
-    async function loadTeacherLibrary() {
-      setLoading(true);
-      setErrorMessage("");
-
-      const [questsResult, tasksResult] = await Promise.all([
-        getQuests(),
-        getAllQuestTasks(),
-      ]);
-
-      if (questsResult.error) {
-        console.error(questsResult.error);
-        setErrorMessage("Unable to load quests.");
-        setLoading(false);
-        return;
-      }
-
-      if (tasksResult.error) {
-        console.error(tasksResult.error);
-        setErrorMessage("Quests loaded, but task counts are unavailable.");
-      }
-
-      setQuests(questsResult.data ?? []);
-      setTasks((tasksResult.data ?? []) as QuestTaskCountSource[]);
-      setLoading(false);
-    }
-
-    loadTeacherLibrary();
-  }, []);
-
-  const taskCountsByQuestId = useMemo(() => {
-    return tasks.reduce<Record<string, number>>((counts, task) => {
+  const taskCountsByQuestId = tasks.reduce<Record<string, number>>(
+    (counts, task) => {
       counts[task.quest_id] = (counts[task.quest_id] ?? 0) + 1;
       return counts;
-    }, {});
-  }, [tasks]);
+    },
+    {}
+  );
 
-  const libraryAnalytics = useMemo(() => {
-    const totalQuests = quests.length;
-    const publicQuests = quests.filter((quest) => quest.is_public).length;
-    const totalTasks = tasks.length;
-    const totalPoints = tasks.reduce(
-      (sum, task) => sum + (Number(task.points) || 0),
-      0
-    );
+  const totalQuests = quests.length;
+  const publicQuests = quests.filter((quest) => quest.is_public).length;
+  const totalTasks = tasks.length;
+  const totalPoints = tasks.reduce(
+    (sum, task) => sum + (Number(task.points) || 0),
+    0
+  );
 
-    return {
-      totalQuests,
-      publicQuests,
-      draftQuests: totalQuests - publicQuests,
-      totalTasks,
-      totalPoints,
-    };
-  }, [quests, tasks]);
+  const libraryAnalytics = {
+    totalQuests,
+    publicQuests,
+    draftQuests: totalQuests - publicQuests,
+    totalTasks,
+    totalPoints,
+  };
 
   return (
     <section className="space-y-8 text-white">
@@ -115,23 +74,7 @@ export default function TeacherQuestLibraryPage() {
         </Link>
       </div>
 
-      {loading ? (
-        <Card>
-          <p className="text-slate-300">Loading quest library...</p>
-        </Card>
-      ) : null}
-
-      {!loading && errorMessage ? (
-        <Card className="border-red-500/40 bg-red-500/10">
-          <h2 className="text-xl font-semibold text-red-100">
-            Something went wrong
-          </h2>
-
-          <p className="mt-2 text-red-200">{errorMessage}</p>
-        </Card>
-      ) : null}
-
-      {!loading && !errorMessage && quests.length === 0 ? (
+      {quests.length === 0 ? (
         <Card className="text-center">
           <h2 className="text-2xl font-semibold">
             No quests yet
@@ -148,9 +91,7 @@ export default function TeacherQuestLibraryPage() {
             Create new quest
           </Link>
         </Card>
-      ) : null}
-
-      {!loading && quests.length > 0 ? (
+      ) : (
         <>
           <div className="grid gap-4 md:grid-cols-5">
             <div className="rounded-xl border border-slate-800 bg-[#111827] p-5">
@@ -196,7 +137,10 @@ export default function TeacherQuestLibraryPage() {
               return (
                 <Card key={quest.id}>
                   <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
-                    <div className="min-w-0">
+                    <Link
+                      href={`/dashboard/quests/${quest.id}/settings`}
+                      className="min-w-0 rounded-xl outline-none transition hover:text-white focus-visible:ring-2 focus-visible:ring-violet-500"
+                    >
                       <div className="flex flex-wrap items-center gap-3">
                         <h2 className="text-2xl font-bold">
                           {quest.title}
@@ -222,7 +166,7 @@ export default function TeacherQuestLibraryPage() {
                         <span>Created: {formatCreatedAt(quest.created_at)}</span>
                         <span>Tasks: {taskCount}</span>
                       </div>
-                    </div>
+                    </Link>
 
                     <div className="flex flex-wrap gap-3">
                       <Link
@@ -259,7 +203,7 @@ export default function TeacherQuestLibraryPage() {
             })}
           </div>
         </>
-      ) : null}
+      )}
     </section>
   );
 }
