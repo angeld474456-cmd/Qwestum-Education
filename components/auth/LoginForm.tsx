@@ -9,11 +9,12 @@ export default function LoginForm() {
 
   async function signIn() {
     setLoading(true);
+    const callbackUrl = `${window.location.origin}/auth/callback?next=/dashboard`;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: "http://localhost:3000/dashboard",
+        emailRedirectTo: callbackUrl,
       },
     });
 
