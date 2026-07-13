@@ -13,28 +13,52 @@ export default function Sidebar() {
 
       <nav className="mt-10 space-y-4">
         <Link href="/dashboard" className="block text-slate-300 hover:text-white">
-          Главная
+          Dashboard
         </Link>
 
         <Link href="/dashboard/quests" className="block text-slate-300 hover:text-white">
-          Библиотека квестов
+          My Quests
         </Link>
 
-        <Link href="/catalog" className="block text-slate-300 hover:text-white">
-          Каталог
-        </Link>
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Catalog</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
 
-        <Link href="/students" className="block text-slate-300 hover:text-white">
-          Ученики
-        </Link>
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Students</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
 
-        <Link href="/schools" className="block text-slate-300 hover:text-white">
-          Школы
-        </Link>
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Schools</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
 
-        <Link href="/settings" className="block text-slate-300 hover:text-white">
-          Настройки
-        </Link>
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Settings</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
       </nav>
     </aside>
   );
