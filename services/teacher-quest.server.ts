@@ -4,6 +4,9 @@ import type { User } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
 
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export type TeacherQuest = {
   id: string;
   title: string;
@@ -72,6 +75,8 @@ export async function getOwnedQuests(): Promise<TeacherQuest[]> {
 }
 
 export async function getOwnedQuest(id: string): Promise<TeacherQuest | null> {
+  if (!uuidPattern.test(id)) return null;
+
   const { supabase, user } = await getAuthenticatedContext();
 
   if (!user) return null;
@@ -93,6 +98,8 @@ export async function getOwnedQuest(id: string): Promise<TeacherQuest | null> {
 export async function getOwnedQuestTasks(
   questId: string
 ): Promise<TeacherQuestTask[] | null> {
+  if (!uuidPattern.test(questId)) return null;
+
   const { supabase, user } = await getAuthenticatedContext();
 
   if (!user) return null;
