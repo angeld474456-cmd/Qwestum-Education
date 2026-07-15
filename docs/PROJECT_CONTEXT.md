@@ -40,8 +40,8 @@ Implemented task types:
 Completed Sprint 12 work:
 
 - Sprint 12.1 — Teacher Quest Library at `/dashboard/quests`.
-  - Loads quests with `getQuests()`.
-  - Loads task counts with `getAllQuestTasks()`.
+  - Loads owned quests through server-side teacher helpers.
+  - Loads owned task counts through server-side teacher helpers.
   - Shows `title`, `description`, `difficulty`, Public/Draft from `is_public`, `created_at`, and task count.
   - Links to settings, edit tasks, preview, and play/test.
 - Sprint 12.2 — Teacher Preview / Play Routes.
@@ -50,7 +50,7 @@ Completed Sprint 12 work:
   - Answers and results are not persisted yet.
 - Sprint 12.3 — Teacher Quest Settings / Publish Controls.
   - `/dashboard/quests/[id]/settings` edits only `title`, `description`, `difficulty`, and `is_public`.
-  - Saves through `updateQuest(id, { title, description, difficulty, is_public })`.
+  - Saves through an authenticated owner-safe teacher API route.
   - `is_public = true` means Public; `is_public = false` means Draft.
   - No `status` field and no migration were added.
 - Sprint 12.4 — Teacher Quest Workspace Navigation.
@@ -76,7 +76,7 @@ Completed Sprint 12 work:
 - Sprint 12.8 - Teacher Quest Analytics.
   - Added teacher-only content analytics summary to `/dashboard/quests`.
   - Shows Total quests, Public quests, Draft quests, Total tasks, and Total points.
-  - Uses existing `getQuests()` and `getAllQuestTasks()` data only.
+  - Uses owned quest and owned task summary data only.
   - No persisted attempts/results exist yet.
   - Student learning analytics are deferred until answer persistence, auth, privacy, and schema decisions are made.
 - Sprint 12.9 - Attempt Persistence / Student Analytics Architecture.
@@ -95,12 +95,12 @@ Completed Sprint 12 work:
   - Real student attempts and private teacher analytics must wait for auth, ownership, and RLS design.
 - Sprint 12.11 - Supabase Schema / RLS Audit.
   - A read-only live Supabase probe confirmed `quests.author_id` exists.
-  - All 3 visible live quests currently have `author_id IS NULL`, so owned-only teacher queries would hide existing quests until backfill/ownership is planned.
-  - Live `quest_tasks` is readable through the anon client and has 10 visible rows.
+  - During the audit, visible live quests had `author_id IS NULL`; these were later assigned to the verified teacher owner before owned-only queries were enabled.
+  - During the audit, live `quest_tasks` was readable through the anon client and had 10 visible rows.
   - Live `quest_tasks.content` was missing during the audit, despite local migration/code/runtime expectations.
-  - Anonymous reads can access `quests` and `quest_tasks`, so RLS is either disabled or policies allow broad anon reads.
+  - Broad anonymous reads were possible before Sprint 12.15.3 RLS hardening.
   - Storage bucket/policy state for `quest-images` is not confirmed.
-  - Do not implement auth/ownership, RLS policies, or attempt persistence until ownership and RLS planning is complete.
+  - Attempt persistence remains deferred until ownership, RLS, privacy, and student flows are intentionally designed.
 - Sprint 12.12 - Schema Repair / Migration.
   - Added `database/migrations/003_add_quest_task_content.sql`.
   - The migration was manually applied and verified in live Supabase.
@@ -110,10 +110,28 @@ Completed Sprint 12 work:
   - `components/tasks/TaskForm.tsx` now exposes only implemented MVP task types: `text` and `single_choice`.
   - `text` remains the default task type.
   - `single_choice` creation, editor loading, option saving, correct answer saving, and refresh persistence were manually verified.
+- Sprint 12.14 - Auth, Ownership, and Owner-Safe Teacher CRUD.
+  - Added Supabase SSR session support and protected `/dashboard`.
+  - Disabled unimplemented dashboard sidebar links.
+  - Scoped teacher dashboard quest reads to owned quests.
+  - Added owner-safe quest creation and settings save.
+  - Added owner-safe task CRUD through authenticated server routes.
+  - Kept storage upload behavior unchanged.
+- Sprint 12.15 - Legacy Read Removal and RLS Hardening.
+  - Removed legacy browser-side quest and task reads from `/quests` and `/quests/[id]`.
+  - `/quests` redirects to `/dashboard/quests`.
+  - `/quests/[id]` redirects to `/dashboard/quests/[id]/preview`.
+  - Added and applied `database/migrations/004_harden_quest_rls.sql`.
+  - Broad public `quests` and `quest_tasks` policies were removed in live Supabase.
+  - `quests` access is now owner-scoped for authenticated teachers through `auth.uid()`.
+  - `quest_tasks` ownership is derived through the parent quest.
+  - Anonymous direct table access to `quests` and `quest_tasks` is denied.
+  - Quest deletion remains unavailable because no `quests` DELETE policy exists.
+  - Read-only smoke tests passed for library, settings, task editor, preview, and play/test.
 
 Next sprint:
 
-- Sprint 12.14.1 - Quest Ownership / Auth Guard Planning.
+- Sprint 12.15.4 - Owner-Safe Storage Upload.
 
 ## Stack
 
@@ -127,6 +145,7 @@ Next sprint:
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.
 - The task editor and runtime renderer are modular. Add new task types through the existing registry/renderer patterns.
+- Storage upload remains the main ownership/security gap. Browser image upload and non-owner-scoped `tasks/{uuid}` paths are still unchanged.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

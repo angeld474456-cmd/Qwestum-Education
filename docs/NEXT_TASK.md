@@ -6,35 +6,44 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan safe quest ownership and dashboard authentication boundaries before implementing owned-only teacher queries, RLS policies, persisted attempts, or private teacher analytics.
+Close the remaining ownership/security gap in task image upload after quest and task table RLS hardening.
 
 ## Next Task
 
-Sprint 12.14.1 - Quest Ownership / Auth Guard Planning.
+Sprint 12.15.4 - Owner-Safe Storage Upload.
 
-This task is analysis/planning only. Do not write code.
+Start with analysis/planning unless implementation is explicitly approved.
 
 Analyze:
 
-- Current quest ownership state, including existing live quests with `author_id IS NULL`.
-- Whether `quests.author_id` type, nullability, and foreign key to `auth.users(id)` are confirmed.
-- How to safely backfill or classify existing unowned/demo quests before owned-only dashboard queries.
-- Current dashboard routes that do not enforce authentication, role, or ownership.
-- How `/dashboard/quests`, settings, preview, play/test, and `/quests/[id]/tasks` should behave before and after auth guards.
-- How public/student routes should differ from teacher dashboard routes.
-- Current anonymous read exposure for `quests` and `quest_tasks`.
-- Storage bucket and image policy uncertainty for `quest-images`.
-- The safest implementation order for auth guard, quest creation ownership, owner-scoped queries, and RLS.
+- Current browser image upload flow in `services/storage.service.ts`.
+- Current use of `ImageUploader` in text and single-choice task editors.
+- Current `quest-images` bucket state and storage policies.
+- Existing non-owner-scoped paths like `tasks/{uuid}`.
+- Whether new uploads should use an authenticated route handler, signed upload URL, or another server-verified path.
+- A target path model such as `teachers/{userId}/quests/{questId}/tasks/{taskId}/{uuid}.{ext}`.
+- File type and file size validation.
+- Image replacement and old-object cleanup behavior.
+- How to preserve existing image URLs during transition.
 
 ## Constraints
 
-- Do not implement auth, RLS, migrations, services, or route changes without separate approval.
-- Do not apply owned-only queries until existing `author_id IS NULL` quests have a safe plan.
-- Do not modify task editor, runtime, or JSONB architecture unless explicitly approved.
-- Do not create or modify Supabase data during analysis.
+- Do not modify runtime/editor/JSONB architecture without explicit approval.
+- Do not modify live storage buckets, objects, or policies without explicit approval.
+- Do not implement student/public runtime access yet.
+- Do not add quest deletion in this sprint.
 - Preserve Russian UI text.
-- Prefer English UI labels in new dashboard pages to reduce encoding risk.
+- Prefer English UI labels in new dashboard pages.
 - Keep changes minimal and scoped.
+
+## Current Security State
+
+- `database/migrations/004_harden_quest_rls.sql` has been applied live.
+- `quests` access is owner-scoped for authenticated teachers.
+- `quest_tasks` access is owner-derived through parent quests.
+- Anonymous direct table access to `quests` and `quest_tasks` is denied.
+- Quest deletion remains unavailable because no `quests` DELETE policy exists.
+- Browser image upload and non-owner-scoped storage paths remain unchanged.
 
 ## Required Verification
 
@@ -48,5 +57,5 @@ npm.cmd run build
 Also check for mojibake before finalizing UI text changes:
 
 ```powershell
-rg -n "Р вЂ™|Р Сњ|Р  |РЎвЂ№|РЎРЉ|СЂСџ" components app docs
+rg -n "Р В РІР‚в„ў|Р В РЎСљ|Р В  |Р РЋРІР‚в„–|Р РЋР Р‰|РЎР‚РЎСџ" components app docs
 ```

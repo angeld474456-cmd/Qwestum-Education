@@ -79,6 +79,34 @@
   - Kept `text` as the default task type.
   - Manually verified single-choice creation, `SingleChoiceTaskEditor` loading, option saving, correct answer saving, and refresh persistence.
   - Lint and production build passed before commit.
+- `2dd71ac` Add Supabase SSR session foundation.
+  - Added SSR-compatible Supabase session handling.
+  - Protected `/dashboard` with authenticated session checks.
+- `431cf37` Disable unimplemented dashboard links.
+  - Disabled sidebar links for unimplemented dashboard sections to avoid 404 navigation.
+- `f59764d` Add owner scoped dashboard reads.
+  - Scoped Teacher Quest Library, Preview, and Play/Test reads to owned quests.
+- `4af5a31` Add owner safe quest creation and settings.
+  - Quest creation now sets `author_id` from the authenticated server session.
+  - Settings save matches both quest `id` and `author_id`.
+- `887cfd6` Add owner safe task CRUD.
+  - Task editor initial loading is owner-scoped.
+  - Task create/update/delete use authenticated server routes.
+  - Task ownership is verified through the parent quest.
+- `b6564c0` Remove legacy browser quest reads.
+  - `/quests` redirects to `/dashboard/quests`.
+  - `/quests/[id]` redirects to `/dashboard/quests/[id]/preview`.
+  - Removed legacy browser-side quest/task table helpers from active flows.
+- Sprint 12.15.3 - Harden Quests and Quest Tasks RLS.
+  - Added `database/migrations/004_harden_quest_rls.sql`.
+  - Applied the migration manually in live Supabase.
+  - Removed broad public `quests` and `quest_tasks` policies.
+  - Added authenticated owner policies for `quests` SELECT, INSERT, and UPDATE.
+  - Added authenticated owner-derived policies for `quest_tasks` SELECT, INSERT, UPDATE, and DELETE.
+  - Confirmed no public or anon policies remain on `quests` or `quest_tasks`.
+  - Confirmed `quests` has no DELETE policy, so quest deletion remains unavailable.
+  - Read-only smoke tests passed for dashboard library, settings, task editor, preview, and play/test.
+  - Storage upload remains unchanged and is the next ownership/security gap.
 
 ## Current State On `feature/next-work`
 

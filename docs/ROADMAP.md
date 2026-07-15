@@ -86,12 +86,31 @@ Completed:
   - Manually verified single-choice creation, editor loading, option saving, correct answer saving, and refresh persistence.
 - Sprint 12.13.1 - Documentation Sync.
   - Updated project documentation for schema repair and task type creation.
+- Sprint 12.14 - Auth and Owner-Safe Teacher Access.
+  - Added Supabase SSR session foundation.
+  - Protected dashboard routes with authenticated sessions.
+  - Scoped Teacher Quest Library reads to owned quests.
+  - Added owner-safe quest creation and settings save.
+  - Added owner-safe task CRUD through authenticated server routes.
+- Sprint 12.15.2 - Remove Legacy Browser Quest Reads.
+  - `/quests` now redirects to `/dashboard/quests`.
+  - `/quests/[id]` now redirects to `/dashboard/quests/[id]/preview`.
+  - Removed legacy browser-side quest and task table reads from active routes.
+- Sprint 12.15.3 - Harden Quests and Quest Tasks RLS.
+  - Added and applied `database/migrations/004_harden_quest_rls.sql`.
+  - Removed broad public policies from `quests` and `quest_tasks`.
+  - `quests` access is owner-scoped for authenticated teachers through `auth.uid()`.
+  - `quest_tasks` ownership is derived through the parent quest.
+  - Anonymous direct table access is denied.
+  - No `quests` DELETE policy exists; quest deletion remains unavailable.
+  - Read-only application smoke tests passed after live application.
 
 Next:
 
-- Sprint 12.14.1 - Quest Ownership / Auth Guard Planning.
-  - Analysis/planning only.
-  - Plan safe quest ownership, dashboard auth guard, author backfill, and RLS sequencing before implementation.
+- Sprint 12.15.4 - Owner-Safe Storage Upload.
+  - Plan and implement authenticated owner-safe image upload.
+  - Replace browser direct storage uploads and non-owner-scoped `tasks/{uuid}` paths.
+  - Do not change runtime/editor architecture unless explicitly approved.
 
 ## Suggested Future Milestones
 

@@ -6,7 +6,7 @@ Qwestum-Education uses a modular quest/task architecture.
 
 - App routes live in `app/`.
 - Reusable UI and feature components live in `components/`.
-- Quest and task data access lives in `services/quest.service.ts`.
+- Teacher quest and task data access lives in server helpers and authenticated API routes. `services/quest.service.ts` currently keeps shared task types used by editor/runtime components.
 - Supabase client setup lives in `lib/supabase.ts`.
 - Shared quest types live in `types/quest.ts` and service-local interfaces.
 
@@ -114,9 +114,16 @@ Supabase tables currently used by the app include:
 - `quests`
 - `quest_tasks`
 
-Important service functions are in `services/quest.service.ts`, including quest loading and task CRUD helpers.
+Teacher data access is owner-scoped:
 
-Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses existing `getQuests()` and `getAllQuestTasks()` data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
+- `services/teacher-quest.server.ts` loads owned quests and owned quest tasks with the authenticated server Supabase client.
+- `app/api/teacher/quests/route.ts` creates quests with `author_id = auth.uid()`.
+- `app/api/teacher/quests/[id]/route.ts` updates quest settings by matching both `id` and `author_id`.
+- `app/api/teacher/quests/[id]/tasks/*` performs task CRUD only after verifying parent quest ownership.
+
+`services/quest.service.ts` no longer exposes browser-side quest/task table reads or writes.
+
+Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses owned quest and owned task summary data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
 
 ## Deferred Attempt Persistence
 
@@ -169,20 +176,24 @@ Deferred future analytics routes:
 
 ## Auth, Roles, Ownership, And RLS
 
-Auth and RLS boundaries are not fully implemented yet. The codebase has early auth and role pieces:
+Auth and owner-scoped teacher access are implemented for the current teacher workspace. The codebase has these auth and role pieces:
 
-- `lib/supabase.ts` creates the Supabase client.
+- `lib/supabase.ts`, `lib/supabase/client.ts`, and `lib/supabase/server.ts` create browser/server Supabase clients.
 - `components/auth/LoginForm.tsx` uses Supabase OTP login.
+- `app/auth/callback/route.ts` handles the magic-link callback.
+- `proxy.ts` refreshes Supabase sessions.
 - `types/user.ts` includes `teacher`, `student`, `school`, and `admin` roles.
 - `types/quest.ts` includes `author_id`.
 
 Current limitations:
 
-- Dashboard routes do not enforce session, role, or ownership.
-- `getQuests()` currently selects all quests.
-- `getQuest(id)`, `updateQuest(id)`, and task helpers are id-based and do not enforce owner checks at service level.
-- `app/quests/new/page.tsx` creates quests without setting `author_id`.
-- `author_id` appears intended but is not actively used by current quest services/pages.
+- Dashboard routes enforce an authenticated session.
+- Teacher dashboard reads are owner-scoped.
+- Quest creation sets `author_id` from the authenticated server session.
+- Quest settings save matches both quest `id` and `author_id`.
+- Task CRUD verifies ownership through the parent quest.
+- Role-specific authorization beyond an authenticated teacher account is still deferred.
+- Storage upload is still browser-side and not owner-scoped.
 
 MVP roles:
 
@@ -194,24 +205,28 @@ Deferred roles:
 - `admin`
 - `school` / organization admin
 
-Quest ownership recommendation:
+Quest ownership model:
 
-- Use `quests.author_id = auth.uid()` for teacher-owned quests if `author_id` is confirmed in the live schema.
-- Teacher dashboard queries should eventually return only quests owned by the current teacher.
+- Use `quests.author_id = auth.uid()` for teacher-owned quests.
+- Teacher dashboard queries return only quests owned by the current teacher.
 - Public/student catalog queries should eventually return only `is_public` quests or assigned quests.
-- Updates and deletes should eventually be allowed only to the owning teacher.
+- Updates are allowed only to the owning teacher.
+- Quest deletion remains unavailable because no `quests` DELETE policy exists.
+
+Current `quests` and `quest_tasks` RLS boundaries after `database/migrations/004_harden_quest_rls.sql`:
+
+- `quests`
+  - Authenticated teachers can select, insert, and update only their own quests through `author_id = auth.uid()`.
+  - Direct anonymous access is denied.
+  - No DELETE policy exists.
+- `quest_tasks`
+  - Authenticated teachers can select, insert, update, and delete tasks only when the parent quest belongs to `auth.uid()`.
+  - Direct anonymous access is denied.
+  - Public/student reads are not allowed because `answer` fields and `content.correctOptionId` may expose correct answers.
 
 Future RLS boundaries:
 
-- `quests`
-  - Teachers can select, insert, update, and delete only their own quests.
-  - Students and anonymous users can select public quests only.
-  - Draft/private quests are visible only to owners.
-- `quest_tasks`
-  - Teachers can manage tasks only for quests they own.
-  - Students can read tasks only for public or assigned quests.
-  - Students cannot update or delete tasks.
-  - `answer` fields and `content.correctOptionId` exposure require care before public/student reads.
+- Public/student catalog and runtime access should use separate routes/policies that do not expose private teacher data or correct answers.
 - Future `quest_attempts`
   - Students can create and select their own attempts.
   - Teachers can read attempts only for quests they own.
@@ -225,11 +240,9 @@ Teacher Test Mode remains local-only until persistence is intentionally designed
 
 Important risks:
 
-- `getQuests()` returning all quests is unsafe once multiple users exist.
-- `updateQuest(id)` and task helpers need RLS/owner protection before production multi-user use.
-- Public quest reads may expose answer or `correctOptionId` data later.
+- Public quest/task reads may expose private data or `correctOptionId` data later if reintroduced without care.
 - Attempt answers may contain sensitive student data.
-- Storage upload paths may need owner-aware policies later.
+- Storage upload paths need owner-aware policies later.
 - School/admin roles require careful scoping and should wait.
 
 ## Live Schema / RLS Audit Notes
@@ -257,25 +270,26 @@ Live `quest_tasks` findings:
 
 RLS and storage findings:
 
-- Anonymous reads can access `quests` and `quest_tasks`.
-- This means RLS is either disabled or policies allow broad anonymous reads.
+- Anonymous reads previously accessed `quests` and `quest_tasks` through broad public policies.
+- `database/migrations/004_harden_quest_rls.sql` was applied in live Supabase after Sprint 12.15.3 verification.
+- Broad public policies on `quests` and `quest_tasks` were removed.
+- `quests` now has authenticated owner policies for SELECT, INSERT, and UPDATE.
+- `quests` has no DELETE policy, so direct quest deletion remains denied by RLS.
+- `quest_tasks` now has authenticated owner-derived policies for SELECT, INSERT, UPDATE, and DELETE through the parent quest.
+- Direct anonymous table access to `quests` and `quest_tasks` is denied.
 - Storage bucket and policy state for `quest-images` is not confirmed.
 - Local migrations do not fully represent live schema history.
 
 Decisions after audit:
 
-- Do not implement auth/ownership code yet.
-- Do not change `getQuests()`, `getQuest(id)`, `updateQuest(id)`, task helpers, dashboard layout, or quest creation yet.
-- Do not add RLS policies blindly.
+- Auth/session, owner-scoped teacher reads, owner-safe quest writes, owner-safe task CRUD, and RLS hardening are implemented for the teacher workspace.
 - Do not add attempt persistence yet.
-- Do not touch runtime/editor/JSONB architecture yet.
-- Next safe step is ownership/auth guard planning before changing dashboard query scope or RLS.
+- Do not touch runtime/editor/JSONB architecture without explicit approval.
+- Next safe step is owner-safe storage upload planning and implementation.
 
 Schema mismatch risks:
 
-- Owned-only teacher queries would hide all existing quests because `author_id` is currently null.
 - Existing legacy tasks may still have `content = null`; single-choice content should be created and saved through the editor before expecting options in preview/play.
-- Broad anon reads are unsafe for production multi-user teacher data.
 - Storage upload/public policy state is unknown.
+- Browser image upload and non-owner-scoped storage paths remain the main ownership/security gap.
 - Local migrations are not a reliable source of truth for the live schema yet.
-- Adding auth code before schema repair could create false security or broken UX.
