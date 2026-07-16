@@ -22,7 +22,7 @@ export default async function DashboardLayout({
       <Sidebar />
 
       <div className="flex flex-1 flex-col">
-        <DashboardHeader />
+        <DashboardHeader teacherEmail={user.email ?? undefined} />
 
         <main className="flex-1 p-8">
           {children}

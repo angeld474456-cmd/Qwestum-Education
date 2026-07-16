@@ -158,6 +158,24 @@
   - Live verification confirmed a temporary task was deleted through the UI, the task row was removed, the exact owner-scoped Storage object was removed, legacy objects were unchanged, and the editor remained functional.
   - Upload-before-failed-PATCH races may still orphan an unattached object.
   - Deferred private bucket/signed URLs, magic-byte MIME validation, legacy object migration, and quest deletion.
+- Sprint 12.16.1 - Teacher Logout / Session UX Planning.
+  - Audited the current Supabase SSR auth/session flow.
+  - Recommended a POST-only server logout route, dashboard Sign out control, authenticated `/login` redirect, and safe allowlisted login feedback messages.
+- Sprint 12.16.2 - Teacher Logout / Session UX.
+  - Added POST-only `/auth/logout` route using the existing Supabase SSR server client.
+  - Successful logout redirects with HTTP 303 to `/login?logged_out=1`.
+  - Failed logout redirects safely to `/login?error=logout_failed`.
+  - Logout accepts no browser-controlled redirect destination.
+  - Dashboard header now shows authenticated teacher email and a plain HTML POST `Sign out` control.
+  - Dashboard layout remains a Server Component.
+  - Authenticated users opening `/login` redirect to `/dashboard`.
+  - Login page uses fixed allowlisted messages for `logged_out`, `missing_auth_code`, `auth_callback_failed`, and `logout_failed`.
+  - Raw query values and Supabase errors are never displayed.
+  - Magic-link callback behavior remains unchanged.
+  - Manual verification confirmed logout cleared the session, the signed-out redirect/message worked, `/dashboard` remained inaccessible after logout, browser Back plus hard refresh did not restore access, and magic-link login remained functional.
+  - A transient Turbopack/module-resolution issue was caused by stale dev state/file locking and resolved without code changes.
+  - No migration or RLS change was required.
+  - Deferred global client-side handling of expired-session API 401 responses, cross-tab logout synchronization, role-aware teacher/student guards, private image bucket/signed URLs, and quest deletion.
 
 ## Current State On `feature/next-work`
 

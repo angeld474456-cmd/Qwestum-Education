@@ -145,11 +145,24 @@ Completed:
   - No migration or UI change was required.
   - Live verification confirmed a temporary task row and its owner-scoped Storage object were removed, legacy objects were unchanged, and the editor remained functional.
   - Upload-before-failed-PATCH races may still orphan an unattached object.
+- Sprint 12.16.1 - Teacher Logout / Session UX Planning.
+  - Audited current Supabase SSR auth/session behavior.
+  - Recommended a POST-only server logout route, dashboard Sign out control, safe login feedback messages, and authenticated `/login` redirect.
+- Sprint 12.16.2 - Teacher Logout / Session UX.
+  - Added POST-only `/auth/logout` route using the Supabase SSR server client.
+  - Successful logout redirects with HTTP 303 to `/login?logged_out=1`.
+  - Failed logout redirects safely to `/login?error=logout_failed`.
+  - Logout accepts no browser-controlled redirect destination.
+  - Dashboard header shows teacher email and a plain HTML POST Sign out control.
+  - Authenticated `/login` visits redirect to `/dashboard`.
+  - Login feedback uses fixed allowlisted messages for logout/callback states.
+  - Manual verification confirmed logout cleared the session, dashboard stayed protected after logout, Back plus hard refresh did not restore access, and magic-link login remained functional.
+  - No migration or RLS change was required.
 
 Next:
 
-- Sprint 12.16.1 - Teacher Logout / Session UX Planning.
-  - Analyze the smallest authenticated teacher logout/session UX improvement.
+- Sprint 12.16.3 - Expired Session / API 401 UX Planning.
+  - Analyze a small, consistent UX for expired sessions during long-lived teacher workflows.
   - Keep auth/session changes small and compatible with the Supabase SSR foundation.
   - Do not add quest deletion unless explicitly required.
 

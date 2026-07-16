@@ -185,6 +185,7 @@ Auth and owner-scoped teacher access are implemented for the current teacher wor
 - `lib/supabase.ts`, `lib/supabase/client.ts`, and `lib/supabase/server.ts` create browser/server Supabase clients.
 - `components/auth/LoginForm.tsx` uses Supabase OTP login.
 - `app/auth/callback/route.ts` handles the magic-link callback.
+- `app/auth/logout/route.ts` handles POST-only logout through the Supabase SSR server client.
 - `proxy.ts` refreshes Supabase sessions.
 - `types/user.ts` includes `teacher`, `student`, `school`, and `admin` roles.
 - `types/quest.ts` includes `author_id`.
@@ -192,6 +193,11 @@ Auth and owner-scoped teacher access are implemented for the current teacher wor
 Current limitations:
 
 - Dashboard routes enforce an authenticated session.
+- Dashboard header displays the authenticated teacher email and a plain HTML POST `Sign out` control.
+- Successful logout redirects with HTTP 303 to `/login?logged_out=1`; failed logout redirects safely to `/login?error=logout_failed`.
+- Logout accepts no browser-controlled redirect destination.
+- Authenticated users opening `/login` are redirected to `/dashboard`.
+- Login feedback uses a fixed allowlist for logout/callback states and never displays raw query values or Supabase errors.
 - Teacher dashboard reads are owner-scoped.
 - Quest creation sets `author_id` from the authenticated server session.
 - Quest settings save matches both quest `id` and `author_id`.
@@ -200,7 +206,7 @@ Current limitations:
 - Task image removal uses an authenticated server route, clears `quest_tasks.image_url` first, and then performs best-effort Storage cleanup only for verified owner-scoped paths.
 - Task image replacement cleanup uses a server-only owner-scoped image URL parser, saves the new `image_url` first, and then performs best-effort cleanup of the previous verified owner-scoped object.
 - Task deletion deletes the database row first, then performs best-effort Storage cleanup using only the deleted row's server-returned `image_url`.
-- Role-specific authorization beyond an authenticated teacher account is still deferred.
+- Global client-side handling of expired-session API 401 responses, cross-tab logout synchronization, and role-specific authorization beyond an authenticated teacher account are still deferred.
 
 MVP roles:
 
@@ -310,9 +316,10 @@ RLS and storage findings:
 Decisions after audit:
 
 - Auth/session, owner-scoped teacher reads, owner-safe quest writes, owner-safe task CRUD, and RLS hardening are implemented for the teacher workspace.
+- Teacher logout/session UX is implemented for the current MVP.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is teacher logout/session UX planning.
+- Next safe step is expired session/API 401 UX planning.
 
 Schema mismatch risks:
 
@@ -320,4 +327,5 @@ Schema mismatch risks:
 - Public reads remain for task images until a private bucket or signed URL plan is approved.
 - Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
 - Upload-before-failed-PATCH races may still orphan unattached owner-scoped image objects.
+- Expired-session API 401 responses are still handled locally by each feature flow; global client-side handling is deferred.
 - Local migrations are not a reliable source of truth for the live schema yet.

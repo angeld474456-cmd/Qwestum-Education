@@ -175,10 +175,24 @@ Completed Sprint 12 work:
   - No migration or UI change was required.
   - Live verification confirmed a temporary task was deleted through the UI, its row was removed, its owner-scoped Storage object was removed, legacy objects were unchanged, and the editor remained functional.
   - Upload-before-failed-PATCH races may still orphan an unattached object.
+- Sprint 12.16.2 - Teacher Logout / Session UX.
+  - Added a POST-only server logout route at `/auth/logout`.
+  - Logout uses the existing Supabase SSR server client and accepts no browser-controlled redirect destination.
+  - Successful logout redirects with HTTP 303 to `/login?logged_out=1`.
+  - Failed logout redirects safely to `/login?error=logout_failed`.
+  - Dashboard header now shows the authenticated teacher email and a `Sign out` control.
+  - Logout uses a plain HTML POST form and keeps the dashboard layout as a Server Component.
+  - Authenticated users opening `/login` are redirected to `/dashboard`.
+  - Login feedback uses a fixed allowlist for `logged_out`, `missing_auth_code`, `auth_callback_failed`, and `logout_failed`.
+  - Raw query values and Supabase errors are never displayed.
+  - Magic-link callback behavior remains unchanged.
+  - No migration or RLS change was required.
+  - Manual verification confirmed logout cleared the session, the signed-out redirect/message worked, `/dashboard` remained inaccessible after logout, browser Back plus refresh did not restore access, and magic-link login still works.
+  - A transient Turbopack/module-resolution issue was caused by stale dev state/file locking and was resolved without code changes.
 
 Next sprint:
 
-- Sprint 12.16.1 - Teacher Logout / Session UX Planning.
+- Sprint 12.16.3 - Expired Session / API 401 UX Planning.
 
 ## Stack
 
@@ -194,6 +208,7 @@ Next sprint:
 - The task editor and runtime renderer are modular. Add new task types through the existing registry/renderer patterns.
 - Storage writes and owner-scoped deletes are supported for new task images, including explicit removal, replacement cleanup, and task-delete cleanup. Public reads remain and legacy `tasks/{uuid}` objects are preserved.
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
+- Deferred auth/session work includes global client-side handling of expired-session API 401 responses, cross-tab logout synchronization, and role-aware teacher/student guards.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.
