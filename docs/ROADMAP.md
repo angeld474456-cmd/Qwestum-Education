@@ -114,13 +114,23 @@ Completed:
   - Enforced 5 MB bucket limit and JPEG/PNG/WebP MIME restrictions.
   - Added runtime task image rendering for text and single-choice tasks in Preview and Play/Test.
   - Preserved legacy `tasks/{uuid}` objects.
+- Sprint 12.15.5a - Owner-Safe Task Image Removal.
+  - Added authenticated owner-safe task image removal.
+  - Browser sends no object path or image URL.
+  - DELETE route verifies authenticated user, owned quest, and task relation.
+  - Clears `image_url` before best-effort Storage deletion.
+  - Added compare-and-clear protection for concurrent image replacement; conflicts return HTTP 409 and skip Storage deletion.
+  - Added and live-applied `database/migrations/006_add_owner_quest_image_delete_policy.sql`.
+  - Authenticated owner-prefixed Storage DELETE policy is active.
+  - Public Storage DELETE remains disabled.
+  - Live removal was verified in editor, Preview, and Play/Test.
+  - Legacy `tasks/{uuid}` objects remain unchanged.
 
 Next:
 
-- Sprint 12.15.5 - Storage Follow-up / Image Lifecycle Planning.
-  - Analyze private bucket/signed URL options.
-  - Analyze old image cleanup, explicit image removal, and cleanup when deleting a task.
-  - Analyze whether magic-byte MIME validation is needed.
+- Sprint 12.15.5b - Safe Image Replacement Cleanup.
+  - Clean up previous owner-scoped images only after a replacement upload and task PATCH both succeed.
+  - Keep cleanup best-effort and never delete legacy `tasks/{uuid}` objects.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones

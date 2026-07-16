@@ -119,6 +119,19 @@
   - Added runtime task image rendering for text and single-choice tasks.
   - Legacy `tasks/{uuid}` objects remain unchanged.
   - Deferred private bucket/signed URLs, magic-byte MIME validation, image removal, old image cleanup, and cleanup when deleting a task.
+- Sprint 12.15.5a - Owner-Safe Task Image Removal.
+  - Added authenticated owner-safe task image removal through `/api/teacher/quests/[id]/tasks/[taskId]/image`.
+  - Browser removal sends no object path or image URL.
+  - DELETE route verifies authenticated user, owned quest, and task relation.
+  - The task `image_url` is cleared before best-effort Storage deletion.
+  - Compare-and-clear protection prevents clearing a newer image URL saved concurrently; conflicts return HTTP 409 and skip Storage deletion.
+  - Repeated removal is idempotent.
+  - Added and manually applied `database/migrations/006_add_owner_quest_image_delete_policy.sql`.
+  - Authenticated owner-prefixed Storage DELETE policy is active; public Storage DELETE remains disabled.
+  - Only paths shaped as `teachers/{userId}/quests/{questId}/tasks/{taskId}/{filename}` are eligible for deletion.
+  - Legacy `tasks/{uuid}` objects are never deleted.
+  - Live removal was verified in the task editor, Teacher Preview, and Teacher Play/Test.
+  - Deferred automatic cleanup when replacing an image, cleanup when deleting a task, private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
 
 ## Current State On `feature/next-work`
 

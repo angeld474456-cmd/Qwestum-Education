@@ -6,7 +6,10 @@ import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import TaskEditor from "@/components/tasks/TaskEditor";
 import TaskForm from "@/components/tasks/TaskForm";
 import TaskList from "@/components/tasks/TaskList";
-import { uploadQuestImage } from "@/services/storage.service";
+import {
+  removeQuestImage,
+  uploadQuestImage,
+} from "@/services/storage.service";
 import type { QuestTask, TaskContent } from "@/services/quest.service";
 
 type QuestTasksClientProps = {
@@ -213,6 +216,38 @@ export default function QuestTasksClient({
     }
   }
 
+  async function handleRemoveImage(taskId: string) {
+    if (busy) return;
+    if (!confirm("Remove image from this task?")) return;
+
+    setBusy(true);
+    setErrorMessage("");
+
+    try {
+      const { error } = await removeQuestImage(questId, taskId);
+
+      if (error) {
+        setErrorMessage(error);
+        return;
+      }
+
+      const nextTasks = tasks.map((task) =>
+        task.id === taskId ? { ...task, image_url: null } : task
+      );
+      setTasks(nextTasks);
+      setSelectedTask((currentTask) =>
+        currentTask?.id === taskId
+          ? { ...currentTask, image_url: null }
+          : currentTask
+      );
+    } catch (error) {
+      console.error(error);
+      setErrorMessage("Unable to remove image.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleDeleteTask(id: string) {
     if (busy) return;
     if (!confirm("Удалить задание?")) return;
@@ -304,6 +339,7 @@ export default function QuestTasksClient({
               task={selectedTask}
               onSave={handleSaveTask}
               onUploadImage={handleUploadImage}
+              onRemoveImage={handleRemoveImage}
             />
           </div>
         </div>

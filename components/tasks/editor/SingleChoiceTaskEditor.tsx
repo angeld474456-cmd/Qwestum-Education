@@ -63,6 +63,7 @@ export default function SingleChoiceTaskEditor({
   task,
   onSave,
   onUploadImage,
+  onRemoveImage,
 }: TextTaskEditorProps) {
   const initialContent = getSingleChoiceContent(task);
 
@@ -218,6 +219,7 @@ export default function SingleChoiceTaskEditor({
       <ImageUploader
         imageUrl={task.image_url}
         onUpload={(file) => onUploadImage(task.id, file)}
+        onRemove={() => onRemoveImage(task.id)}
       />
 
       <div>

@@ -17,12 +17,14 @@ export interface TextTaskEditorProps {
     taskId: string,
     file: File
   ) => Promise<void>;
+  onRemoveImage: (taskId: string) => Promise<void>;
 }
 
 export default function TextTaskEditor({
   task,
   onSave,
   onUploadImage,
+  onRemoveImage,
 }: TextTaskEditorProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
@@ -91,6 +93,7 @@ export default function TextTaskEditor({
       <ImageUploader
         imageUrl={task.image_url}
         onUpload={(file) => onUploadImage(task.id, file)}
+        onRemove={() => onRemoveImage(task.id)}
       />
 
       <div>

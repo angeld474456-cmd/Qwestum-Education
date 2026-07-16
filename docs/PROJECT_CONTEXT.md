@@ -139,10 +139,22 @@ Completed Sprint 12 work:
   - Authenticated owner-prefixed INSERT policy is active.
   - Runtime task images now render in the editor, Teacher Preview, and Teacher Play/Test for text and single-choice tasks.
   - Legacy `tasks/{uuid}` storage objects remain unchanged.
+- Sprint 12.15.5a - Owner-Safe Task Image Removal.
+  - Added authenticated owner-safe task image removal through the existing image route.
+  - Browser removal sends no object path or image URL.
+  - The DELETE route verifies authenticated user, owned quest, and task relation before clearing image data.
+  - `quest_tasks.image_url` is cleared before best-effort Storage deletion.
+  - Compare-and-clear protection returns HTTP 409 and skips Storage deletion if the task image changed concurrently.
+  - Repeated removal is idempotent.
+  - Only owner-scoped paths shaped as `teachers/{userId}/quests/{questId}/tasks/{taskId}/{filename}` are eligible for deletion.
+  - Legacy `tasks/{uuid}` storage objects are never deleted.
+  - Added and live-applied `database/migrations/006_add_owner_quest_image_delete_policy.sql`.
+  - Authenticated owner-prefixed Storage DELETE policy is active; public Storage DELETE remains disabled.
+  - Live removal was verified in the task editor, Teacher Preview, and Teacher Play/Test.
 
 Next sprint:
 
-- Sprint 12.15.5 - Storage Follow-up / Image Lifecycle Planning.
+- Sprint 12.15.5b - Safe Image Replacement Cleanup.
 
 ## Stack
 
@@ -157,7 +169,7 @@ Next sprint:
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.
 - The task editor and runtime renderer are modular. Add new task types through the existing registry/renderer patterns.
 - Storage writes are owner-scoped for new task images, but public reads remain and legacy `tasks/{uuid}` objects are preserved.
-- Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, old image cleanup, explicit image removal, and cleanup when deleting a task.
+- Deferred storage work includes automatic cleanup when replacing an image, cleanup when deleting a task, private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

@@ -19,12 +19,14 @@ interface TaskEditorProps {
     taskId: string,
     file: File
   ) => Promise<void>;
+  onRemoveImage: (taskId: string) => Promise<void>;
 }
 
 export default function TaskEditor({
   task,
   onSave,
   onUploadImage,
+  onRemoveImage,
 }: TaskEditorProps) {
   if (!task) {
     return (
@@ -57,6 +59,7 @@ export default function TaskEditor({
         task={task}
         onSave={onSave}
         onUploadImage={onUploadImage}
+        onRemoveImage={onRemoveImage}
       />
 
     </div>

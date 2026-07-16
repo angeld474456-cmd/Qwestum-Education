@@ -92,9 +92,9 @@ function parseUpdateTaskPayload(body: UpdateTaskPayload) {
   }
 
   if ("image_url" in body) {
-    if (typeof body.image_url !== "string") {
+    if (typeof body.image_url !== "string" && body.image_url !== null) {
       return {
-        error: "Image URL must be text.",
+        error: "Image URL must be text or null.",
       };
     }
 

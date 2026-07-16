@@ -6,65 +6,51 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the next storage lifecycle step after owner-safe task image uploads.
+Continue task image lifecycle hardening after owner-safe upload and explicit image removal.
 
 ## Next Task
 
-Sprint 12.15.5 - Storage Follow-up / Image Lifecycle Planning.
+Sprint 12.15.5b - Safe Image Replacement Cleanup.
 
-This task should begin with analysis/planning only.
+Start with a small implementation only after approval.
 
-Analyze:
+Goal:
 
-- Whether `quest-images` should remain public for MVP or move toward private bucket/signed URL access.
-- How existing public `image_url` values should be handled if signed URLs are introduced later.
-- Whether old image cleanup should happen when a task image is replaced.
-- Whether explicit image removal is needed in the task editor.
-- Whether storage objects should be cleaned up when a task is deleted.
-- Whether magic-byte MIME validation is needed beyond current server MIME checks.
-- How to preserve legacy `tasks/{uuid}` objects safely.
-- What storage changes can be implemented without quest deletion.
+- When a teacher replaces an existing owner-scoped task image, clean up the previous owner-scoped Storage object only after the new upload and task `image_url` PATCH both succeed.
 
-## Current Security State
+Current state:
 
-- `quests` and `quest_tasks` RLS are hardened and owner-scoped.
-- New task image uploads use an authenticated server route.
-- New task image paths are owner-prefixed:
+- New image uploads use authenticated owner-scoped paths:
   `teachers/{userId}/quests/{questId}/tasks/{taskId}/{uuid}.{ext}`.
-- Storage public INSERT, UPDATE, and DELETE policies were removed.
-- Authenticated owner-prefixed INSERT policy is active.
-- `quest-images` remains public for reads.
+- Explicit image removal is owner-safe and verified.
+- Public reads remain for `quest-images`.
+- Public Storage writes and deletes remain disabled.
+- Owner-prefixed INSERT and DELETE policies are active.
 - Legacy `tasks/{uuid}` objects remain unchanged.
 
-## Deferred Items
+Implementation constraints:
 
-- Private bucket or signed URL access.
-- Magic-byte MIME validation.
-- Old image cleanup after replacement.
-- Explicit image removal.
-- Cleanup when deleting a task.
-- Quest deletion.
-
-## Constraints
-
-- Do not modify live storage buckets, objects, or policies without explicit approval.
-- Do not upload, update, or delete storage objects during analysis.
-- Do not add quest deletion unless explicitly required.
+- Do not delete legacy `tasks/{uuid}` objects.
+- Do not delete any object before the replacement `image_url` is saved.
+- Do not trust object paths or image URLs from the browser.
+- Use the server-read previous `image_url`.
+- Cleanup failure must not revert the successfully saved replacement image.
+- Do not add quest deletion.
 - Preserve Russian UI text.
-- Prefer English UI labels in new dashboard pages.
 - Keep changes minimal and scoped.
 
-## Required Verification
+Deferred items:
 
-Before finishing any implementation:
+- Cleanup when deleting a task.
+- Private bucket or signed URL access.
+- Magic-byte MIME validation.
+- Legacy object migration.
+
+Required verification:
 
 ```powershell
 npm.cmd run lint
 npm.cmd run build
-```
-
-Also check for mojibake before finalizing UI text changes:
-
-```powershell
-rg -n "Р В Р’В Р Р†Р вЂљРІвЂћСћ|Р В Р’В Р РЋРЎС™|Р В Р’В  |Р В Р Р‹Р Р†Р вЂљРІвЂћвЂ“|Р В Р Р‹Р В Р вЂ°|Р РЋР вЂљР РЋРЎСџ" components app docs
+git diff --check
+git status -sb
 ```

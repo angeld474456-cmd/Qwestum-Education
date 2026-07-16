@@ -197,6 +197,7 @@ Current limitations:
 - Quest settings save matches both quest `id` and `author_id`.
 - Task CRUD verifies ownership through the parent quest.
 - Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
+- Task image removal uses an authenticated server route, clears `quest_tasks.image_url` first, and then performs best-effort Storage cleanup only for verified owner-scoped paths.
 - Role-specific authorization beyond an authenticated teacher account is still deferred.
 
 MVP roles:
@@ -248,7 +249,7 @@ Important risks:
 - Attempt answers may contain sensitive student data.
 - Storage upload paths need owner-aware policies later.
 - Storage public reads remain temporarily; private bucket or signed URL design is deferred.
-- Old storage object cleanup, image removal, task-deletion cleanup, and magic-byte MIME validation are deferred.
+- Automatic replacement cleanup, task-deletion cleanup, private bucket/signed URLs, legacy object migration, and magic-byte MIME validation are deferred.
 - School/admin roles require careful scoping and should wait.
 
 ## Live Schema / RLS Audit Notes
@@ -289,6 +290,11 @@ RLS and storage findings:
 - Public read remains.
 - Authenticated users can insert only under owner-prefixed paths shaped like `teachers/{auth.uid()}/quests/{questId}/tasks/{taskId}/{filename}`.
 - Bucket constraints now limit uploads to 5 MB and JPEG, PNG, or WebP MIME types.
+- `database/migrations/006_add_owner_quest_image_delete_policy.sql` was applied live after Sprint 12.15.5a verification.
+- Authenticated users can delete only owner-prefixed image paths shaped like `teachers/{auth.uid()}/quests/{questId}/tasks/{taskId}/{filename}`.
+- Public Storage DELETE remains disabled.
+- Task image removal clears the database reference before best-effort Storage deletion.
+- Compare-and-clear protection prevents a remove request from clearing a newer image URL saved concurrently; conflicts return HTTP 409 and skip Storage deletion.
 - Legacy `tasks/{uuid}` objects remain unchanged.
 - Local migrations do not fully represent live schema history.
 
@@ -297,12 +303,12 @@ Decisions after audit:
 - Auth/session, owner-scoped teacher reads, owner-safe quest writes, owner-safe task CRUD, and RLS hardening are implemented for the teacher workspace.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is storage lifecycle follow-up planning.
+- Next safe step is safe image replacement cleanup planning/implementation.
 
 Schema mismatch risks:
 
 - Existing legacy tasks may still have `content = null`; single-choice content should be created and saved through the editor before expecting options in preview/play.
 - Public reads remain for task images until a private bucket or signed URL plan is approved.
 - Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
-- Old image cleanup, explicit image removal, and storage cleanup on task deletion are deferred.
+- Automatic cleanup when replacing an image and storage cleanup on task deletion are deferred.
 - Local migrations are not a reliable source of truth for the live schema yet.
