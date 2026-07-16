@@ -135,12 +135,22 @@ Completed:
   - Live replacement was verified in editor, Preview, and Play/Test.
   - The new owner-scoped object remained, the previous owner-scoped object was removed, and legacy `tasks/{uuid}` objects remained unchanged.
   - Concurrent replacements may still orphan an intermediate object.
+- Sprint 12.15.5c - Task Delete Image Cleanup.
+  - Task DELETE now returns the deleted row `id` and `image_url`.
+  - Deletes the database row before best-effort Storage cleanup.
+  - Uses only the deleted row's server-returned `image_url`.
+  - Reuses the canonical server-only owner-scoped parser.
+  - Deletes only owner-scoped paths matching authenticated user, quest, and task.
+  - Browser sends no image URL or object path.
+  - No migration or UI change was required.
+  - Live verification confirmed a temporary task row and its owner-scoped Storage object were removed, legacy objects were unchanged, and the editor remained functional.
+  - Upload-before-failed-PATCH races may still orphan an unattached object.
 
 Next:
 
-- Sprint 12.15.5c - Task Delete Image Cleanup Planning.
-  - Analyze safe cleanup of owner-scoped task images when deleting a task.
-  - Keep legacy `tasks/{uuid}` objects protected.
+- Sprint 12.16.1 - Teacher Logout / Session UX Planning.
+  - Analyze the smallest authenticated teacher logout/session UX improvement.
+  - Keep auth/session changes small and compatible with the Supabase SSR foundation.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones

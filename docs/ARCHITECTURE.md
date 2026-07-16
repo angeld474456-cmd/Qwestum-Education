@@ -199,6 +199,7 @@ Current limitations:
 - Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
 - Task image removal uses an authenticated server route, clears `quest_tasks.image_url` first, and then performs best-effort Storage cleanup only for verified owner-scoped paths.
 - Task image replacement cleanup uses a server-only owner-scoped image URL parser, saves the new `image_url` first, and then performs best-effort cleanup of the previous verified owner-scoped object.
+- Task deletion deletes the database row first, then performs best-effort Storage cleanup using only the deleted row's server-returned `image_url`.
 - Role-specific authorization beyond an authenticated teacher account is still deferred.
 
 MVP roles:
@@ -250,7 +251,7 @@ Important risks:
 - Attempt answers may contain sensitive student data.
 - Storage upload paths need owner-aware policies later.
 - Storage public reads remain temporarily; private bucket or signed URL design is deferred.
-- Task-deletion cleanup, private bucket/signed URLs, legacy object migration, and magic-byte MIME validation are deferred.
+- Private bucket/signed URLs, legacy object migration, and magic-byte MIME validation are deferred.
 - School/admin roles require careful scoping and should wait.
 
 ## Live Schema / RLS Audit Notes
@@ -300,6 +301,9 @@ RLS and storage findings:
 - Safe image replacement cleanup reads the previous `image_url` server-side, saves the new `image_url` first, and deletes the previous object only when it matches `teachers/{auth.uid()}/quests/{questId}/tasks/{taskId}/{filename}`.
 - Replacement cleanup is best-effort and non-blocking; concurrent replacements may orphan an intermediate object.
 - Live replacement verification confirmed the new image rendered in the task editor, Teacher Preview, and Teacher Play/Test, the previous owner-scoped object was removed, and legacy objects remained unchanged.
+- Task-delete cleanup uses the deleted row's returned `image_url`, runs only after the database delete succeeds, and deletes only verified owner-scoped paths.
+- Task-delete cleanup is best-effort and non-blocking; upload-before-failed-PATCH races may still orphan an unattached object.
+- Live task-delete verification confirmed a temporary task row was removed, the exact owner-scoped Storage object was removed, legacy objects remained unchanged, and the editor remained functional.
 - Legacy `tasks/{uuid}` objects remain unchanged.
 - Local migrations do not fully represent live schema history.
 
@@ -308,12 +312,12 @@ Decisions after audit:
 - Auth/session, owner-scoped teacher reads, owner-safe quest writes, owner-safe task CRUD, and RLS hardening are implemented for the teacher workspace.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is task-delete image cleanup planning.
+- Next safe step is teacher logout/session UX planning.
 
 Schema mismatch risks:
 
 - Existing legacy tasks may still have `content = null`; single-choice content should be created and saved through the editor before expecting options in preview/play.
 - Public reads remain for task images until a private bucket or signed URL plan is approved.
 - Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
-- Storage cleanup on task deletion is deferred.
+- Upload-before-failed-PATCH races may still orphan unattached owner-scoped image objects.
 - Local migrations are not a reliable source of truth for the live schema yet.

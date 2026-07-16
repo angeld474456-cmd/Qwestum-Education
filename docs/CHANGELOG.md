@@ -145,6 +145,19 @@
   - The new owner-scoped object remained, the previous owner-scoped object was removed, and legacy objects remained unchanged.
   - Concurrent replacements may still orphan an intermediate object.
   - Deferred cleanup when deleting a task, private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
+- Sprint 12.15.5c - Task Delete Image Cleanup.
+  - Task DELETE now returns the deleted row `id` and `image_url`.
+  - The database row is deleted before best-effort Storage cleanup.
+  - Cleanup uses only the deleted row's server-returned `image_url`.
+  - The canonical server-only owner-scoped parser is reused.
+  - Only paths matching the authenticated user, quest, and task are eligible for deletion.
+  - Browser task deletion sends no image URL or object path.
+  - Legacy `tasks/{uuid}` objects are never deleted.
+  - Cleanup failure is non-blocking.
+  - No migration or UI change was required.
+  - Live verification confirmed a temporary task was deleted through the UI, the task row was removed, the exact owner-scoped Storage object was removed, legacy objects were unchanged, and the editor remained functional.
+  - Upload-before-failed-PATCH races may still orphan an unattached object.
+  - Deferred private bucket/signed URLs, magic-byte MIME validation, legacy object migration, and quest deletion.
 
 ## Current State On `feature/next-work`
 

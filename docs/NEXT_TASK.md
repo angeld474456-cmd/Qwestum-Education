@@ -6,48 +6,52 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Continue task image lifecycle hardening after owner-safe upload, explicit image removal, and safe replacement cleanup.
+Improve the authenticated teacher experience after owner-safe quest, task, and image flows are in place.
 
 ## Next Task
 
-Sprint 12.15.5c - Task Delete Image Cleanup Planning.
+Sprint 12.16.1 - Teacher Logout / Session UX Planning.
 
 Start with analysis/planning only unless implementation is explicitly approved.
 
 Goal:
 
-- Analyze how to safely clean up owner-scoped task image objects when a teacher deletes a task.
+- Analyze the smallest safe logout/session UX improvement for authenticated teachers.
 
 Current state:
 
-- New image uploads use authenticated owner-scoped paths:
-  `teachers/{userId}/quests/{questId}/tasks/{taskId}/{uuid}.{ext}`.
-- Explicit image removal is owner-safe and verified.
-- Safe image replacement cleanup is implemented and live-verified.
-- Replacement cleanup reads the previous `image_url` server-side, saves the new URL first, and deletes only verified owner-scoped previous objects.
+- Supabase SSR session foundation is implemented.
+- `/dashboard` is protected by an authenticated server-side guard.
+- Owner-safe quest creation, settings save, dashboard reads, Preview, Play/Test, and task CRUD are implemented.
+- Owner-safe task image upload, explicit removal, replacement cleanup, and task-delete cleanup are implemented and live-verified.
 - Public reads remain for `quest-images`.
-- Public Storage writes and deletes remain disabled.
-- Owner-prefixed INSERT and DELETE policies are active.
-- Legacy `tasks/{uuid}` objects remain unchanged.
-- Concurrent replacements may still orphan an intermediate object.
+- Quest deletion remains intentionally postponed.
 
 Planning constraints:
 
-- Do not delete legacy `tasks/{uuid}` objects.
-- Do not trust object paths or image URLs from the browser.
-- Use server-read task data before deleting a task.
-- Decide whether task image cleanup should happen before or after task deletion.
-- Cleanup failure must not create confusing task deletion state.
-- Do not add quest deletion.
-- Preserve Russian UI text.
+- Do not change RLS policies.
+- Do not modify Supabase schema or migrations.
+- Do not modify quest/task CRUD unless required for logout/session UX.
+- Preserve the existing dashboard layout and disabled MVP sidebar links.
+- Keep UI labels in English for new dashboard UI.
+- Preserve Russian task editor text.
 - Keep changes minimal and scoped.
+
+Questions to answer:
+
+- Where should a logout control live for MVP?
+- Should logout be implemented through a server action, route handler, or client helper?
+- How should the app redirect after logout?
+- How should expired sessions be surfaced in dashboard pages?
+- Should the teacher email or profile role be displayed now, or deferred?
 
 Deferred items:
 
+- Quest deletion.
 - Private bucket or signed URL access.
 - Magic-byte MIME validation.
 - Legacy object migration.
-- Quest deletion.
+- Student attempt persistence and analytics.
 
 Required verification for any future implementation:
 

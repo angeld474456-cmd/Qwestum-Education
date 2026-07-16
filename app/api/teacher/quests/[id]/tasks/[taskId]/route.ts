@@ -280,8 +280,8 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     .delete()
     .eq("id", taskId)
     .eq("quest_id", id)
-    .select("id")
-    .maybeSingle();
+    .select("id, image_url")
+    .maybeSingle<OwnedTaskImage>();
 
   if (error) {
     console.error(error);
@@ -295,7 +295,41 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
+  if (data.image_url) {
+    const objectPath = getSafeQuestImageObjectPath(
+      data.image_url,
+      ownedQuest.userId,
+      id,
+      taskId
+    );
+
+    if (objectPath) {
+      const { error: cleanupError } = await supabase.storage
+        .from(questImageBucketName)
+        .remove([objectPath]);
+
+      if (cleanupError) {
+        console.warn("Quest image cleanup failed after task deletion.", {
+          questId: id,
+          taskId,
+          error: cleanupError.message,
+        });
+
+        return NextResponse.json({
+          ok: true,
+          storageDeleted: false,
+        });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        storageDeleted: true,
+      });
+    }
+  }
+
   return NextResponse.json({
     ok: true,
+    storageDeleted: false,
   });
 }

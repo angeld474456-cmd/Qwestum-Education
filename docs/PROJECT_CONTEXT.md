@@ -163,10 +163,22 @@ Completed Sprint 12 work:
   - Live replacement was verified in the task editor, Teacher Preview, and Teacher Play/Test.
   - After verification, the new owner-scoped object remained, the previous owner-scoped object was removed, and legacy objects remained unchanged.
   - Concurrent replacements may still orphan an intermediate object.
+- Sprint 12.15.5c - Task Delete Image Cleanup.
+  - Task DELETE now returns the deleted row `id` and `image_url`.
+  - The database row is deleted before Storage cleanup is attempted.
+  - Cleanup uses only the deleted row's server-returned `image_url`.
+  - The canonical server-only owner-scoped parser is reused.
+  - Only owner-scoped paths matching authenticated user, quest, and task are eligible for deletion.
+  - Browser task deletion sends no image URL or object path.
+  - Legacy `tasks/{uuid}` storage objects are never deleted.
+  - Cleanup failure is non-blocking.
+  - No migration or UI change was required.
+  - Live verification confirmed a temporary task was deleted through the UI, its row was removed, its owner-scoped Storage object was removed, legacy objects were unchanged, and the editor remained functional.
+  - Upload-before-failed-PATCH races may still orphan an unattached object.
 
 Next sprint:
 
-- Sprint 12.15.5c - Task Delete Image Cleanup Planning.
+- Sprint 12.16.1 - Teacher Logout / Session UX Planning.
 
 ## Stack
 
@@ -180,8 +192,8 @@ Next sprint:
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.
 - The task editor and runtime renderer are modular. Add new task types through the existing registry/renderer patterns.
-- Storage writes and owner-scoped deletes are supported for new task images, but public reads remain and legacy `tasks/{uuid}` objects are preserved.
-- Deferred storage work includes cleanup when deleting a task, private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
+- Storage writes and owner-scoped deletes are supported for new task images, including explicit removal, replacement cleanup, and task-delete cleanup. Public reads remain and legacy `tasks/{uuid}` objects are preserved.
+- Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.
