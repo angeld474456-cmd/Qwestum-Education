@@ -132,6 +132,19 @@
   - Legacy `tasks/{uuid}` objects are never deleted.
   - Live removal was verified in the task editor, Teacher Preview, and Teacher Play/Test.
   - Deferred automatic cleanup when replacing an image, cleanup when deleting a task, private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
+- Sprint 12.15.5b - Safe Image Replacement Cleanup.
+  - Added a canonical server-only owner-scoped image URL parser.
+  - Replacement cleanup reads the previous `image_url` server-side.
+  - The new `image_url` is saved before old object cleanup is attempted.
+  - Previous objects are deleted only when they match the authenticated user, quest, and task path.
+  - Browser replacement sends no previous URL or object path.
+  - Legacy `tasks/{uuid}` objects are never deleted.
+  - Cleanup failure is non-blocking and does not fail a successfully saved replacement.
+  - Explicit image removal behavior remains intact.
+  - Live replacement was verified in the task editor, Teacher Preview, and Teacher Play/Test.
+  - The new owner-scoped object remained, the previous owner-scoped object was removed, and legacy objects remained unchanged.
+  - Concurrent replacements may still orphan an intermediate object.
+  - Deferred cleanup when deleting a task, private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
 
 ## Current State On `feature/next-work`
 

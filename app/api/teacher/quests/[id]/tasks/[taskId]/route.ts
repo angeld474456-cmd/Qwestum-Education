@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import {
+  getSafeQuestImageObjectPath,
+  questImageBucketName,
+} from "@/lib/storage/quest-image.server";
 import { createClient } from "@/lib/supabase/server";
 
 const uuidPattern =
@@ -17,6 +21,11 @@ type UpdateTaskPayload = {
   description?: unknown;
   content?: unknown;
   image_url?: unknown;
+};
+
+type OwnedTaskImage = {
+  id: string;
+  image_url: string | null;
 };
 
 async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>, questId: string) {
@@ -52,6 +61,7 @@ async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>,
 
   return {
     status: "ok" as const,
+    userId: user.id,
   };
 }
 
@@ -158,6 +168,36 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     );
   }
 
+  let previousImageUrl: string | null = null;
+  const isImageUrlUpdate = "image_url" in parsed.data;
+
+  if (isImageUrlUpdate) {
+    const { data: currentTask, error: currentTaskError } = await supabase
+      .from("quest_tasks")
+      .select("id, image_url")
+      .eq("id", taskId)
+      .eq("quest_id", id)
+      .maybeSingle<OwnedTaskImage>();
+
+    if (currentTaskError) {
+      console.error("Task image replacement lookup failed.", {
+        questId: id,
+        taskId,
+        error: currentTaskError.message,
+      });
+      return NextResponse.json(
+        { error: "Unable to save task." },
+        { status: 500 }
+      );
+    }
+
+    if (!currentTask) {
+      return NextResponse.json({ error: "Task not found." }, { status: 404 });
+    }
+
+    previousImageUrl = currentTask.image_url;
+  }
+
   const { data, error } = await supabase
     .from("quest_tasks")
     .update(parsed.data)
@@ -176,6 +216,33 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (!data) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
+  }
+
+  if (
+    isImageUrlUpdate &&
+    previousImageUrl &&
+    previousImageUrl !== data.image_url
+  ) {
+    const previousObjectPath = getSafeQuestImageObjectPath(
+      previousImageUrl,
+      ownedQuest.userId,
+      id,
+      taskId
+    );
+
+    if (previousObjectPath) {
+      const { error: cleanupError } = await supabase.storage
+        .from(questImageBucketName)
+        .remove([previousObjectPath]);
+
+      if (cleanupError) {
+        console.warn("Quest image cleanup failed after replacement.", {
+          questId: id,
+          taskId,
+          error: cleanupError.message,
+        });
+      }
+    }
   }
 
   return NextResponse.json({

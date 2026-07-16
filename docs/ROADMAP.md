@@ -125,12 +125,22 @@ Completed:
   - Public Storage DELETE remains disabled.
   - Live removal was verified in editor, Preview, and Play/Test.
   - Legacy `tasks/{uuid}` objects remain unchanged.
+- Sprint 12.15.5b - Safe Image Replacement Cleanup.
+  - Added a canonical server-only owner-scoped image URL parser.
+  - Replacement cleanup reads the previous `image_url` server-side.
+  - Saves the new `image_url` before old object cleanup is attempted.
+  - Deletes the previous object only when it matches the authenticated user, quest, and task path.
+  - Browser sends no previous URL or object path.
+  - Cleanup failure is non-blocking.
+  - Live replacement was verified in editor, Preview, and Play/Test.
+  - The new owner-scoped object remained, the previous owner-scoped object was removed, and legacy `tasks/{uuid}` objects remained unchanged.
+  - Concurrent replacements may still orphan an intermediate object.
 
 Next:
 
-- Sprint 12.15.5b - Safe Image Replacement Cleanup.
-  - Clean up previous owner-scoped images only after a replacement upload and task PATCH both succeed.
-  - Keep cleanup best-effort and never delete legacy `tasks/{uuid}` objects.
+- Sprint 12.15.5c - Task Delete Image Cleanup Planning.
+  - Analyze safe cleanup of owner-scoped task images when deleting a task.
+  - Keep legacy `tasks/{uuid}` objects protected.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones

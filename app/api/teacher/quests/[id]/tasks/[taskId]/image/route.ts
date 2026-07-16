@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
+import {
+  getSafeQuestImageObjectPath,
+  questImageBucketName,
+} from "@/lib/storage/quest-image.server";
 import { createClient } from "@/lib/supabase/server";
 
-const bucketName = "quest-images";
 const maxFileSize = 5 * 1024 * 1024;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -24,46 +27,6 @@ type OwnedTask = {
   id: string;
   image_url: string | null;
 };
-
-function getSafeObjectPath(
-  imageUrl: string,
-  userId: string,
-  questId: string,
-  taskId: string
-) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-  if (!supabaseUrl) return null;
-
-  try {
-    const publicUrl = new URL(imageUrl);
-    const projectUrl = new URL(supabaseUrl);
-
-    if (publicUrl.origin !== projectUrl.origin) return null;
-
-    const publicPrefix = `/storage/v1/object/public/${bucketName}/`;
-
-    if (!publicUrl.pathname.startsWith(publicPrefix)) return null;
-
-    const objectPath = decodeURIComponent(
-      publicUrl.pathname.slice(publicPrefix.length)
-    );
-    const segments = objectPath.split("/");
-
-    if (segments.length !== 7) return null;
-    if (segments[0] !== "teachers") return null;
-    if (segments[1] !== userId) return null;
-    if (segments[2] !== "quests") return null;
-    if (segments[3] !== questId) return null;
-    if (segments[4] !== "tasks") return null;
-    if (segments[5] !== taskId) return null;
-    if (!segments[6]) return null;
-
-    return objectPath;
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(request: Request, { params }: RouteContext) {
   const { id, taskId } = await params;
@@ -181,7 +144,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const objectPath = `teachers/${user.id}/quests/${id}/tasks/${taskId}/${crypto.randomUUID()}.${extension}`;
 
   const { error: uploadError } = await supabase.storage
-    .from(bucketName)
+    .from(questImageBucketName)
     .upload(objectPath, file, {
       contentType: file.type,
       upsert: false,
@@ -200,7 +163,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
 
   const { data } = supabase.storage
-    .from(bucketName)
+    .from(questImageBucketName)
     .getPublicUrl(objectPath);
 
   return NextResponse.json({
@@ -278,7 +241,12 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     });
   }
 
-  const objectPath = getSafeObjectPath(task.image_url, user.id, id, taskId);
+  const objectPath = getSafeQuestImageObjectPath(
+    task.image_url,
+    user.id,
+    id,
+    taskId
+  );
 
   const { data: updatedTask, error: updateError } = await supabase
     .from("quest_tasks")
@@ -318,7 +286,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
 
   const { error: deleteError } = await supabase.storage
-    .from(bucketName)
+    .from(questImageBucketName)
     .remove([objectPath]);
 
   if (deleteError) {
