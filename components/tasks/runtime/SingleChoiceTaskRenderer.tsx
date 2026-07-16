@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 export interface SingleChoiceRuntimeOption {
@@ -10,6 +11,7 @@ export interface SingleChoiceRuntimeOption {
 export interface SingleChoiceTaskRendererProps {
   title: string;
   description: string;
+  imageUrl?: string | null;
   options: SingleChoiceRuntimeOption[];
   correctOptionId: string;
   mode?: "preview" | "play";
@@ -20,6 +22,7 @@ export interface SingleChoiceTaskRendererProps {
 export default function SingleChoiceTaskRenderer({
   title,
   description,
+  imageUrl,
   options,
   correctOptionId,
   mode = "preview",
@@ -42,6 +45,17 @@ export default function SingleChoiceTaskRenderer({
       <p className="mt-3 text-slate-300">
         {description || "Описание задания"}
       </p>
+
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={`${title || "Task"} image`}
+          width={1200}
+          height={675}
+          unoptimized
+          className="mt-5 max-h-[420px] w-full rounded-xl border border-slate-700 object-contain"
+        />
+      ) : null}
 
       <div className="mt-5 space-y-3">
         {options.length > 0 ? (

@@ -104,13 +104,24 @@ Completed:
   - Anonymous direct table access is denied.
   - No `quests` DELETE policy exists; quest deletion remains unavailable.
   - Read-only application smoke tests passed after live application.
+- Sprint 12.15.4a - Owner-Safe Storage Upload Boundary.
+  - Added authenticated owner-safe image upload route.
+  - Removed direct browser Supabase Storage uploads from the task editor flow.
+  - Added and live-applied `database/migrations/005_harden_quest_image_storage.sql`.
+  - Preserved public read for existing task image URLs.
+  - Removed public Storage INSERT, UPDATE, and DELETE policies.
+  - Added authenticated owner-prefixed INSERT policy.
+  - Enforced 5 MB bucket limit and JPEG/PNG/WebP MIME restrictions.
+  - Added runtime task image rendering for text and single-choice tasks in Preview and Play/Test.
+  - Preserved legacy `tasks/{uuid}` objects.
 
 Next:
 
-- Sprint 12.15.4 - Owner-Safe Storage Upload.
-  - Plan and implement authenticated owner-safe image upload.
-  - Replace browser direct storage uploads and non-owner-scoped `tasks/{uuid}` paths.
-  - Do not change runtime/editor architecture unless explicitly approved.
+- Sprint 12.15.5 - Storage Follow-up / Image Lifecycle Planning.
+  - Analyze private bucket/signed URL options.
+  - Analyze old image cleanup, explicit image removal, and cleanup when deleting a task.
+  - Analyze whether magic-byte MIME validation is needed.
+  - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones
 

@@ -87,6 +87,7 @@ function QuestRunnerContent() {
         taskType={currentTask.task_type}
         title={currentTask.title}
         description={currentTask.description ?? ""}
+        imageUrl={currentTask.image_url}
         options={singleChoiceContent.options}
         correctOptionId={singleChoiceContent.correctOptionId}
         answer={answers[currentTask.id] ?? ""}

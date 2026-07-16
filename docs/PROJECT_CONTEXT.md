@@ -128,10 +128,21 @@ Completed Sprint 12 work:
   - Anonymous direct table access to `quests` and `quest_tasks` is denied.
   - Quest deletion remains unavailable because no `quests` DELETE policy exists.
   - Read-only smoke tests passed for library, settings, task editor, preview, and play/test.
+- Sprint 12.15.4a - Owner-Safe Storage Upload Boundary.
+  - Added an authenticated owner-safe image upload route at `/api/teacher/quests/[id]/tasks/[taskId]/image`.
+  - Removed direct browser Supabase Storage upload from the task editor flow.
+  - New uploads use owner-prefixed paths: `teachers/{userId}/quests/{questId}/tasks/{taskId}/{uuid}.{ext}`.
+  - Quest ownership and task-to-quest relation are verified before upload.
+  - Server validation allows only JPEG, PNG, and WebP images up to 5 MB.
+  - Added and live-applied `database/migrations/005_harden_quest_image_storage.sql`.
+  - `quest-images` remains public for existing public URLs, but public INSERT, UPDATE, and DELETE policies were removed.
+  - Authenticated owner-prefixed INSERT policy is active.
+  - Runtime task images now render in the editor, Teacher Preview, and Teacher Play/Test for text and single-choice tasks.
+  - Legacy `tasks/{uuid}` storage objects remain unchanged.
 
 Next sprint:
 
-- Sprint 12.15.4 - Owner-Safe Storage Upload.
+- Sprint 12.15.5 - Storage Follow-up / Image Lifecycle Planning.
 
 ## Stack
 
@@ -145,7 +156,8 @@ Next sprint:
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.
 - The task editor and runtime renderer are modular. Add new task types through the existing registry/renderer patterns.
-- Storage upload remains the main ownership/security gap. Browser image upload and non-owner-scoped `tasks/{uuid}` paths are still unchanged.
+- Storage writes are owner-scoped for new task images, but public reads remain and legacy `tasks/{uuid}` objects are preserved.
+- Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, old image cleanup, explicit image removal, and cleanup when deleting a task.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

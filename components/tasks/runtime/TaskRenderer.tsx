@@ -8,6 +8,7 @@ export interface TaskRendererProps {
   taskType: string;
   title: string;
   description: string;
+  imageUrl?: string | null;
   options?: SingleChoiceRuntimeOption[];
   correctOptionId?: string;
   answer?: string;
@@ -20,6 +21,7 @@ export default function TaskRenderer({
   taskType,
   title,
   description,
+  imageUrl,
   options = [],
   correctOptionId = "",
   answer = "",
@@ -31,6 +33,7 @@ export default function TaskRenderer({
       <SingleChoiceTaskRenderer
         title={title}
         description={description}
+        imageUrl={imageUrl}
         options={options}
         correctOptionId={correctOptionId}
         mode={mode}
@@ -44,6 +47,7 @@ export default function TaskRenderer({
     <TextTaskRenderer
       title={title}
       description={description}
+      imageUrl={imageUrl}
       mode={mode}
       answer={answer}
       onAnswerChange={onTextAnswerChange}

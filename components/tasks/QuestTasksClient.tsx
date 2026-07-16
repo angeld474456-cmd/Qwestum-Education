@@ -168,10 +168,14 @@ export default function QuestTasksClient({
     setErrorMessage("");
 
     try {
-      const { url, error } = await uploadQuestImage(file);
+      const { imageUrl, error } = await uploadQuestImage(
+        questId,
+        taskId,
+        file
+      );
 
-      if (error || !url) {
-        setErrorMessage("Unable to upload image.");
+      if (error || !imageUrl) {
+        setErrorMessage(error ?? "Unable to upload image.");
         return;
       }
 
@@ -183,7 +187,7 @@ export default function QuestTasksClient({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            image_url: url,
+            image_url: imageUrl,
           }),
         }
       );

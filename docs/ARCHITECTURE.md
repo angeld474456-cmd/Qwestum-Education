@@ -60,6 +60,8 @@ Key files:
 
 Preview supports `single_choice` tasks through `TaskRenderer` by reading options and `correctOptionId` from `quest_tasks.content`.
 
+Task images are supported in preview through `TaskRenderer`. `image_url` is passed from owned task rows into the runtime renderers and displayed for both `text` and `single_choice` tasks.
+
 ## Quest Runtime
 
 The runtime engine is context-based and manages quest progress, answers, and status.
@@ -77,6 +79,8 @@ Key files:
 Do not bypass `RuntimeContext` for core runtime state unless the architecture is intentionally changed.
 
 Teacher Play/Test supports `single_choice` tasks through `QuestRunner` and `TaskRenderer`. Teacher Test Mode remains local-only and does not persist answers.
+
+Teacher Play/Test also renders task images when `quest_tasks.image_url` is present. Image rendering is shared through the runtime task renderer path.
 
 ## Teacher Experience Routes
 
@@ -192,8 +196,8 @@ Current limitations:
 - Quest creation sets `author_id` from the authenticated server session.
 - Quest settings save matches both quest `id` and `author_id`.
 - Task CRUD verifies ownership through the parent quest.
+- Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
 - Role-specific authorization beyond an authenticated teacher account is still deferred.
-- Storage upload is still browser-side and not owner-scoped.
 
 MVP roles:
 
@@ -243,6 +247,8 @@ Important risks:
 - Public quest/task reads may expose private data or `correctOptionId` data later if reintroduced without care.
 - Attempt answers may contain sensitive student data.
 - Storage upload paths need owner-aware policies later.
+- Storage public reads remain temporarily; private bucket or signed URL design is deferred.
+- Old storage object cleanup, image removal, task-deletion cleanup, and magic-byte MIME validation are deferred.
 - School/admin roles require careful scoping and should wait.
 
 ## Live Schema / RLS Audit Notes
@@ -277,7 +283,13 @@ RLS and storage findings:
 - `quests` has no DELETE policy, so direct quest deletion remains denied by RLS.
 - `quest_tasks` now has authenticated owner-derived policies for SELECT, INSERT, UPDATE, and DELETE through the parent quest.
 - Direct anonymous table access to `quests` and `quest_tasks` is denied.
-- Storage bucket and policy state for `quest-images` is not confirmed.
+- `database/migrations/005_harden_quest_image_storage.sql` was applied live after Sprint 12.15.4a verification.
+- `quest-images` remains public for existing public URLs.
+- Public Storage INSERT, UPDATE, and DELETE policies were removed.
+- Public read remains.
+- Authenticated users can insert only under owner-prefixed paths shaped like `teachers/{auth.uid()}/quests/{questId}/tasks/{taskId}/{filename}`.
+- Bucket constraints now limit uploads to 5 MB and JPEG, PNG, or WebP MIME types.
+- Legacy `tasks/{uuid}` objects remain unchanged.
 - Local migrations do not fully represent live schema history.
 
 Decisions after audit:
@@ -285,11 +297,12 @@ Decisions after audit:
 - Auth/session, owner-scoped teacher reads, owner-safe quest writes, owner-safe task CRUD, and RLS hardening are implemented for the teacher workspace.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is owner-safe storage upload planning and implementation.
+- Next safe step is storage lifecycle follow-up planning.
 
 Schema mismatch risks:
 
 - Existing legacy tasks may still have `content = null`; single-choice content should be created and saved through the editor before expecting options in preview/play.
-- Storage upload/public policy state is unknown.
-- Browser image upload and non-owner-scoped storage paths remain the main ownership/security gap.
+- Public reads remain for task images until a private bucket or signed URL plan is approved.
+- Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
+- Old image cleanup, explicit image removal, and storage cleanup on task deletion are deferred.
 - Local migrations are not a reliable source of truth for the live schema yet.

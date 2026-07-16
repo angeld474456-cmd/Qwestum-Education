@@ -126,6 +126,7 @@ export default async function TeacherQuestPreviewPage({
                   taskType={task.task_type}
                   title={task.title}
                   description={task.description ?? ""}
+                  imageUrl={task.image_url}
                   options={singleChoiceContent.options}
                   correctOptionId={singleChoiceContent.correctOptionId}
                 />

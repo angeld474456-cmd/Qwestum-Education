@@ -1,30 +1,45 @@
-import { supabase } from "@/lib/supabase";
+type UploadQuestImageResponse = {
+  imageUrl?: string;
+  objectPath?: string;
+  error?: string;
+};
 
-export async function uploadQuestImage(file: File) {
-  const extension = file.name.split(".").pop();
+export async function uploadQuestImage(
+  questId: string,
+  taskId: string,
+  file: File
+) {
+  const formData = new FormData();
+  formData.append("file", file);
 
-  const fileName =
-    crypto.randomUUID() + "." + extension;
+  try {
+    const response = await fetch(
+      `/api/teacher/quests/${encodeURIComponent(
+        questId
+      )}/tasks/${encodeURIComponent(taskId)}/image`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+    const result = (await response.json()) as UploadQuestImageResponse;
 
-  const filePath = `tasks/${fileName}`;
+    if (!response.ok || !result.imageUrl) {
+      return {
+        error: result.error ?? "Unable to upload image.",
+        imageUrl: null,
+      };
+    }
 
-  const { error } = await supabase.storage
-    .from("quest-images")
-    .upload(filePath, file);
-
-  if (error) {
     return {
-      error,
-      url: null,
+      error: null,
+      imageUrl: result.imageUrl,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      error: "Unable to upload image.",
+      imageUrl: null,
     };
   }
-
-  const { data } = supabase.storage
-    .from("quest-images")
-    .getPublicUrl(filePath);
-
-  return {
-    error: null,
-    url: data.publicUrl,
-  };
 }

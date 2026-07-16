@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 export interface TextTaskRendererProps {
   title: string;
   description: string;
+  imageUrl?: string | null;
   mode?: "preview" | "play";
   answer?: string;
   onAnswerChange?: (answer: string) => void;
@@ -13,6 +15,7 @@ export interface TextTaskRendererProps {
 export default function TextTaskRenderer({
   title,
   description,
+  imageUrl,
   mode = "preview",
   answer = "",
   onAnswerChange,
@@ -33,6 +36,17 @@ export default function TextTaskRenderer({
       <p className="mt-3 text-slate-300">
         {description || "Описание задания"}
       </p>
+
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt={`${title || "Task"} image`}
+          width={1200}
+          height={675}
+          unoptimized
+          className="mt-5 max-h-[420px] w-full rounded-xl border border-slate-700 object-contain"
+        />
+      ) : null}
 
       {mode === "play" && (
         <textarea

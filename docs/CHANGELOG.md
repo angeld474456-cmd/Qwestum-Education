@@ -107,6 +107,18 @@
   - Confirmed `quests` has no DELETE policy, so quest deletion remains unavailable.
   - Read-only smoke tests passed for dashboard library, settings, task editor, preview, and play/test.
   - Storage upload remains unchanged and is the next ownership/security gap.
+- Sprint 12.15.4a - Owner-Safe Storage Upload Boundary.
+  - Added authenticated task image upload route at `/api/teacher/quests/[id]/tasks/[taskId]/image`.
+  - Removed direct browser Supabase Storage upload from the task editor image flow.
+  - New uploads use `teachers/{userId}/quests/{questId}/tasks/{taskId}/{uuid}.{ext}` paths.
+  - Uploads verify quest ownership and task relation before Storage writes.
+  - Server validation allows JPEG, PNG, and WebP images up to 5 MB.
+  - Added and manually applied `database/migrations/005_harden_quest_image_storage.sql`.
+  - Preserved public read for `quest-images`, removed public INSERT/UPDATE/DELETE, and added authenticated owner-prefixed INSERT.
+  - Confirmed one owner-safe image upload works and displays in the task editor, Teacher Preview, and Teacher Play/Test.
+  - Added runtime task image rendering for text and single-choice tasks.
+  - Legacy `tasks/{uuid}` objects remain unchanged.
+  - Deferred private bucket/signed URLs, magic-byte MIME validation, image removal, old image cleanup, and cleanup when deleting a task.
 
 ## Current State On `feature/next-work`
 
