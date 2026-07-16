@@ -3,6 +3,11 @@
 import { FormEvent, useState } from "react";
 
 import Card from "@/components/ui/Card";
+import {
+  isSessionExpiredResponse,
+  redirectToSessionExpiredLogin,
+  SESSION_EXPIRED_MESSAGE,
+} from "@/lib/auth/session-expired.client";
 
 type QuestSettingsFormProps = {
   quest: {
@@ -72,6 +77,12 @@ export default function QuestSettingsForm({
           is_public: isPublic,
         }),
       });
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
 
       const result = (await response.json()) as QuestSettingsResponse;
 

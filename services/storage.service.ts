@@ -1,3 +1,9 @@
+import {
+  isSessionExpiredResponse,
+  redirectToSessionExpiredLogin,
+  SESSION_EXPIRED_MESSAGE,
+} from "@/lib/auth/session-expired.client";
+
 type UploadQuestImageResponse = {
   imageUrl?: string;
   objectPath?: string;
@@ -29,6 +35,12 @@ export async function uploadQuestImage(
         body: formData,
       }
     );
+
+    if (isSessionExpiredResponse(response)) {
+      redirectToSessionExpiredLogin();
+      throw new Error(SESSION_EXPIRED_MESSAGE);
+    }
+
     const result = (await response.json()) as UploadQuestImageResponse;
 
     if (!response.ok || !result.imageUrl) {
@@ -43,6 +55,10 @@ export async function uploadQuestImage(
       imageUrl: result.imageUrl,
     };
   } catch (error) {
+    if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
+      throw error;
+    }
+
     console.error(error);
     return {
       error: "Unable to upload image.",
@@ -61,6 +77,12 @@ export async function removeQuestImage(questId: string, taskId: string) {
         method: "DELETE",
       }
     );
+
+    if (isSessionExpiredResponse(response)) {
+      redirectToSessionExpiredLogin();
+      throw new Error(SESSION_EXPIRED_MESSAGE);
+    }
+
     const result = (await response.json()) as RemoveQuestImageResponse;
 
     if (!response.ok || !result.success) {
@@ -75,6 +97,10 @@ export async function removeQuestImage(questId: string, taskId: string) {
       storageDeleted: result.storageDeleted ?? false,
     };
   } catch (error) {
+    if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
+      throw error;
+    }
+
     console.error(error);
     return {
       error: "Unable to remove image.",

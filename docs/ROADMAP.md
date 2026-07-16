@@ -158,12 +158,24 @@ Completed:
   - Login feedback uses fixed allowlisted messages for logout/callback states.
   - Manual verification confirmed logout cleared the session, dashboard stayed protected after logout, Back plus hard refresh did not restore access, and magic-link login remained functional.
   - No migration or RLS change was required.
+- Sprint 12.16.3 - Expired Session / API 401 UX Planning.
+  - Audited protected teacher client workflows that call authenticated API routes.
+  - Recommended a small client-only helper rather than a global fetch interceptor, token refresh framework, or mutation replay.
+- Sprint 12.16.4 - Expired Session / API 401 UX.
+  - Added a client-only helper for API `401` detection.
+  - Uses fixed message `Your session has expired. Please sign in again.`
+  - Redirects only to `/login?error=session_expired` with module-level redirect deduplication.
+  - Task editor, quest settings, new quest form, and storage upload/remove flows detect `401` before generic error parsing.
+  - Technical `Unauthorized.` messages are not shown for expired sessions, and no success state is applied after `401`.
+  - Login feedback allowlist supports `error=session_expired`.
+  - Protected API contracts, RLS, Supabase configuration, and migrations were unchanged.
+  - Manual verification confirmed logout in another tab followed by a protected action redirects to the fixed session-expired login message and re-login still works.
 
 Next:
 
-- Sprint 12.16.3 - Expired Session / API 401 UX Planning.
-  - Analyze a small, consistent UX for expired sessions during long-lived teacher workflows.
-  - Keep auth/session changes small and compatible with the Supabase SSR foundation.
+- Sprint 12.17.1 - Quest Settings Metadata Planning.
+  - Analyze the smallest safe expansion of quest settings metadata for the teacher MVP.
+  - Consider fields such as duration, attempts, grade level, and subject without assuming schema changes are already approved.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones

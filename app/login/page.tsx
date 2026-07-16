@@ -42,6 +42,11 @@ function getLoginFeedback(searchParams: Awaited<NonNullable<LoginPageProps["sear
         message: "Sign out could not be completed. Please try again.",
         messageTone: "error",
       };
+    case "session_expired":
+      return {
+        message: "Your session has expired. Please sign in again.",
+        messageTone: "error",
+      };
     default:
       return {};
   }

@@ -197,7 +197,8 @@ Current limitations:
 - Successful logout redirects with HTTP 303 to `/login?logged_out=1`; failed logout redirects safely to `/login?error=logout_failed`.
 - Logout accepts no browser-controlled redirect destination.
 - Authenticated users opening `/login` are redirected to `/dashboard`.
-- Login feedback uses a fixed allowlist for logout/callback states and never displays raw query values or Supabase errors.
+- Login feedback uses a fixed allowlist for logout/callback/session-expired states and never displays raw query values or Supabase errors.
+- Current protected teacher client workflows use a client-only expired-session helper for API `401` responses. The helper uses the fixed message `Your session has expired. Please sign in again.`, redirects only to `/login?error=session_expired`, and deduplicates repeated redirects with a module-level guard.
 - Teacher dashboard reads are owner-scoped.
 - Quest creation sets `author_id` from the authenticated server session.
 - Quest settings save matches both quest `id` and `author_id`.
@@ -206,7 +207,7 @@ Current limitations:
 - Task image removal uses an authenticated server route, clears `quest_tasks.image_url` first, and then performs best-effort Storage cleanup only for verified owner-scoped paths.
 - Task image replacement cleanup uses a server-only owner-scoped image URL parser, saves the new `image_url` first, and then performs best-effort cleanup of the previous verified owner-scoped object.
 - Task deletion deletes the database row first, then performs best-effort Storage cleanup using only the deleted row's server-returned `image_url`.
-- Global client-side handling of expired-session API 401 responses, cross-tab logout synchronization, and role-specific authorization beyond an authenticated teacher account are still deferred.
+- Cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence after expired-session redirects, mutation replay, and role-specific authorization beyond an authenticated teacher account are still deferred.
 
 MVP roles:
 
@@ -317,9 +318,10 @@ Decisions after audit:
 
 - Auth/session, owner-scoped teacher reads, owner-safe quest writes, owner-safe task CRUD, and RLS hardening are implemented for the teacher workspace.
 - Teacher logout/session UX is implemented for the current MVP.
+- Expired-session API `401` UX is implemented for the current teacher client workflows without changing protected API contracts.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is expired session/API 401 UX planning.
+- Next safe step is quest settings metadata planning.
 
 Schema mismatch risks:
 
@@ -327,5 +329,5 @@ Schema mismatch risks:
 - Public reads remain for task images until a private bucket or signed URL plan is approved.
 - Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
 - Upload-before-failed-PATCH races may still orphan unattached owner-scoped image objects.
-- Expired-session API 401 responses are still handled locally by each feature flow; global client-side handling is deferred.
+- Expired-session API `401` responses redirect to `/login?error=session_expired` in current teacher client workflows; unsaved edits are not persisted across the login redirect.
 - Local migrations are not a reliable source of truth for the live schema yet.

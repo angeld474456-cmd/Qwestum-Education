@@ -189,10 +189,22 @@ Completed Sprint 12 work:
   - No migration or RLS change was required.
   - Manual verification confirmed logout cleared the session, the signed-out redirect/message worked, `/dashboard` remained inaccessible after logout, browser Back plus refresh did not restore access, and magic-link login still works.
   - A transient Turbopack/module-resolution issue was caused by stale dev state/file locking and was resolved without code changes.
+- Sprint 12.16.4 - Expired Session / API 401 UX.
+  - Added a client-only expired-session helper for protected teacher client workflows.
+  - The fixed expired-session message is `Your session has expired. Please sign in again.`
+  - The fixed redirect target is `/login?error=session_expired`.
+  - A module-level guard deduplicates repeated redirect attempts from concurrent `401` responses.
+  - Task editor actions, quest settings save, new quest creation, and storage upload/remove flows detect `401` before generic error parsing.
+  - Technical `Unauthorized.` messages are no longer shown to users for expired teacher sessions.
+  - No success state is applied after `401`, and no automatic mutation retry or replay was added.
+  - Login feedback allowlist now supports `error=session_expired`.
+  - Protected API contracts, RLS policies, Supabase configuration, and migrations were unchanged.
+  - Manual verification confirmed logout in another tab followed by a protected action redirects to the session-expired login message without false success, and re-login still works.
+  - Known limitations: unsaved edits are not persisted across login redirect, no return-to-current-page support, no cross-tab sync, no mutation replay, and upload-success followed by PATCH-401 may leave an orphaned image.
 
 Next sprint:
 
-- Sprint 12.16.3 - Expired Session / API 401 UX Planning.
+- Sprint 12.17.1 - Quest Settings Metadata Planning.
 
 ## Stack
 
@@ -208,7 +220,8 @@ Next sprint:
 - The task editor and runtime renderer are modular. Add new task types through the existing registry/renderer patterns.
 - Storage writes and owner-scoped deletes are supported for new task images, including explicit removal, replacement cleanup, and task-delete cleanup. Public reads remain and legacy `tasks/{uuid}` objects are preserved.
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
-- Deferred auth/session work includes global client-side handling of expired-session API 401 responses, cross-tab logout synchronization, and role-aware teacher/student guards.
+- Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
+- Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

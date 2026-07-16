@@ -11,6 +11,11 @@ import {
   uploadQuestImage,
 } from "@/services/storage.service";
 import type { QuestTask, TaskContent } from "@/services/quest.service";
+import {
+  isSessionExpiredResponse,
+  redirectToSessionExpiredLogin,
+  SESSION_EXPIRED_MESSAGE,
+} from "@/lib/auth/session-expired.client";
 
 type QuestTasksClientProps = {
   questId: string;
@@ -53,6 +58,13 @@ export default function QuestTasksClient({
 
     try {
       const response = await fetch(`/api/teacher/quests/${questId}/tasks`);
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
+
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.tasks) {
@@ -98,6 +110,13 @@ export default function QuestTasksClient({
           task_type: task.taskType,
         }),
       });
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
+
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.task) {
@@ -142,6 +161,13 @@ export default function QuestTasksClient({
           }),
         }
       );
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
+
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.task) {
@@ -194,6 +220,13 @@ export default function QuestTasksClient({
           }),
         }
       );
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
+
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.task) {
@@ -209,6 +242,11 @@ export default function QuestTasksClient({
 
       alert("🖼 Изображение загружено");
     } catch (error) {
+      if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        return;
+      }
+
       console.error(error);
       setErrorMessage("Unable to upload image.");
     } finally {
@@ -241,6 +279,11 @@ export default function QuestTasksClient({
           : currentTask
       );
     } catch (error) {
+      if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        return;
+      }
+
       console.error(error);
       setErrorMessage("Unable to remove image.");
     } finally {
@@ -262,6 +305,13 @@ export default function QuestTasksClient({
           method: "DELETE",
         }
       );
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
+
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok) {

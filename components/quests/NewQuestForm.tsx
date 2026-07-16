@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  isSessionExpiredResponse,
+  redirectToSessionExpiredLogin,
+  SESSION_EXPIRED_MESSAGE,
+} from "@/lib/auth/session-expired.client";
+
 type CreateQuestResponse = {
   quest?: {
     id: string;
@@ -47,6 +53,12 @@ export default function NewQuestForm() {
           is_public: isPublic,
         }),
       });
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
 
       const result = (await response.json()) as CreateQuestResponse;
 

@@ -176,6 +176,19 @@
   - A transient Turbopack/module-resolution issue was caused by stale dev state/file locking and resolved without code changes.
   - No migration or RLS change was required.
   - Deferred global client-side handling of expired-session API 401 responses, cross-tab logout synchronization, role-aware teacher/student guards, private image bucket/signed URLs, and quest deletion.
+- Sprint 12.16.3 - Expired Session / API 401 UX Planning.
+  - Audited protected teacher client workflows that can receive API `401` responses during long-lived editing sessions.
+  - Recommended a small client-only helper with fixed session-expired messaging and no return-path support, global interceptor, token refresh framework, mutation replay, or cross-tab sync.
+- Sprint 12.16.4 - Expired Session / API 401 UX.
+  - Added `lib/auth/session-expired.client.ts`.
+  - Uses fixed message `Your session has expired. Please sign in again.`
+  - Redirects only to `/login?error=session_expired` and deduplicates repeated redirect attempts with a module-level guard.
+  - Updated task editor, quest settings, new quest form, and storage upload/remove flows to detect `401` before generic error parsing.
+  - Prevents technical `Unauthorized.` messages and false success states after expired-session `401` responses.
+  - Added `error=session_expired` to the login feedback allowlist.
+  - Protected API contracts, RLS policies, Supabase configuration, and migrations were unchanged.
+  - Manual verification confirmed logout in another tab followed by a protected action redirected to the fixed session-expired login message, and re-login remained functional.
+  - Known limitations: unsaved edits are not persisted across login redirect, no return-to-current-page support, no cross-tab sync, no mutation replay, and upload-success followed by PATCH-401 may leave an orphaned image.
 
 ## Current State On `feature/next-work`
 
