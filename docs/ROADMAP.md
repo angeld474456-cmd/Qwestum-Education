@@ -223,13 +223,29 @@ Completed:
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - No default, backfill, index, RLS change, policy change, lookup table, enum, admin UI, filtering, or i18n framework was added.
   - Browser verification passed for Russian save/persistence, Library display, Preview display, changing to Kazakh, clearing language, display removal, and subject/grade/duration regression coverage.
+- Sprint 12.17.8 - Quest Cover Image Planning.
+  - Confirmed live schema had no existing quest cover field or related constraint.
+  - Recommended reusing the public `quest-images` bucket with a path-only quest cover model.
+  - Planned owner-safe cover upload, replacement, removal, Library thumbnail display, and Preview display.
+- Sprint 12.17.9 - Quest Cover Image MVP.
+  - Added and manually applied `database/migrations/010_add_quest_cover_image.sql`.
+  - Added nullable `quests.cover_image_path` text with no default, backfill, index, or quest RLS change.
+  - Persisted only bucket-relative Storage paths; public URLs are derived and not stored.
+  - Added authenticated owner-prefixed cover INSERT and DELETE policies for `teachers/{userId}/quests/{questId}/cover/{uuid}.{ext}`.
+  - Preserved public read, existing task-image policies, and the absence of a Storage UPDATE policy.
+  - Server-generated paths derive extensions from validated JPEG/PNG/WebP MIME types and reject nested or malformed paths.
+  - Added owner-safe cover upload, replacement cleanup, and removal through authenticated server routes.
+  - Added `QuestCoverImageManager` to Quest Settings without submitting the regular settings form.
+  - Teacher Library shows a 16:9 thumbnail or stable fallback; Teacher Preview shows a larger cover when present.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - Browser verification passed for upload, persistence, Settings preview, Library thumbnail, Preview display, replacement, removal, task image regression, and subject/grade/duration/language regression coverage.
 
 Next:
 
-- Sprint 12.17.8 - Quest Cover Image Planning.
-  - Analyze the smallest owner-safe quest cover image slice for the teacher MVP.
-  - Reuse existing storage/security lessons where appropriate, but do not implement storage changes without approval.
-  - Keep subject/language administration, catalog filtering, and quest deletion deferred.
+- Sprint 12.17.10 - Quest Tags / Category Planning.
+  - Analyze the smallest teacher-MVP taxonomy slice after subject, language, grade/duration, and cover metadata.
+  - Decide whether tags/category need schema, static options, or deferral.
+  - Keep subject/language administration, catalog filtering, cover enhancements, and quest deletion deferred.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones
@@ -237,6 +253,6 @@ Next:
 - Add more task types through the existing registry pattern.
 - Improve analytics with real student attempt data.
 - Add teacher authentication/authorization boundaries.
-- Add richer quest settings, including subject, language, tags/category, cover image, attempt limits, and catalog filtering.
+- Add richer quest settings, including tags/category, attempt limits, catalog filtering, and creation-time metadata where useful.
 - Add student assignment and classroom flows.
 - Add automated tests around task rendering and runtime state.

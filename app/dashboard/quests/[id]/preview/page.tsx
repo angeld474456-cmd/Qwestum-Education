@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import Card from "@/components/ui/Card";
+import { getSafeQuestCoverImagePublicUrl } from "@/lib/storage/quest-cover.server";
 import TaskRenderer from "@/components/tasks/runtime/TaskRenderer";
 import {
   getTeacherSubjects,
@@ -117,6 +119,11 @@ export default async function TeacherQuestPreviewPage({
     ? formatSubject(subjects.find((subject) => subject.id === quest.subject_id))
     : null;
   const languageLabel = getQuestLanguageLabel(quest.language_code);
+  const coverImageUrl = getSafeQuestCoverImagePublicUrl(
+    quest.cover_image_path,
+    quest.author_id,
+    quest.id
+  );
 
   return (
     <section className="space-y-8 text-white">
@@ -162,6 +169,19 @@ export default async function TeacherQuestPreviewPage({
 
         <QuestWorkspaceNav questId={id} active="preview" />
       </div>
+
+      {coverImageUrl ? (
+        <div className="aspect-video overflow-hidden rounded-2xl border border-slate-800 bg-[#111827]">
+          <Image
+            src={coverImageUrl}
+            alt={`${quest.title} cover image`}
+            width={1280}
+            height={720}
+            unoptimized
+            className="h-full w-full object-cover"
+          />
+        </div>
+      ) : null}
 
       {tasks.length === 0 ? (
         <Card className="text-center">

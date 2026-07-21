@@ -144,7 +144,19 @@ Quest metadata:
 - `quests.language_code` is nullable text and constrained to `ru`, `kk`, or `en` when populated.
 - Language labels are Russian, Kazakh, and English. Language describes quest content, not UI locale.
 - No language default, backfill, index, lookup table, PostgreSQL enum, RLS change, policy change, admin UI, filtering, or i18n framework was added.
+- `database/migrations/010_add_quest_cover_image.sql` was applied live after Sprint 12.17.9 verification.
+- `quests.cover_image_path` is nullable text.
+- Quest cover images persist only the bucket-relative Storage path. Public URLs are derived at render time and are not stored.
+- Cover objects use `teachers/{userId}/quests/{questId}/cover/{uuid}.{ext}`.
+- The server generates cover paths, derives file extensions from validated MIME type, and does not trust browser filenames or paths.
+- Cover upload allows JPEG, PNG, and WebP images up to 5 MB.
+- Cover Storage policies add authenticated INSERT and DELETE for owner-prefixed cover paths only. Exact UUID-shaped quest and filename segments are enforced, nested or malformed paths are rejected, no Storage UPDATE policy was added, public read remains unchanged, and task image policies remain unchanged.
+- Cover replacement uploads the new object, conditionally saves the new path, and then performs best-effort cleanup of the previous validated owner-scoped cover object.
+- Failed DB updates attempt best-effort cleanup of the newly uploaded object; concurrent cover changes return safe HTTP 409 and do not delete a newer cover.
+- Cover removal conditionally clears the DB path and deletes only a validated old owner-scoped cover object.
+- Malformed or unrelated cover paths are never deleted; cleanup failure after a successful DB update is logged and non-blocking.
 - Quest Settings can edit grade range, estimated duration, optional `subject_id`, and optional `language_code` through the owner-safe settings API.
+- Quest Settings has a separate `QuestCoverImageManager` for optional cover upload, replacement, preview, and removal without submitting the regular settings form.
 - The subject selector uses a server-only authenticated lookup from `public.subjects` and selects only `id`, `name`, and `grade`, ordered by name, grade, and id.
 - No service role or hardcoded subject UUID mapping is used for subject selection.
 - `No subject` submits `null`; omitted `subject_id` preserves the current value.
@@ -152,6 +164,7 @@ Quest metadata:
 - A shared `QuestLanguageCode` helper provides language codes, labels, validation, and safe label resolution. Unknown or null language values render without a placeholder.
 - `No language specified` submits `null`; omitted `language_code` preserves the current value. Invalid language values return safe `400` responses.
 - Dashboard and Teacher Preview show resolved subject and language metadata only when populated. Null or unresolved subjects/languages show no placeholder.
+- Teacher Library shows a 16:9 cover thumbnail or stable fallback. Teacher Preview shows a larger 16:9 cover when present. Null or malformed cover paths do not show broken images.
 - The Teacher Library uses one subject lookup and an in-memory map, avoiding N+1 subject queries.
 - NewQuestForm and Teacher Play/Test remain unchanged.
 
@@ -235,6 +248,7 @@ Current limitations:
 - Task image removal uses an authenticated server route, clears `quest_tasks.image_url` first, and then performs best-effort Storage cleanup only for verified owner-scoped paths.
 - Task image replacement cleanup uses a server-only owner-scoped image URL parser, saves the new `image_url` first, and then performs best-effort cleanup of the previous verified owner-scoped object.
 - Task deletion deletes the database row first, then performs best-effort Storage cleanup using only the deleted row's server-returned `image_url`.
+- Quest cover upload/removal uses an authenticated server route and verifies quest ownership before Storage writes/deletes.
 - Cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence after expired-session redirects, mutation replay, and role-specific authorization beyond an authenticated teacher account are still deferred.
 
 MVP roles:
@@ -351,6 +365,12 @@ RLS and storage findings:
 - `database/migrations/009_add_quest_language_metadata.sql` was applied live after Sprint 12.17.7 verification.
 - Live `quests.language_code` is nullable text with allowed values `ru`, `kk`, and `en`.
 - No default, backfill, index, RLS change, or policy change was added for language metadata.
+- Sprint 12.17.8 planning confirmed live schema had no existing quest cover field.
+- `database/migrations/010_add_quest_cover_image.sql` was applied live after Sprint 12.17.9 verification.
+- Live `quests.cover_image_path` is nullable text with no default, backfill, index, or quest RLS change.
+- The existing public `quest-images` bucket is reused for cover images, remains public, keeps the 5 MB limit, and keeps JPEG/PNG/WebP MIME restrictions.
+- Cover Storage policies `Teachers can upload own quest covers` and `Teachers can delete own quest covers` were added for authenticated owner-prefixed cover paths.
+- Public read remains unchanged, task image INSERT/DELETE policies remain unchanged, and no Storage UPDATE policy was added.
 - Local migrations do not fully represent live schema history.
 
 Decisions after audit:
@@ -361,16 +381,19 @@ Decisions after audit:
 - Grade range and estimated duration metadata are implemented for Quest Settings, Dashboard, and Teacher Preview.
 - Subject lookup and the Quest Settings subject selector are implemented. Subject creation/editing/deletion, taxonomy administration, subject catalog filtering, and inactive/status semantics remain deferred.
 - Quest content language metadata is implemented for Quest Settings, Dashboard, and Teacher Preview. Language during quest creation, catalog language filtering/indexes, multilingual variants, UI localization/i18n, and language administration remain deferred.
+- Quest cover images are implemented for Quest Settings, Dashboard, and Teacher Preview. Cover selection during quest creation, image resizing/cropping, private media/signed URLs, and orphan cleanup tooling remain deferred.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is quest cover image planning.
+- Next safe step is tags/category planning for the teacher MVP.
 
 Schema mismatch risks:
 
 - Existing legacy tasks may still have `content = null`; single-choice content should be created and saved through the editor before expecting options in preview/play.
 - Public reads remain for task images until a private bucket or signed URL plan is approved.
+- Public reads remain for task and cover images until a private bucket or signed URL plan is approved.
 - Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
 - Upload-before-failed-PATCH races may still orphan unattached owner-scoped image objects.
+- Failed best-effort cover cleanup may leave orphaned cover objects.
 - Expired-session API `401` responses redirect to `/login?error=session_expired` in current teacher client workflows; unsaved edits are not persisted across the login redirect.
 - Direct authenticated API edge-case verification for invalid subject UUID, missing subject UUID, and foreign quest PATCH was not executed in Sprint 12.17.5 because no safe controllable authenticated API session was available; those paths were verified by code review and browser save/clear covered the authenticated success path.
 - Local migrations are not a reliable source of truth for the live schema yet.

@@ -9,6 +9,8 @@ export interface Quest {
 
   language_code: "ru" | "kk" | "en" | null;
 
+  cover_image_path: string | null;
+
   author_id: string;
 
   difficulty: number;

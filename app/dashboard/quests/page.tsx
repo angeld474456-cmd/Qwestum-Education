@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import Card from "@/components/ui/Card";
+import { getSafeQuestCoverImagePublicUrl } from "@/lib/storage/quest-cover.server";
 import {
   getTeacherSubjects,
   type TeacherSubject,
@@ -169,6 +171,11 @@ export default async function TeacherQuestLibraryPage() {
           <div className="grid gap-6">
             {quests.map((quest) => {
               const taskCount = taskCountsByQuestId[quest.id] ?? 0;
+              const coverImageUrl = getSafeQuestCoverImagePublicUrl(
+                quest.cover_image_path,
+                quest.author_id,
+                quest.id
+              );
               const gradeLabel = formatGradeRange(
                 quest.grade_min,
                 quest.grade_max
@@ -188,59 +195,80 @@ export default async function TeacherQuestLibraryPage() {
                       href={`/dashboard/quests/${quest.id}/settings`}
                       className="min-w-0 rounded-xl outline-none transition hover:text-white focus-visible:ring-2 focus-visible:ring-violet-500"
                     >
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h2 className="text-2xl font-bold">
-                          {quest.title}
-                        </h2>
+                      <div className="grid gap-5 lg:grid-cols-[220px_1fr]">
+                        <div className="aspect-video overflow-hidden rounded-xl border border-slate-800 bg-gradient-to-br from-slate-800 via-slate-900 to-violet-950">
+                          {coverImageUrl ? (
+                            <Image
+                              src={coverImageUrl}
+                              alt={`${quest.title} cover image`}
+                              width={640}
+                              height={360}
+                              unoptimized
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center px-4 text-center text-xs font-semibold text-slate-500">
+                              No cover
+                            </div>
+                          )}
+                        </div>
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                            quest.is_public
-                              ? "bg-emerald-500/15 text-emerald-300"
-                              : "bg-amber-500/15 text-amber-300"
-                          }`}
-                        >
-                          {quest.is_public ? "Public" : "Draft"}
-                        </span>
-                      </div>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h2 className="text-2xl font-bold">
+                              {quest.title}
+                            </h2>
 
-                      <p className="mt-3 max-w-3xl text-slate-400">
-                        {quest.description || "No description provided."}
-                      </p>
+                            <span
+                              className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                                quest.is_public
+                                  ? "bg-emerald-500/15 text-emerald-300"
+                                  : "bg-amber-500/15 text-amber-300"
+                              }`}
+                            >
+                              {quest.is_public ? "Public" : "Draft"}
+                            </span>
+                          </div>
 
-                      <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-300">
-                        <span>Difficulty: {quest.difficulty ?? "Not available"}</span>
-                        <span>Created: {formatCreatedAt(quest.created_at)}</span>
-                        <span>Tasks: {taskCount}</span>
-                      </div>
+                          <p className="mt-3 max-w-3xl text-slate-400">
+                            {quest.description || "No description provided."}
+                          </p>
 
-                      {subjectLabel ||
-                      languageLabel ||
-                      gradeLabel ||
-                      durationLabel ? (
-                        <div className="mt-4 flex flex-wrap gap-2 text-sm">
-                          {subjectLabel ? (
-                            <span className="rounded-full bg-violet-500/10 px-3 py-1 font-semibold text-violet-200">
-                              {subjectLabel}
-                            </span>
-                          ) : null}
-                          {languageLabel ? (
-                            <span className="rounded-full bg-indigo-500/10 px-3 py-1 font-semibold text-indigo-200">
-                              {languageLabel}
-                            </span>
-                          ) : null}
-                          {gradeLabel ? (
-                            <span className="rounded-full bg-cyan-500/10 px-3 py-1 font-semibold text-cyan-200">
-                              {gradeLabel}
-                            </span>
-                          ) : null}
-                          {durationLabel ? (
-                            <span className="rounded-full bg-slate-700 px-3 py-1 font-semibold text-slate-200">
-                              {durationLabel}
-                            </span>
+                          <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-300">
+                            <span>Difficulty: {quest.difficulty ?? "Not available"}</span>
+                            <span>Created: {formatCreatedAt(quest.created_at)}</span>
+                            <span>Tasks: {taskCount}</span>
+                          </div>
+
+                          {subjectLabel ||
+                          languageLabel ||
+                          gradeLabel ||
+                          durationLabel ? (
+                            <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                              {subjectLabel ? (
+                                <span className="rounded-full bg-violet-500/10 px-3 py-1 font-semibold text-violet-200">
+                                  {subjectLabel}
+                                </span>
+                              ) : null}
+                              {languageLabel ? (
+                                <span className="rounded-full bg-indigo-500/10 px-3 py-1 font-semibold text-indigo-200">
+                                  {languageLabel}
+                                </span>
+                              ) : null}
+                              {gradeLabel ? (
+                                <span className="rounded-full bg-cyan-500/10 px-3 py-1 font-semibold text-cyan-200">
+                                  {gradeLabel}
+                                </span>
+                              ) : null}
+                              {durationLabel ? (
+                                <span className="rounded-full bg-slate-700 px-3 py-1 font-semibold text-slate-200">
+                                  {durationLabel}
+                                </span>
+                              ) : null}
+                            </div>
                           ) : null}
                         </div>
-                      ) : null}
+                      </div>
                     </Link>
 
                     <div className="flex flex-wrap gap-3">

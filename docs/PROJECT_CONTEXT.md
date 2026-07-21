@@ -259,10 +259,34 @@ Completed Sprint 12 work:
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - No language lookup table, PostgreSQL enum, admin UI, filtering, or i18n framework was added.
   - Browser verification confirmed Russian save/persistence, library display, preview display, changing to Kazakh, clearing language, display removal, and subject/grade/duration regression coverage.
+- Sprint 12.17.8 - Quest Cover Image Planning.
+  - Confirmed live schema had no existing quest cover field or related constraint.
+  - Planned a path-only cover image model using the existing public `quest-images` bucket.
+  - Confirmed cover work should preserve task image policies and owner-scoped quest RLS.
+- Sprint 12.17.9 - Quest Cover Image MVP.
+  - Added and live-applied `database/migrations/010_add_quest_cover_image.sql`.
+  - `quests.cover_image_path` is nullable text with no default, backfill, index, or quest RLS change.
+  - Only the bucket-relative Storage path is persisted; public URLs are derived at render time and are not stored.
+  - Cover objects use `teachers/{userId}/quests/{questId}/cover/{uuid}.{ext}`.
+  - The server generates paths, derives filename extensions from validated MIME type, and does not trust browser filenames or paths.
+  - Cover Storage INSERT and DELETE policies were added for authenticated owner-prefixed cover paths.
+  - Exact UUID-shaped quest and filename segments are enforced; nested or malformed cover paths are rejected.
+  - Public read remains unchanged, task image policies remain unchanged, no Storage UPDATE policy was added, no service role is used, and no direct browser Storage writes were added.
+  - Cover upload runs authentication, owner check, validation, Storage upload, then conditional DB update.
+  - Cover replacement uploads the new object, conditionally saves the new path, and then performs best-effort old object cleanup.
+  - Failed DB updates attempt best-effort cleanup of the new object; concurrent cover changes return safe HTTP 409 and do not delete a newer cover.
+  - Cover removal conditionally clears the DB path and deletes only a validated old owner-scoped cover object.
+  - Malformed or unrelated paths are never deleted; cleanup failure after a successful DB update is logged and non-blocking.
+  - Quest Settings has a separate `QuestCoverImageManager` for upload, replacement, preview, and removal without submitting the regular settings form.
+  - Teacher Library shows a 16:9 cover thumbnail or stable fallback.
+  - Teacher Preview shows a larger 16:9 cover when present.
+  - Null or malformed cover paths do not show broken images.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - Browser verification confirmed cover upload, persistence after refresh, Settings preview, Library thumbnail, Preview display, replacement, removal, task image regression coverage, and subject/grade/duration/language regression coverage.
 
 Next sprint:
 
-- Sprint 12.17.8 - Quest Cover Image Planning.
+- Sprint 12.17.10 - Quest Tags / Category Planning.
 
 ## Stack
 
@@ -276,11 +300,11 @@ Next sprint:
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.
 - The task editor and runtime renderer are modular. Add new task types through the existing registry/renderer patterns.
-- Storage writes and owner-scoped deletes are supported for new task images, including explicit removal, replacement cleanup, and task-delete cleanup. Public reads remain and legacy `tasks/{uuid}` objects are preserved.
-- Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
+- Storage writes and owner-scoped deletes are supported for new task images and quest cover images. Public reads remain and legacy `tasks/{uuid}` objects are preserved.
+- Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, orphan cleanup tooling, image resizing/cropping, and legacy object migration.
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
-- Deferred quest metadata work includes language during quest creation, catalog language filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, tags/category, quest cover image, attempt limits, and subject catalog filtering/administration.
+- Deferred quest metadata work includes language during quest creation, catalog language filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, tags/category, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

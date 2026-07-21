@@ -245,6 +245,24 @@
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - No default, backfill, index, RLS change, policy change, lookup table, PostgreSQL enum, admin UI, filtering, or i18n framework was added.
   - Browser verification passed for Russian save/persistence, Library display, Preview display, changing to Kazakh, clearing language, display removal, and subject/grade/duration regression coverage.
+- Sprint 12.17.8 - Quest Cover Image Planning.
+  - Confirmed live schema had no existing quest cover field or related constraint.
+  - Planned a path-only cover image model using the existing public `quest-images` bucket.
+  - Recommended owner-safe server upload/removal, authenticated cover Storage policies, Library thumbnail display, and Preview cover display.
+- Sprint 12.17.9 - Quest Cover Image MVP.
+  - Added and manually applied `database/migrations/010_add_quest_cover_image.sql`.
+  - Added nullable `quests.cover_image_path` text.
+  - Persisted only bucket-relative Storage paths; public URLs are derived and not stored.
+  - Added authenticated owner-prefixed cover INSERT and DELETE policies for `teachers/{userId}/quests/{questId}/cover/{uuid}.{ext}`.
+  - Preserved public read, existing task-image policies, quest owner RLS, and no Storage UPDATE policy.
+  - Server generates paths, derives extensions from validated JPEG/PNG/WebP MIME types, and rejects nested or malformed cover paths.
+  - Added owner-safe cover upload, replacement cleanup, and removal through `/api/teacher/quests/[id]/cover`.
+  - Added `QuestCoverImageManager` to Settings; cover actions do not submit the regular Settings form.
+  - Teacher Library displays a 16:9 cover thumbnail or fallback.
+  - Teacher Preview displays a larger 16:9 cover when present.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - Browser verification passed for upload, persistence after refresh, Settings preview, Library thumbnail, Preview display, replacement, removal, task image regression, and subject/grade/duration/language regression coverage.
+  - Known limitations: public bucket reads remain, MIME verification relies on `File.type`, best-effort cleanup can leave orphan objects, no cropper/resizing, no private bucket/signed URLs, no cover in NewQuestForm or Play/Test, and no gallery/multiple covers.
 
 ## Current State On `feature/next-work`
 

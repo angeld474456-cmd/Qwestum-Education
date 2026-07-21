@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 
+import QuestCoverImageManager from "@/components/dashboard/QuestCoverImageManager";
 import QuestSettingsForm from "@/components/dashboard/QuestSettingsForm";
 import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
+import { getSafeQuestCoverImagePublicUrl } from "@/lib/storage/quest-cover.server";
 import { getTeacherSubjects } from "@/services/subject.server";
 import { getOwnedQuest } from "@/services/teacher-quest.server";
 
@@ -40,6 +42,15 @@ export default async function TeacherQuestSettingsPage({
 
         <QuestWorkspaceNav questId={id} active="settings" />
       </div>
+
+      <QuestCoverImageManager
+        questId={quest.id}
+        initialCoverImageUrl={getSafeQuestCoverImagePublicUrl(
+          quest.cover_image_path,
+          quest.author_id,
+          quest.id
+        )}
+      />
 
       <QuestSettingsForm quest={quest} subjects={subjects} />
     </section>
