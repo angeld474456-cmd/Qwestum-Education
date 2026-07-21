@@ -212,10 +212,23 @@ Completed Sprint 12 work:
   - Dashboard and Teacher Preview display metadata only when populated, including `Grades 5-7`, `45 min`, and `Grade 7`.
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - Browser verification confirmed range save/persistence, single-grade display, metadata clearing, and existing quest compatibility.
+- Sprint 12.17.3 - Quest Subject Lookup Planning.
+  - Confirmed `quests.subject_id` is nullable UUID and has a foreign key to `public.subjects.id`.
+  - Confirmed `public.subjects` has `id uuid`, `name text`, `grade integer nullable`, and `created_at timestamptz`.
+  - Confirmed subject lookup rows exist, exact duplicate `name + grade` pairs were not found, and all 7 existing quests currently have `subject_id = null`.
+  - Confirmed subject UI should reuse `subject_id`; no duplicate `subject` text column is planned.
+- Sprint 12.17.4 - Subjects Read Policy.
+  - Added and live-applied `database/migrations/008_add_subjects_read_policy.sql`.
+  - `public.subjects` RLS remains enabled.
+  - Authenticated users have SELECT-only access to subjects.
+  - No subject INSERT, UPDATE, or DELETE policies exist.
+  - Subject row count remained unchanged.
+  - Existing `quests` and `quest_tasks` policies were untouched.
+  - No subject UI or quest CRUD changes were included.
 
 Next sprint:
 
-- Sprint 12.17.3 - Quest Subject Lookup Planning.
+- Sprint 12.17.5 - Teacher Quest Subject Selector.
 
 ## Stack
 

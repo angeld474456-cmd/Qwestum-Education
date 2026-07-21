@@ -182,12 +182,26 @@ Completed:
   - Dashboard and Teacher Preview display metadata only when populated.
   - `subject_id` remained untouched, no `subject` text column was added, and owner-scoped RLS policies were unchanged.
   - Browser verification passed for `Grades 5-7`, `45 min`, `Grade 7`, metadata clearing, and existing quest compatibility.
+- Sprint 12.17.3 - Quest Subject Lookup Planning.
+  - Confirmed `quests.subject_id` is nullable UUID with a foreign key to `public.subjects.id`.
+  - Confirmed `public.subjects` has usable seeded rows with `id`, `name`, optional `grade`, and `created_at`.
+  - Confirmed no exact duplicate `name + grade` pairs were found and all 7 existing quests currently have `subject_id = null`.
+  - Recommended reusing `subject_id` with a server-read subject lookup.
+- Sprint 12.17.4 - Subjects Read Policy.
+  - Added and live-applied `database/migrations/008_add_subjects_read_policy.sql`.
+  - `public.subjects` RLS remains enabled.
+  - Authenticated users have SELECT-only access to subjects.
+  - No subject INSERT, UPDATE, or DELETE policies exist.
+  - Subject row count remained unchanged.
+  - Existing `quests` and `quest_tasks` policies were untouched.
+  - No subject UI or quest CRUD changes were included.
 
 Next:
 
-- Sprint 12.17.3 - Quest Subject Lookup Planning.
-  - Analyze live `subject_id` table/FK/display-name/RLS behavior before adding subject UI.
-  - Do not add duplicate subject text unless `subject_id` is confirmed unusable and explicitly approved.
+- Sprint 12.17.5 - Teacher Quest Subject Selector.
+  - Add subject selection to Quest Settings using existing `quests.subject_id`.
+  - Display subject name in Teacher Library and Preview.
+  - Do not add subject creation/edit/delete UI or taxonomy/admin tooling.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones

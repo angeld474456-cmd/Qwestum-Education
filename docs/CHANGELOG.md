@@ -203,6 +203,19 @@
   - Verified `Grades 5-7`, `45 min`, `Grade 7`, metadata clearing, and existing quest compatibility in the browser.
   - Confirmed all 7 existing quests remained compatible with null metadata.
   - `subject_id` remained untouched, no `subject` text column was added, and existing owner-scoped RLS policies remained unchanged.
+- Sprint 12.17.3 - Quest Subject Lookup Planning.
+  - Confirmed `quests.subject_id` is nullable UUID and references `public.subjects.id`.
+  - Confirmed `public.subjects` has `id uuid`, `name text`, `grade integer nullable`, and `created_at timestamptz`.
+  - Confirmed usable subject rows exist, no exact duplicate `name + grade` pairs were found, and all 7 current quests have `subject_id = null`.
+  - Recommended reusing `subject_id` with a server-read lookup rather than adding duplicate subject text.
+- Sprint 12.17.4 - Subjects Read Policy.
+  - Added and manually applied `database/migrations/008_add_subjects_read_policy.sql`.
+  - `public.subjects` RLS remains enabled.
+  - Added exactly one authenticated SELECT policy: `Authenticated users can read subjects`.
+  - No subject INSERT, UPDATE, or DELETE policies exist.
+  - Subject row count remained unchanged.
+  - Existing `quests` and `quest_tasks` policies were untouched.
+  - No subject UI or quest CRUD changes were included.
 
 ## Current State On `feature/next-work`
 

@@ -135,6 +135,11 @@ Quest metadata:
 - Duration is constrained to null or 5-240 minutes.
 - No defaults or backfill were added, so legacy quests with null metadata remain valid.
 - `subject_id` remains untouched, and no duplicate `subject` text column exists.
+- `quests.subject_id` is nullable UUID and references `public.subjects.id`.
+- `public.subjects` has `id uuid`, `name text`, `grade integer nullable`, and `created_at timestamptz`.
+- Subject lookup rows exist and no exact duplicate `name + grade` pairs were found during Sprint 12.17.3 planning.
+- `database/migrations/008_add_subjects_read_policy.sql` was applied live. `public.subjects` RLS remains enabled and authenticated users have SELECT-only lookup access.
+- No subject INSERT, UPDATE, or DELETE policies exist, and no subject create/edit/delete UI is planned for the MVP slice.
 - Quest Settings can edit grade range and estimated duration through the owner-safe settings API.
 - Dashboard and Teacher Preview show metadata only when populated. NewQuestForm and Teacher Play/Test remain unchanged.
 
@@ -327,6 +332,9 @@ RLS and storage findings:
 - Live `quests` now includes nullable `grade_min`, `grade_max`, and `estimated_duration_minutes`.
 - CHECK constraints enforce grade values 1-11, both grades null or both populated, ordered grade ranges, and duration 5-240 minutes.
 - Existing owner-scoped quest policies remained unchanged, RLS remained enabled, and all 7 existing quests remained compatible with null metadata.
+- `database/migrations/008_add_subjects_read_policy.sql` was applied live after Sprint 12.17.4 verification.
+- `public.subjects` has exactly one SELECT policy for authenticated users; no subject write policies exist.
+- Subject row count remained unchanged, and existing `quests` and `quest_tasks` policies were untouched.
 - Local migrations do not fully represent live schema history.
 
 Decisions after audit:
@@ -335,7 +343,7 @@ Decisions after audit:
 - Teacher logout/session UX is implemented for the current MVP.
 - Expired-session API `401` UX is implemented for the current teacher client workflows without changing protected API contracts.
 - Grade range and estimated duration metadata are implemented for Quest Settings, Dashboard, and Teacher Preview.
-- Subject metadata remains deferred pending a dedicated `subject_id` lookup/table audit.
+- Subject lookup access is ready for a small Quest Settings subject selector. Subject creation/editing/deletion and taxonomy administration remain deferred.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
 - Next safe step is quest settings metadata planning.

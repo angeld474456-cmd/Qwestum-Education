@@ -6,17 +6,17 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the next small teacher-MVP metadata improvement after grade range and duration.
+Add a small teacher-facing subject selector using the verified existing subject lookup.
 
 ## Next Task
 
-Sprint 12.17.3 - Quest Subject Lookup Planning.
+Sprint 12.17.5 - Teacher Quest Subject Selector.
 
-Start with analysis/planning only unless implementation is explicitly approved.
+Start implementation only after explicit approval.
 
 Goal:
 
-- Verify whether existing `quests.subject_id` can support teacher-facing subject metadata without adding a duplicate subject text column.
+- Let teachers set an optional quest subject in Quest Settings using existing `quests.subject_id` and `public.subjects`.
 
 Current state:
 
@@ -24,55 +24,41 @@ Current state:
 - Dashboard and teacher pages are protected.
 - Owner-scoped quest and task CRUD is implemented.
 - Quest/task RLS hardening is live.
-- Owner-safe image upload, removal, replacement cleanup, and task-delete cleanup are implemented.
-- Teacher logout/session UX and expired-session API `401` UX are implemented.
-- Quest Settings now supports grade range and estimated duration.
-- Migration 007 is applied live.
-- `subject_id` exists in live `quests` but is not used by active teacher CRUD.
-- No usable subject lookup model has been confirmed.
-- No duplicate `subject` text column has been added.
+- Quest Settings supports grade range and estimated duration.
+- `quests.subject_id` is nullable UUID and references `public.subjects.id`.
+- `public.subjects` has usable seeded rows.
+- `public.subjects` RLS is enabled.
+- Authenticated users have SELECT-only access to subjects.
+- No subject INSERT, UPDATE, or DELETE policies exist.
+- All current quests have `subject_id = null`.
 
-Planning constraints:
+Planned scope:
 
-- Do not create migrations without separate approval.
-- Do not change RLS policies.
-- Do not modify Supabase schema or data.
-- Do not modify task editor/runtime/JSONB architecture.
-- Do not add quest deletion unless explicitly required.
-- Preserve existing auth/session behavior.
-- Keep UI labels in English for new dashboard UI.
-- Keep changes minimal and scoped.
+- Add `subject_id` to the active teacher quest DTO and selects.
+- Add a server-side subject lookup using the authenticated Supabase server client.
+- Add an optional subject selector to Quest Settings.
+- Validate submitted UUID and subject existence in the owner-safe PATCH route.
+- Allow `null` to clear subject.
+- Display subject name in Teacher Library and Preview.
+- Keep `NewQuestForm` unchanged.
 
-Questions to answer:
+Out of scope:
 
-- Does `quests.subject_id` have a live foreign key?
-- What table does it reference, if any?
-- Does the subject table have stable display-name fields and usable rows?
-- Can authenticated teacher routes safely read subject names under current RLS?
-- Should subject UI reuse `subject_id`, wait for seed/taxonomy repair, or be deferred?
-- What is the smallest independently testable implementation sprint after planning?
-
-Deferred items:
-
+- Subject create/edit/delete UI.
+- Taxonomy/admin UI.
+- Hardcoded UUID mapping.
+- Service role.
+- New schema migration.
 - Quest deletion.
-- Student attempt persistence and analytics.
-- Language.
-- Tags/category.
-- Quest cover image.
-- Attempt limits.
-- Catalog filtering/indexes.
-- Cross-tab logout synchronization.
-- Return-to-current-page after session expiry.
-- Unsaved-edit persistence across login redirects.
-- Private bucket or signed URL access.
-- Magic-byte MIME validation.
-- Legacy object migration.
+- Task editor/runtime/JSONB changes.
 
-Required verification for any future implementation:
+Required verification:
 
 ```powershell
 npm.cmd run lint
 npm.cmd run build
 git diff --check
+git diff --name-only
+git diff --stat
 git status -sb
 ```
