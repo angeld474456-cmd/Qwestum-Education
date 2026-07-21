@@ -11,6 +11,9 @@ type QuestPayload = {
   description?: unknown;
   difficulty?: unknown;
   is_public?: unknown;
+  grade_min?: unknown;
+  grade_max?: unknown;
+  estimated_duration_minutes?: unknown;
 };
 
 type RouteContext = {
@@ -53,6 +56,65 @@ function parseQuestPayload(body: QuestPayload) {
   };
 }
 
+type NullableIntegerFieldResult =
+  | {
+      provided: false;
+      value?: never;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value: number | null;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value?: never;
+      error: string;
+    };
+
+function parseNullableIntegerField(
+  body: QuestPayload,
+  fieldName: keyof QuestPayload,
+  label: string,
+  min: number,
+  max: number
+): NullableIntegerFieldResult {
+  if (!(fieldName in body)) {
+    return {
+      provided: false,
+    };
+  }
+
+  const value = body[fieldName];
+
+  if (value === null || value === "") {
+    return {
+      provided: true,
+      value: null,
+    };
+  }
+
+  if (typeof value !== "number" || !Number.isInteger(value)) {
+    return {
+      provided: true,
+      error: `${label} must be an integer.`,
+    };
+  }
+
+  if (value < min || value > max) {
+    return {
+      provided: true,
+      error: `${label} must be between ${min} and ${max}.`,
+    };
+  }
+
+  return {
+    provided: true,
+    value,
+  };
+}
+
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { id } = await params;
 
@@ -81,6 +143,43 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
+  const gradeMin = parseNullableIntegerField(
+    body,
+    "grade_min",
+    "Grade from",
+    1,
+    11
+  );
+  const gradeMax = parseNullableIntegerField(
+    body,
+    "grade_max",
+    "Grade to",
+    1,
+    11
+  );
+  const estimatedDuration = parseNullableIntegerField(
+    body,
+    "estimated_duration_minutes",
+    "Estimated duration",
+    5,
+    240
+  );
+
+  if (gradeMin.error) {
+    return NextResponse.json({ error: gradeMin.error }, { status: 400 });
+  }
+
+  if (gradeMax.error) {
+    return NextResponse.json({ error: gradeMax.error }, { status: 400 });
+  }
+
+  if (estimatedDuration.error) {
+    return NextResponse.json(
+      { error: estimatedDuration.error },
+      { status: 400 }
+    );
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -92,7 +191,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   const { data: ownedQuest, error: ownedQuestError } = await supabase
     .from("quests")
-    .select("id")
+    .select("id, grade_min, grade_max")
     .eq("id", id)
     .eq("author_id", user.id)
     .maybeSingle();
@@ -109,12 +208,51 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Quest not found." }, { status: 404 });
   }
 
+  const finalGradeMin = gradeMin.provided
+    ? gradeMin.value
+    : ownedQuest.grade_min;
+  const finalGradeMax = gradeMax.provided
+    ? gradeMax.value
+    : ownedQuest.grade_max;
+
+  const hasGradeMin = finalGradeMin !== null;
+  const hasGradeMax = finalGradeMax !== null;
+
+  if (hasGradeMin !== hasGradeMax) {
+    return NextResponse.json(
+      { error: "Grade range must include both Grade from and Grade to." },
+      { status: 400 }
+    );
+  }
+
+  if (
+    finalGradeMin !== null &&
+    finalGradeMax !== null &&
+    finalGradeMin > finalGradeMax
+  ) {
+    return NextResponse.json(
+      { error: "Grade from must be less than or equal to Grade to." },
+      { status: 400 }
+    );
+  }
+
+  const updateData = {
+    ...parsed.data,
+    ...(gradeMin.provided ? { grade_min: gradeMin.value } : {}),
+    ...(gradeMax.provided ? { grade_max: gradeMax.value } : {}),
+    ...(estimatedDuration.provided
+      ? { estimated_duration_minutes: estimatedDuration.value }
+      : {}),
+  };
+
   const { data, error } = await supabase
     .from("quests")
-    .update(parsed.data)
+    .update(updateData)
     .eq("id", id)
     .eq("author_id", user.id)
-    .select("id, title, description, difficulty, is_public")
+    .select(
+      "id, title, description, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
+    )
     .maybeSingle();
 
   if (error) {

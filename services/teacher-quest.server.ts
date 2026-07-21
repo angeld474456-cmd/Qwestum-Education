@@ -13,6 +13,9 @@ export type TeacherQuest = {
   description: string | null;
   difficulty: number;
   is_public: boolean;
+  grade_min: number | null;
+  grade_max: number | null;
+  estimated_duration_minutes: number | null;
   created_at?: string;
   author_id: string | null;
 };
@@ -63,7 +66,9 @@ export async function getOwnedQuests(): Promise<TeacherQuest[]> {
 
   const { data, error } = await supabase
     .from("quests")
-    .select("id, title, description, difficulty, is_public, created_at, author_id")
+    .select(
+      "id, title, description, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
+    )
     .eq("author_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -83,7 +88,9 @@ export async function getOwnedQuest(id: string): Promise<TeacherQuest | null> {
 
   const { data, error } = await supabase
     .from("quests")
-    .select("id, title, description, difficulty, is_public, created_at, author_id")
+    .select(
+      "id, title, description, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
+    )
     .eq("id", id)
     .eq("author_id", user.id)
     .maybeSingle();

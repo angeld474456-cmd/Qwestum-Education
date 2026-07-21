@@ -6,17 +6,17 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the next small teacher-MVP improvement after auth/session hardening.
+Plan the next small teacher-MVP metadata improvement after grade range and duration.
 
 ## Next Task
 
-Sprint 12.17.1 - Quest Settings Metadata Planning.
+Sprint 12.17.3 - Quest Subject Lookup Planning.
 
 Start with analysis/planning only unless implementation is explicitly approved.
 
 Goal:
 
-- Analyze the smallest safe expansion of quest settings metadata for the teacher MVP.
+- Verify whether existing `quests.subject_id` can support teacher-facing subject metadata without adding a duplicate subject text column.
 
 Current state:
 
@@ -25,9 +25,12 @@ Current state:
 - Owner-scoped quest and task CRUD is implemented.
 - Quest/task RLS hardening is live.
 - Owner-safe image upload, removal, replacement cleanup, and task-delete cleanup are implemented.
-- Teacher logout/session UX is implemented.
-- Expired-session API `401` UX is implemented for current teacher client workflows.
-- Current quest settings edit only `title`, `description`, `difficulty`, and `is_public`.
+- Teacher logout/session UX and expired-session API `401` UX are implemented.
+- Quest Settings now supports grade range and estimated duration.
+- Migration 007 is applied live.
+- `subject_id` exists in live `quests` but is not used by active teacher CRUD.
+- No usable subject lookup model has been confirmed.
+- No duplicate `subject` text column has been added.
 
 Planning constraints:
 
@@ -42,17 +45,22 @@ Planning constraints:
 
 Questions to answer:
 
-- Which quest metadata fields are most valuable for the teacher MVP?
-- Should fields such as duration, attempts, grade level, subject, or publish notes be added now or deferred?
-- Which metadata can be represented with existing schema fields, if any?
-- Which metadata requires schema changes or live Supabase migration planning?
-- Should the settings page remain the only place for metadata, or should the library cards show some of it?
+- Does `quests.subject_id` have a live foreign key?
+- What table does it reference, if any?
+- Does the subject table have stable display-name fields and usable rows?
+- Can authenticated teacher routes safely read subject names under current RLS?
+- Should subject UI reuse `subject_id`, wait for seed/taxonomy repair, or be deferred?
 - What is the smallest independently testable implementation sprint after planning?
 
 Deferred items:
 
 - Quest deletion.
 - Student attempt persistence and analytics.
+- Language.
+- Tags/category.
+- Quest cover image.
+- Attempt limits.
+- Catalog filtering/indexes.
 - Cross-tab logout synchronization.
 - Return-to-current-page after session expiry.
 - Unsaved-edit persistence across login redirects.

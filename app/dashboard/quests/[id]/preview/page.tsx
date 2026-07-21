@@ -60,6 +60,22 @@ function getSingleChoiceContent(task: TeacherQuestTask): SingleChoiceContent {
   };
 }
 
+function formatGradeRange(gradeMin: number | null, gradeMax: number | null) {
+  if (gradeMin === null || gradeMax === null) return null;
+
+  if (gradeMin === gradeMax) {
+    return `Grade ${gradeMin}`;
+  }
+
+  return `Grades ${gradeMin}-${gradeMax}`;
+}
+
+function formatDuration(minutes: number | null) {
+  if (minutes === null) return null;
+
+  return `${minutes} min`;
+}
+
 export default async function TeacherQuestPreviewPage({
   params,
 }: PreviewPageProps) {
@@ -77,6 +93,9 @@ export default async function TeacherQuestPreviewPage({
     notFound();
   }
 
+  const gradeLabel = formatGradeRange(quest.grade_min, quest.grade_max);
+  const durationLabel = formatDuration(quest.estimated_duration_minutes);
+
   return (
     <section className="space-y-8 text-white">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -93,6 +112,20 @@ export default async function TeacherQuestPreviewPage({
           <p className="mt-4 text-sm text-slate-300">
             Tasks: {tasks.length}
           </p>
+          {gradeLabel || durationLabel ? (
+            <div className="mt-4 flex flex-wrap gap-2 text-sm">
+              {gradeLabel ? (
+                <span className="rounded-full bg-cyan-500/10 px-3 py-1 font-semibold text-cyan-200">
+                  {gradeLabel}
+                </span>
+              ) : null}
+              {durationLabel ? (
+                <span className="rounded-full bg-slate-700 px-3 py-1 font-semibold text-slate-200">
+                  {durationLabel}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <QuestWorkspaceNav questId={id} active="preview" />

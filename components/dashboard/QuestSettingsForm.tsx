@@ -16,6 +16,9 @@ type QuestSettingsFormProps = {
     description: string | null;
     difficulty: number;
     is_public: boolean;
+    grade_min: number | null;
+    grade_max: number | null;
+    estimated_duration_minutes: number | null;
   };
 };
 
@@ -26,9 +29,16 @@ type QuestSettingsResponse = {
     description: string | null;
     difficulty: number;
     is_public: boolean;
+    grade_min: number | null;
+    grade_max: number | null;
+    estimated_duration_minutes: number | null;
   };
   error?: string;
 };
+
+function metadataValue(value: number | null) {
+  return value === null ? "" : String(value);
+}
 
 export default function QuestSettingsForm({
   quest,
@@ -37,6 +47,11 @@ export default function QuestSettingsForm({
   const [description, setDescription] = useState(quest.description ?? "");
   const [difficulty, setDifficulty] = useState(Number(quest.difficulty) || 1);
   const [isPublic, setIsPublic] = useState(Boolean(quest.is_public));
+  const [gradeMin, setGradeMin] = useState(metadataValue(quest.grade_min));
+  const [gradeMax, setGradeMax] = useState(metadataValue(quest.grade_max));
+  const [estimatedDuration, setEstimatedDuration] = useState(
+    metadataValue(quest.estimated_duration_minutes)
+  );
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -48,6 +63,15 @@ export default function QuestSettingsForm({
 
     const normalizedTitle = title.trim();
     const normalizedDifficulty = Number(difficulty);
+    const normalizedGradeMin = gradeMin === "" ? null : Number(gradeMin);
+    const normalizedGradeMax =
+      gradeMax === "" && normalizedGradeMin !== null
+        ? normalizedGradeMin
+        : gradeMax === ""
+          ? null
+          : Number(gradeMax);
+    const normalizedDuration =
+      estimatedDuration === "" ? null : Number(estimatedDuration);
 
     setErrorMessage("");
     setSuccessMessage("");
@@ -59,6 +83,50 @@ export default function QuestSettingsForm({
 
     if (Number.isNaN(normalizedDifficulty)) {
       setErrorMessage("Difficulty must be a number.");
+      return;
+    }
+
+    if (gradeMin === "" && gradeMax !== "") {
+      setErrorMessage("Select Grade from before choosing Grade to.");
+      return;
+    }
+
+    if (
+      normalizedGradeMin !== null &&
+      (!Number.isInteger(normalizedGradeMin) ||
+        normalizedGradeMin < 1 ||
+        normalizedGradeMin > 11)
+    ) {
+      setErrorMessage("Grade from must be between 1 and 11.");
+      return;
+    }
+
+    if (
+      normalizedGradeMax !== null &&
+      (!Number.isInteger(normalizedGradeMax) ||
+        normalizedGradeMax < 1 ||
+        normalizedGradeMax > 11)
+    ) {
+      setErrorMessage("Grade to must be between 1 and 11.");
+      return;
+    }
+
+    if (
+      normalizedGradeMin !== null &&
+      normalizedGradeMax !== null &&
+      normalizedGradeMin > normalizedGradeMax
+    ) {
+      setErrorMessage("Grade from must be less than or equal to Grade to.");
+      return;
+    }
+
+    if (
+      normalizedDuration !== null &&
+      (!Number.isInteger(normalizedDuration) ||
+        normalizedDuration < 5 ||
+        normalizedDuration > 240)
+    ) {
+      setErrorMessage("Estimated duration must be between 5 and 240 minutes.");
       return;
     }
 
@@ -75,6 +143,9 @@ export default function QuestSettingsForm({
           description,
           difficulty: normalizedDifficulty,
           is_public: isPublic,
+          grade_min: normalizedGradeMin,
+          grade_max: normalizedGradeMax,
+          estimated_duration_minutes: normalizedDuration,
         }),
       });
 
@@ -95,6 +166,11 @@ export default function QuestSettingsForm({
       setDescription(result.quest.description ?? "");
       setDifficulty(Number(result.quest.difficulty) || 1);
       setIsPublic(Boolean(result.quest.is_public));
+      setGradeMin(metadataValue(result.quest.grade_min));
+      setGradeMax(metadataValue(result.quest.grade_max));
+      setEstimatedDuration(
+        metadataValue(result.quest.estimated_duration_minutes)
+      );
       setSuccessMessage("Quest settings saved.");
     } catch (error) {
       console.error(error);
@@ -156,6 +232,75 @@ export default function QuestSettingsForm({
             <option value={2}>2</option>
             <option value={3}>3</option>
           </select>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <label
+              htmlFor="quest-grade-min"
+              className="mb-2 block text-sm font-semibold text-slate-300"
+            >
+              Grade from
+            </label>
+            <select
+              id="quest-grade-min"
+              value={gradeMin}
+              onChange={(event) => setGradeMin(event.target.value)}
+              className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+            >
+              <option value="">Not set</option>
+              {Array.from({ length: 11 }, (_, index) => index + 1).map(
+                (grade) => (
+                  <option key={grade} value={grade}>
+                    {grade}
+                  </option>
+                )
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="quest-grade-max"
+              className="mb-2 block text-sm font-semibold text-slate-300"
+            >
+              Grade to
+            </label>
+            <select
+              id="quest-grade-max"
+              value={gradeMax}
+              onChange={(event) => setGradeMax(event.target.value)}
+              className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+            >
+              <option value="">Not set</option>
+              {Array.from({ length: 11 }, (_, index) => index + 1).map(
+                (grade) => (
+                  <option key={grade} value={grade}>
+                    {grade}
+                  </option>
+                )
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="quest-estimated-duration"
+              className="mb-2 block text-sm font-semibold text-slate-300"
+            >
+              Estimated duration (minutes)
+            </label>
+            <input
+              id="quest-estimated-duration"
+              type="number"
+              min={5}
+              max={240}
+              step={1}
+              value={estimatedDuration}
+              onChange={(event) => setEstimatedDuration(event.target.value)}
+              className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+            />
+          </div>
         </div>
 
         <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">

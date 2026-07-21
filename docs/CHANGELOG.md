@@ -189,6 +189,20 @@
   - Protected API contracts, RLS policies, Supabase configuration, and migrations were unchanged.
   - Manual verification confirmed logout in another tab followed by a protected action redirected to the fixed session-expired login message, and re-login remained functional.
   - Known limitations: unsaved edits are not persisted across login redirect, no return-to-current-page support, no cross-tab sync, no mutation replay, and upload-success followed by PATCH-401 may leave an orphaned image.
+- Sprint 12.17.1 - Quest Settings Metadata Planning.
+  - Planned the smallest safe quest metadata expansion for the teacher MVP.
+  - Deferred subject UI until `quests.subject_id` lookup/table behavior is verified.
+  - Recommended grade range and estimated duration as the first implementation slice.
+- Sprint 12.17.2 - Quest Grade Range and Duration Metadata.
+  - Added and manually applied `database/migrations/007_add_quest_metadata.sql`.
+  - Added nullable `quests.grade_min`, `quests.grade_max`, and `quests.estimated_duration_minutes`.
+  - Added CHECK constraints for grade values 1-11, paired grade values, ordered ranges, and duration 5-240 minutes.
+  - Added Quest Settings controls for grade range and estimated duration.
+  - Empty metadata controls save `null`; Grade-from-only mirrors to Grade-to on submit.
+  - Dashboard and Teacher Preview display metadata only when populated.
+  - Verified `Grades 5-7`, `45 min`, `Grade 7`, metadata clearing, and existing quest compatibility in the browser.
+  - Confirmed all 7 existing quests remained compatible with null metadata.
+  - `subject_id` remained untouched, no `subject` text column was added, and existing owner-scoped RLS policies remained unchanged.
 
 ## Current State On `feature/next-work`
 

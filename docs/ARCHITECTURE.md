@@ -127,6 +127,17 @@ Teacher data access is owner-scoped:
 
 `services/quest.service.ts` no longer exposes browser-side quest/task table reads or writes.
 
+Quest metadata:
+
+- `database/migrations/007_add_quest_metadata.sql` was applied live.
+- `quests.grade_min`, `quests.grade_max`, and `quests.estimated_duration_minutes` are nullable integers.
+- Grade constraints allow only grades 1-11, require both grade values to be null or both populated, and require `grade_min <= grade_max`.
+- Duration is constrained to null or 5-240 minutes.
+- No defaults or backfill were added, so legacy quests with null metadata remain valid.
+- `subject_id` remains untouched, and no duplicate `subject` text column exists.
+- Quest Settings can edit grade range and estimated duration through the owner-safe settings API.
+- Dashboard and Teacher Preview show metadata only when populated. NewQuestForm and Teacher Play/Test remain unchanged.
+
 Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses owned quest and owned task summary data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
 
 ## Deferred Attempt Persistence
@@ -312,6 +323,10 @@ RLS and storage findings:
 - Task-delete cleanup is best-effort and non-blocking; upload-before-failed-PATCH races may still orphan an unattached object.
 - Live task-delete verification confirmed a temporary task row was removed, the exact owner-scoped Storage object was removed, legacy objects remained unchanged, and the editor remained functional.
 - Legacy `tasks/{uuid}` objects remain unchanged.
+- `database/migrations/007_add_quest_metadata.sql` was applied live after Sprint 12.17.2 verification.
+- Live `quests` now includes nullable `grade_min`, `grade_max`, and `estimated_duration_minutes`.
+- CHECK constraints enforce grade values 1-11, both grades null or both populated, ordered grade ranges, and duration 5-240 minutes.
+- Existing owner-scoped quest policies remained unchanged, RLS remained enabled, and all 7 existing quests remained compatible with null metadata.
 - Local migrations do not fully represent live schema history.
 
 Decisions after audit:
@@ -319,6 +334,8 @@ Decisions after audit:
 - Auth/session, owner-scoped teacher reads, owner-safe quest writes, owner-safe task CRUD, and RLS hardening are implemented for the teacher workspace.
 - Teacher logout/session UX is implemented for the current MVP.
 - Expired-session API `401` UX is implemented for the current teacher client workflows without changing protected API contracts.
+- Grade range and estimated duration metadata are implemented for Quest Settings, Dashboard, and Teacher Preview.
+- Subject metadata remains deferred pending a dedicated `subject_id` lookup/table audit.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
 - Next safe step is quest settings metadata planning.

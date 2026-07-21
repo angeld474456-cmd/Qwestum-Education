@@ -22,6 +22,22 @@ function formatCreatedAt(value?: string) {
   }).format(date);
 }
 
+function formatGradeRange(gradeMin: number | null, gradeMax: number | null) {
+  if (gradeMin === null || gradeMax === null) return null;
+
+  if (gradeMin === gradeMax) {
+    return `Grade ${gradeMin}`;
+  }
+
+  return `Grades ${gradeMin}-${gradeMax}`;
+}
+
+function formatDuration(minutes: number | null) {
+  if (minutes === null) return null;
+
+  return `${minutes} min`;
+}
+
 export default async function TeacherQuestLibraryPage() {
   const [quests, tasks] = await Promise.all([
     getOwnedQuests(),
@@ -133,6 +149,13 @@ export default async function TeacherQuestLibraryPage() {
           <div className="grid gap-6">
             {quests.map((quest) => {
               const taskCount = taskCountsByQuestId[quest.id] ?? 0;
+              const gradeLabel = formatGradeRange(
+                quest.grade_min,
+                quest.grade_max
+              );
+              const durationLabel = formatDuration(
+                quest.estimated_duration_minutes
+              );
 
               return (
                 <Card key={quest.id}>
@@ -166,6 +189,21 @@ export default async function TeacherQuestLibraryPage() {
                         <span>Created: {formatCreatedAt(quest.created_at)}</span>
                         <span>Tasks: {taskCount}</span>
                       </div>
+
+                      {gradeLabel || durationLabel ? (
+                        <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                          {gradeLabel ? (
+                            <span className="rounded-full bg-cyan-500/10 px-3 py-1 font-semibold text-cyan-200">
+                              {gradeLabel}
+                            </span>
+                          ) : null}
+                          {durationLabel ? (
+                            <span className="rounded-full bg-slate-700 px-3 py-1 font-semibold text-slate-200">
+                              {durationLabel}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </Link>
 
                     <div className="flex flex-wrap gap-3">

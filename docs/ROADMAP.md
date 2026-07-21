@@ -170,12 +170,24 @@ Completed:
   - Login feedback allowlist supports `error=session_expired`.
   - Protected API contracts, RLS, Supabase configuration, and migrations were unchanged.
   - Manual verification confirmed logout in another tab followed by a protected action redirects to the fixed session-expired login message and re-login still works.
+- Sprint 12.17.1 - Quest Settings Metadata Planning.
+  - Analyzed the smallest safe expansion of quest settings metadata for the teacher MVP.
+  - Recommended deferring subject until `subject_id` lookup/table behavior is verified.
+  - Recommended adding grade range and estimated duration first.
+- Sprint 12.17.2 - Quest Grade Range and Duration Metadata.
+  - Added and live-applied `database/migrations/007_add_quest_metadata.sql`.
+  - Added nullable `grade_min`, `grade_max`, and `estimated_duration_minutes` to `quests`.
+  - Added CHECK constraints for grades 1-11, paired grade values, ordered ranges, and duration 5-240 minutes.
+  - Added Quest Settings controls for grade range and estimated duration.
+  - Dashboard and Teacher Preview display metadata only when populated.
+  - `subject_id` remained untouched, no `subject` text column was added, and owner-scoped RLS policies were unchanged.
+  - Browser verification passed for `Grades 5-7`, `45 min`, `Grade 7`, metadata clearing, and existing quest compatibility.
 
 Next:
 
-- Sprint 12.17.1 - Quest Settings Metadata Planning.
-  - Analyze the smallest safe expansion of quest settings metadata for the teacher MVP.
-  - Consider fields such as duration, attempts, grade level, and subject without assuming schema changes are already approved.
+- Sprint 12.17.3 - Quest Subject Lookup Planning.
+  - Analyze live `subject_id` table/FK/display-name/RLS behavior before adding subject UI.
+  - Do not add duplicate subject text unless `subject_id` is confirmed unusable and explicitly approved.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones
@@ -183,6 +195,6 @@ Next:
 - Add more task types through the existing registry pattern.
 - Improve analytics with real student attempt data.
 - Add teacher authentication/authorization boundaries.
-- Add richer quest settings, including duration, attempts, grade level, and subject.
+- Add richer quest settings, including subject, language, tags/category, cover image, attempt limits, and catalog filtering.
 - Add student assignment and classroom flows.
 - Add automated tests around task rendering and runtime state.

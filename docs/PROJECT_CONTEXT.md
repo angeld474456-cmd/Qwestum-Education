@@ -49,7 +49,7 @@ Completed Sprint 12 work:
   - `/dashboard/quests/[id]/play` mounts `QuestRunner`.
   - Answers and results are not persisted yet.
 - Sprint 12.3 — Teacher Quest Settings / Publish Controls.
-  - `/dashboard/quests/[id]/settings` edits only `title`, `description`, `difficulty`, and `is_public`.
+  - `/dashboard/quests/[id]/settings` edits `title`, `description`, `difficulty`, `is_public`, grade range, and estimated duration.
   - Saves through an authenticated owner-safe teacher API route.
   - `is_public = true` means Public; `is_public = false` means Draft.
   - No `status` field and no migration were added.
@@ -201,10 +201,21 @@ Completed Sprint 12 work:
   - Protected API contracts, RLS policies, Supabase configuration, and migrations were unchanged.
   - Manual verification confirmed logout in another tab followed by a protected action redirects to the session-expired login message without false success, and re-login still works.
   - Known limitations: unsaved edits are not persisted across login redirect, no return-to-current-page support, no cross-tab sync, no mutation replay, and upload-success followed by PATCH-401 may leave an orphaned image.
+- Sprint 12.17.2 - Quest Grade Range and Duration Metadata.
+  - Added and live-applied `database/migrations/007_add_quest_metadata.sql`.
+  - Added nullable `quests.grade_min`, `quests.grade_max`, and `quests.estimated_duration_minutes`.
+  - CHECK constraints enforce grades 1-11, both grade values null or both populated, `grade_min <= grade_max`, and duration 5-240 minutes.
+  - No defaults or backfill were added; all 7 existing quests remained compatible with null metadata.
+  - `subject_id` remained untouched and no `subject` text column was added.
+  - Existing owner-scoped quest RLS policies remained unchanged.
+  - Quest Settings supports grade range and estimated duration; empty controls save `null`, and Grade-from-only mirrors to Grade-to on submit.
+  - Dashboard and Teacher Preview display metadata only when populated, including `Grades 5-7`, `45 min`, and `Grade 7`.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - Browser verification confirmed range save/persistence, single-grade display, metadata clearing, and existing quest compatibility.
 
 Next sprint:
 
-- Sprint 12.17.1 - Quest Settings Metadata Planning.
+- Sprint 12.17.3 - Quest Subject Lookup Planning.
 
 ## Stack
 
@@ -222,6 +233,7 @@ Next sprint:
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
+- Deferred quest metadata work includes subject lookup/table audit and subject UI, language, tags/category, quest cover image, attempt limits, and catalog filtering/indexes.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.
