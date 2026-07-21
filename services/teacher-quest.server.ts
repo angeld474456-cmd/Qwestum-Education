@@ -3,6 +3,7 @@ import "server-only";
 import type { User } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/server";
+import type { QuestLanguageCode } from "@/services/quest-language";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -12,6 +13,7 @@ export type TeacherQuest = {
   title: string;
   description: string | null;
   subject_id: string | null;
+  language_code: QuestLanguageCode | null;
   difficulty: number;
   is_public: boolean;
   grade_min: number | null;
@@ -68,7 +70,7 @@ export async function getOwnedQuests(): Promise<TeacherQuest[]> {
   const { data, error } = await supabase
     .from("quests")
     .select(
-      "id, title, description, subject_id, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
+      "id, title, description, subject_id, language_code, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
     )
     .eq("author_id", user.id)
     .order("created_at", { ascending: false });
@@ -90,7 +92,7 @@ export async function getOwnedQuest(id: string): Promise<TeacherQuest | null> {
   const { data, error } = await supabase
     .from("quests")
     .select(
-      "id, title, description, subject_id, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
+      "id, title, description, subject_id, language_code, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
     )
     .eq("id", id)
     .eq("author_id", user.id)

@@ -7,6 +7,8 @@ export interface Quest {
 
   subject_id: string | null;
 
+  language_code: "ru" | "kk" | "en" | null;
+
   author_id: string;
 
   difficulty: number;

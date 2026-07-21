@@ -8,6 +8,11 @@ import {
   redirectToSessionExpiredLogin,
   SESSION_EXPIRED_MESSAGE,
 } from "@/lib/auth/session-expired.client";
+import {
+  getQuestLanguageLabel,
+  QUEST_LANGUAGE_OPTIONS,
+  type QuestLanguageCode,
+} from "@/services/quest-language";
 
 type QuestSettingsFormProps = {
   quest: {
@@ -15,6 +20,7 @@ type QuestSettingsFormProps = {
     title: string;
     description: string | null;
     subject_id: string | null;
+    language_code: QuestLanguageCode | null;
     difficulty: number;
     is_public: boolean;
     grade_min: number | null;
@@ -30,6 +36,7 @@ type QuestSettingsResponse = {
     title: string;
     description: string | null;
     subject_id: string | null;
+    language_code: QuestLanguageCode | null;
     difficulty: number;
     is_public: boolean;
     grade_min: number | null;
@@ -64,6 +71,7 @@ export default function QuestSettingsForm({
   const [title, setTitle] = useState(quest.title ?? "");
   const [description, setDescription] = useState(quest.description ?? "");
   const [subjectId, setSubjectId] = useState(quest.subject_id ?? "");
+  const [languageCode, setLanguageCode] = useState(quest.language_code ?? "");
   const [difficulty, setDifficulty] = useState(Number(quest.difficulty) || 1);
   const [isPublic, setIsPublic] = useState(Boolean(quest.is_public));
   const [gradeMin, setGradeMin] = useState(metadataValue(quest.grade_min));
@@ -161,6 +169,7 @@ export default function QuestSettingsForm({
           title: normalizedTitle,
           description,
           subject_id: subjectId || null,
+          language_code: languageCode || null,
           difficulty: normalizedDifficulty,
           is_public: isPublic,
           grade_min: normalizedGradeMin,
@@ -185,6 +194,7 @@ export default function QuestSettingsForm({
       setTitle(result.quest.title ?? "");
       setDescription(result.quest.description ?? "");
       setSubjectId(result.quest.subject_id ?? "");
+      setLanguageCode(result.quest.language_code ?? "");
       setDifficulty(Number(result.quest.difficulty) || 1);
       setIsPublic(Boolean(result.quest.is_public));
       setGradeMin(metadataValue(result.quest.grade_min));
@@ -253,6 +263,28 @@ export default function QuestSettingsForm({
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {formatSubjectOption(subject)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="quest-language"
+            className="mb-2 block text-sm font-semibold text-slate-300"
+          >
+            Language
+          </label>
+          <select
+            id="quest-language"
+            value={languageCode}
+            onChange={(event) => setLanguageCode(event.target.value)}
+            className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+          >
+            <option value="">No language specified</option>
+            {QUEST_LANGUAGE_OPTIONS.map((language) => (
+              <option key={language.code} value={language.code}>
+                {getQuestLanguageLabel(language.code)}
               </option>
             ))}
           </select>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { isQuestLanguageCode } from "@/services/quest-language";
 
 const allowedDifficulties = new Set([1, 2, 3]);
 const uuidPattern =
@@ -12,6 +13,7 @@ type QuestPayload = {
   difficulty?: unknown;
   is_public?: unknown;
   subject_id?: unknown;
+  language_code?: unknown;
   grade_min?: unknown;
   grade_max?: unknown;
   estimated_duration_minutes?: unknown;
@@ -163,6 +165,50 @@ function parseSubjectIdField(body: QuestPayload): SubjectIdFieldResult {
   };
 }
 
+type LanguageCodeFieldResult =
+  | {
+      provided: false;
+      value?: never;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value: string | null;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value?: never;
+      error: string;
+    };
+
+function parseLanguageCodeField(body: QuestPayload): LanguageCodeFieldResult {
+  if (!("language_code" in body)) {
+    return {
+      provided: false,
+    };
+  }
+
+  if (body.language_code === null || body.language_code === "") {
+    return {
+      provided: true,
+      value: null,
+    };
+  }
+
+  if (!isQuestLanguageCode(body.language_code)) {
+    return {
+      provided: true,
+      error: "Language is invalid.",
+    };
+  }
+
+  return {
+    provided: true,
+    value: body.language_code,
+  };
+}
+
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { id } = await params;
 
@@ -213,6 +259,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     240
   );
   const subjectId = parseSubjectIdField(body);
+  const languageCode = parseLanguageCodeField(body);
 
   if (gradeMin.error) {
     return NextResponse.json({ error: gradeMin.error }, { status: 400 });
@@ -231,6 +278,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (subjectId.error) {
     return NextResponse.json({ error: subjectId.error }, { status: 400 });
+  }
+
+  if (languageCode.error) {
+    return NextResponse.json({ error: languageCode.error }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -312,6 +363,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const updateData = {
     ...parsed.data,
     ...(subjectId.provided ? { subject_id: subjectId.value } : {}),
+    ...(languageCode.provided
+      ? { language_code: languageCode.value }
+      : {}),
     ...(gradeMin.provided ? { grade_min: gradeMin.value } : {}),
     ...(gradeMax.provided ? { grade_max: gradeMax.value } : {}),
     ...(estimatedDuration.provided
@@ -325,7 +379,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .eq("id", id)
     .eq("author_id", user.id)
     .select(
-      "id, title, description, subject_id, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
+      "id, title, description, subject_id, language_code, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
     )
     .maybeSingle();
 

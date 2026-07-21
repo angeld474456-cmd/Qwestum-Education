@@ -229,6 +229,22 @@
   - Browser verification passed for subject select/save/refresh, Library display, Preview display, clearing, display removal, and grade/duration regression coverage.
   - Logged-out PATCH was directly verified as `401` with safe JSON.
   - Invalid UUID, missing subject UUID, and foreign/missing quest API cases were reviewed in code but not directly executed.
+- Sprint 12.17.6 - Quest Language Metadata Planning.
+  - Confirmed live Supabase had no existing language column, enum, language/locale/translation table, or language-related `quests` constraint.
+  - Recommended nullable constrained text codes for quest content language: `ru`, `kk`, and `en`.
+- Sprint 12.17.7 - Quest Language Metadata.
+  - Added and manually applied `database/migrations/009_add_quest_language_metadata.sql`.
+  - Added nullable `quests.language_code` text with allowed codes `ru`, `kk`, and `en`.
+  - Added labels Russian, Kazakh, and English through a shared `QuestLanguageCode` helper.
+  - Added optional Language selector to Quest Settings.
+  - `No language specified` clears the value to `null`; omitted `language_code` preserves the current value.
+  - Invalid language values return safe `400`; owner-safe `404` and logged-out `401` behavior remain unchanged.
+  - Teacher Library and Teacher Preview display language only when populated and resolved.
+  - Unknown or null language values render safely without a placeholder.
+  - Subject, grade range, and duration metadata remain unchanged.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - No default, backfill, index, RLS change, policy change, lookup table, PostgreSQL enum, admin UI, filtering, or i18n framework was added.
+  - Browser verification passed for Russian save/persistence, Library display, Preview display, changing to Kazakh, clearing language, display removal, and subject/grade/duration regression coverage.
 
 ## Current State On `feature/next-work`
 

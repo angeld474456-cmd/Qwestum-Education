@@ -207,13 +207,29 @@ Completed:
   - No migration, RLS change, hardcoded UUID mapping, service role, subject administration, or taxonomy UI was added.
   - Browser verification passed for subject select/save/refresh, library display, preview display, subject clearing, display removal, and grade/duration regression coverage.
   - Logged-out PATCH was directly verified as `401`; invalid UUID, missing subject UUID, and foreign quest API cases were reviewed in code but not directly executed.
+- Sprint 12.17.6 - Quest Language Metadata Planning.
+  - Confirmed live Supabase had no language-like column on `public.quests`.
+  - Confirmed no public language-related enum, table, or `quests` constraint existed.
+  - Recommended nullable constrained text codes for quest content language.
+- Sprint 12.17.7 - Quest Language Metadata.
+  - Added and live-applied `database/migrations/009_add_quest_language_metadata.sql`.
+  - Added nullable `quests.language_code` text constrained to `ru`, `kk`, and `en`.
+  - Added shared language code/label helper with labels Russian, Kazakh, and English.
+  - Added optional Language selector to Quest Settings.
+  - `No language specified` clears to `null`; omitted `language_code` preserves the current value.
+  - Invalid language values return safe `400`; owner-safe `404` and logged-out `401` remain unchanged.
+  - Teacher Library and Teacher Preview display language only when populated and resolved.
+  - Subject, grade range, and duration metadata remain unchanged.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - No default, backfill, index, RLS change, policy change, lookup table, enum, admin UI, filtering, or i18n framework was added.
+  - Browser verification passed for Russian save/persistence, Library display, Preview display, changing to Kazakh, clearing language, display removal, and subject/grade/duration regression coverage.
 
 Next:
 
-- Sprint 12.17.6 - Quest Language Metadata Planning.
-  - Analyze the smallest teacher-facing language metadata slice.
-  - Confirm whether live schema already has a language field or whether a nullable forward migration is needed.
-  - Keep subject administration, catalog filtering, and quest deletion deferred.
+- Sprint 12.17.8 - Quest Cover Image Planning.
+  - Analyze the smallest owner-safe quest cover image slice for the teacher MVP.
+  - Reuse existing storage/security lessons where appropriate, but do not implement storage changes without approval.
+  - Keep subject/language administration, catalog filtering, and quest deletion deferred.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones

@@ -8,6 +8,7 @@ import {
   getTeacherSubjects,
   type TeacherSubject,
 } from "@/services/subject.server";
+import { getQuestLanguageLabel } from "@/services/quest-language";
 import {
   SingleChoiceRuntimeOption,
 } from "@/components/tasks/runtime/SingleChoiceTaskRenderer";
@@ -115,6 +116,7 @@ export default async function TeacherQuestPreviewPage({
   const subjectLabel = quest.subject_id
     ? formatSubject(subjects.find((subject) => subject.id === quest.subject_id))
     : null;
+  const languageLabel = getQuestLanguageLabel(quest.language_code);
 
   return (
     <section className="space-y-8 text-white">
@@ -132,11 +134,16 @@ export default async function TeacherQuestPreviewPage({
           <p className="mt-4 text-sm text-slate-300">
             Tasks: {tasks.length}
           </p>
-          {subjectLabel || gradeLabel || durationLabel ? (
+          {subjectLabel || languageLabel || gradeLabel || durationLabel ? (
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
               {subjectLabel ? (
                 <span className="rounded-full bg-violet-500/10 px-3 py-1 font-semibold text-violet-200">
                   {subjectLabel}
+                </span>
+              ) : null}
+              {languageLabel ? (
+                <span className="rounded-full bg-indigo-500/10 px-3 py-1 font-semibold text-indigo-200">
+                  {languageLabel}
                 </span>
               ) : null}
               {gradeLabel ? (

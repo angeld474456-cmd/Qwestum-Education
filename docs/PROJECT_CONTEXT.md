@@ -239,10 +239,30 @@ Completed Sprint 12 work:
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - No migration, RLS change, subject create/edit/delete UI, or taxonomy/admin UI was added.
   - Browser verification confirmed subject select/save/refresh, library display, preview display, subject clearing, display removal, and grade/duration regression coverage.
+- Sprint 12.17.6 - Quest Language Metadata Planning.
+  - Confirmed live Supabase had no existing language-like column on `public.quests`.
+  - Confirmed no public language-related enum, table, or `quests` constraint existed.
+  - Recommended nullable constrained text on `quests` for content language using stable codes `ru`, `kk`, and `en`.
+  - Confirmed language describes quest content, not UI locale.
+- Sprint 12.17.7 - Quest Language Metadata.
+  - Added and live-applied `database/migrations/009_add_quest_language_metadata.sql`.
+  - Added nullable `quests.language_code` as text.
+  - Allowed codes are `ru`, `kk`, and `en`, displayed as Russian, Kazakh, and English.
+  - No default, backfill, index, RLS change, or policy change was added.
+  - Existing quests remain compatible with null language metadata.
+  - Added a shared `QuestLanguageCode` helper for codes, labels, validation, and safe label resolution.
+  - Quest Settings now has an optional Language selector; `No language specified` clears to `null`.
+  - The owner-safe settings PATCH preserves the current value when `language_code` is omitted and returns safe `400` for invalid language values.
+  - Owner-safe `404` and logged-out `401` behavior remain unchanged.
+  - Teacher Library and Teacher Preview display language only when populated and resolved; unknown or null values render without a placeholder.
+  - Subject, grade range, and duration metadata remain unchanged.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - No language lookup table, PostgreSQL enum, admin UI, filtering, or i18n framework was added.
+  - Browser verification confirmed Russian save/persistence, library display, preview display, changing to Kazakh, clearing language, display removal, and subject/grade/duration regression coverage.
 
 Next sprint:
 
-- Sprint 12.17.6 - Quest Language Metadata Planning.
+- Sprint 12.17.8 - Quest Cover Image Planning.
 
 ## Stack
 
@@ -260,7 +280,7 @@ Next sprint:
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
-- Deferred quest metadata work includes language, tags/category, quest cover image, attempt limits, catalog filtering/indexes, and subject catalog filtering/administration.
+- Deferred quest metadata work includes language during quest creation, catalog language filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, tags/category, quest cover image, attempt limits, and subject catalog filtering/administration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

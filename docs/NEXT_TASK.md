@@ -6,17 +6,17 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the smallest teacher-facing language metadata slice after subject selection.
+Plan the smallest owner-safe quest cover image slice for the teacher MVP.
 
 ## Next Task
 
-Sprint 12.17.6 - Quest Language Metadata Planning.
+Sprint 12.17.8 - Quest Cover Image Planning.
 
 Analysis/planning only. Start implementation only after explicit approval.
 
 Goal:
 
-- Determine whether quest language metadata should be added next for the teacher MVP, and whether it needs a nullable schema migration or can reuse existing schema.
+- Determine whether quest cover images should be added next, how they should be stored, and how to keep ownership and Storage cleanup safe.
 
 Current state:
 
@@ -24,28 +24,28 @@ Current state:
 - Dashboard and teacher pages are protected.
 - Owner-scoped quest and task CRUD is implemented.
 - Quest/task RLS hardening is live.
-- Quest Settings supports grade range, estimated duration, and optional subject selection.
-- `quests.subject_id` uses the existing `public.subjects` lookup.
+- Owner-safe task image upload, explicit removal, replacement cleanup, and task-delete cleanup are implemented.
+- Quest Settings supports grade range, estimated duration, optional subject, and optional language.
 - Teacher Library and Teacher Preview display populated metadata.
 - `NewQuestForm` and Teacher Play/Test are unchanged for metadata.
 
 Planning scope:
 
-- Audit local and live schema for any existing language field or related metadata.
-- Decide whether language belongs on `quests` as a nullable value.
-- Define a minimal fixed option set if language is implemented.
-- Plan Settings validation, Dashboard display, and Preview display.
-- Preserve owner-scoped settings save and existing RLS boundaries.
+- Audit whether live `quests` already has a cover image field.
+- Decide whether a nullable quest cover image URL belongs on `quests`.
+- Plan owner-safe upload path shape and Storage policy needs.
+- Plan Settings upload/removal/replacement behavior.
+- Plan Teacher Library and Preview display behavior.
+- Preserve existing task image behavior and owner-scoped quest access.
 
 Out of scope:
 
-- Subject administration or taxonomy UI.
-- Subject catalog filtering.
-- Tags/category.
-- Quest cover image.
-- Attempt limits.
-- Student catalog changes.
 - Quest deletion.
+- Student catalog filtering.
+- Subject administration or taxonomy UI.
+- Language administration or i18n.
+- Tags/category.
+- Attempt limits.
 - Task editor/runtime/JSONB changes.
 
 Required validation for any implementation sprint:

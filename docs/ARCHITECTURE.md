@@ -140,12 +140,18 @@ Quest metadata:
 - Subject lookup rows exist and no exact duplicate `name + grade` pairs were found during Sprint 12.17.3 planning.
 - `database/migrations/008_add_subjects_read_policy.sql` was applied live. `public.subjects` RLS remains enabled and authenticated users have SELECT-only lookup access.
 - No subject INSERT, UPDATE, or DELETE policies exist, and no subject create/edit/delete UI is planned for the MVP slice.
-- Quest Settings can edit grade range, estimated duration, and optional `subject_id` through the owner-safe settings API.
+- `database/migrations/009_add_quest_language_metadata.sql` was applied live after Sprint 12.17.7 verification.
+- `quests.language_code` is nullable text and constrained to `ru`, `kk`, or `en` when populated.
+- Language labels are Russian, Kazakh, and English. Language describes quest content, not UI locale.
+- No language default, backfill, index, lookup table, PostgreSQL enum, RLS change, policy change, admin UI, filtering, or i18n framework was added.
+- Quest Settings can edit grade range, estimated duration, optional `subject_id`, and optional `language_code` through the owner-safe settings API.
 - The subject selector uses a server-only authenticated lookup from `public.subjects` and selects only `id`, `name`, and `grade`, ordered by name, grade, and id.
 - No service role or hardcoded subject UUID mapping is used for subject selection.
 - `No subject` submits `null`; omitted `subject_id` preserves the current value.
 - The settings API validates subject UUID shape and subject existence before saving. Invalid UUID and missing subject UUID inputs return safe `400` responses by implementation review; real lookup/database failures return safe `500` responses with server-side logging.
-- Dashboard and Teacher Preview show resolved subject metadata only when populated. Null or unresolved subjects show no placeholder.
+- A shared `QuestLanguageCode` helper provides language codes, labels, validation, and safe label resolution. Unknown or null language values render without a placeholder.
+- `No language specified` submits `null`; omitted `language_code` preserves the current value. Invalid language values return safe `400` responses.
+- Dashboard and Teacher Preview show resolved subject and language metadata only when populated. Null or unresolved subjects/languages show no placeholder.
 - The Teacher Library uses one subject lookup and an in-memory map, avoiding N+1 subject queries.
 - NewQuestForm and Teacher Play/Test remain unchanged.
 
@@ -341,6 +347,10 @@ RLS and storage findings:
 - `database/migrations/008_add_subjects_read_policy.sql` was applied live after Sprint 12.17.4 verification.
 - `public.subjects` has exactly one SELECT policy for authenticated users; no subject write policies exist.
 - Subject row count remained unchanged, and existing `quests` and `quest_tasks` policies were untouched.
+- Sprint 12.17.6 language schema audit found no existing language column, enum, table, or constraint.
+- `database/migrations/009_add_quest_language_metadata.sql` was applied live after Sprint 12.17.7 verification.
+- Live `quests.language_code` is nullable text with allowed values `ru`, `kk`, and `en`.
+- No default, backfill, index, RLS change, or policy change was added for language metadata.
 - Local migrations do not fully represent live schema history.
 
 Decisions after audit:
@@ -350,9 +360,10 @@ Decisions after audit:
 - Expired-session API `401` UX is implemented for the current teacher client workflows without changing protected API contracts.
 - Grade range and estimated duration metadata are implemented for Quest Settings, Dashboard, and Teacher Preview.
 - Subject lookup and the Quest Settings subject selector are implemented. Subject creation/editing/deletion, taxonomy administration, subject catalog filtering, and inactive/status semantics remain deferred.
+- Quest content language metadata is implemented for Quest Settings, Dashboard, and Teacher Preview. Language during quest creation, catalog language filtering/indexes, multilingual variants, UI localization/i18n, and language administration remain deferred.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is quest language metadata planning.
+- Next safe step is quest cover image planning.
 
 Schema mismatch risks:
 
