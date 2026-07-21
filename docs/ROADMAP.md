@@ -195,13 +195,25 @@ Completed:
   - Subject row count remained unchanged.
   - Existing `quests` and `quest_tasks` policies were untouched.
   - No subject UI or quest CRUD changes were included.
+- Sprint 12.17.5 - Teacher Quest Subject Selector.
+  - Added `subject_id` to the active teacher quest DTO/selects and shared nullable quest type.
+  - Added a server-only authenticated subject lookup selecting `id`, `name`, and `grade`, ordered by name, grade, and id.
+  - Added an optional Subject selector to Quest Settings.
+  - `No subject` saves `null`; omitted `subject_id` preserves the current value.
+  - The owner-safe settings PATCH validates UUID shape and subject existence.
+  - Teacher Library and Teacher Preview display resolved subject names when present.
+  - Null or unresolved subjects show no placeholder, and the library uses one lookup with an in-memory map.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - No migration, RLS change, hardcoded UUID mapping, service role, subject administration, or taxonomy UI was added.
+  - Browser verification passed for subject select/save/refresh, library display, preview display, subject clearing, display removal, and grade/duration regression coverage.
+  - Logged-out PATCH was directly verified as `401`; invalid UUID, missing subject UUID, and foreign quest API cases were reviewed in code but not directly executed.
 
 Next:
 
-- Sprint 12.17.5 - Teacher Quest Subject Selector.
-  - Add subject selection to Quest Settings using existing `quests.subject_id`.
-  - Display subject name in Teacher Library and Preview.
-  - Do not add subject creation/edit/delete UI or taxonomy/admin tooling.
+- Sprint 12.17.6 - Quest Language Metadata Planning.
+  - Analyze the smallest teacher-facing language metadata slice.
+  - Confirm whether live schema already has a language field or whether a nullable forward migration is needed.
+  - Keep subject administration, catalog filtering, and quest deletion deferred.
   - Do not add quest deletion unless explicitly required.
 
 ## Suggested Future Milestones

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import QuestSettingsForm from "@/components/dashboard/QuestSettingsForm";
 import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
+import { getTeacherSubjects } from "@/services/subject.server";
 import { getOwnedQuest } from "@/services/teacher-quest.server";
 
 type SettingsPageProps = {
@@ -14,7 +15,10 @@ export default async function TeacherQuestSettingsPage({
   params,
 }: SettingsPageProps) {
   const { id } = await params;
-  const quest = await getOwnedQuest(id);
+  const [quest, subjects] = await Promise.all([
+    getOwnedQuest(id),
+    getTeacherSubjects(),
+  ]);
 
   if (!quest) {
     notFound();
@@ -37,7 +41,7 @@ export default async function TeacherQuestSettingsPage({
         <QuestWorkspaceNav questId={id} active="settings" />
       </div>
 
-      <QuestSettingsForm quest={quest} />
+      <QuestSettingsForm quest={quest} subjects={subjects} />
     </section>
   );
 }

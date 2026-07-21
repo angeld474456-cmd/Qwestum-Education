@@ -14,12 +14,14 @@ type QuestSettingsFormProps = {
     id: string;
     title: string;
     description: string | null;
+    subject_id: string | null;
     difficulty: number;
     is_public: boolean;
     grade_min: number | null;
     grade_max: number | null;
     estimated_duration_minutes: number | null;
   };
+  subjects: SubjectOption[];
 };
 
 type QuestSettingsResponse = {
@@ -27,6 +29,7 @@ type QuestSettingsResponse = {
     id: string;
     title: string;
     description: string | null;
+    subject_id: string | null;
     difficulty: number;
     is_public: boolean;
     grade_min: number | null;
@@ -36,15 +39,31 @@ type QuestSettingsResponse = {
   error?: string;
 };
 
+type SubjectOption = {
+  id: string;
+  name: string;
+  grade: number | null;
+};
+
 function metadataValue(value: number | null) {
   return value === null ? "" : String(value);
 }
 
+function formatSubjectOption(subject: SubjectOption) {
+  if (subject.grade === null) {
+    return `${subject.name} — all grades`;
+  }
+
+  return `${subject.name} — Grade ${subject.grade}`;
+}
+
 export default function QuestSettingsForm({
   quest,
+  subjects,
 }: QuestSettingsFormProps) {
   const [title, setTitle] = useState(quest.title ?? "");
   const [description, setDescription] = useState(quest.description ?? "");
+  const [subjectId, setSubjectId] = useState(quest.subject_id ?? "");
   const [difficulty, setDifficulty] = useState(Number(quest.difficulty) || 1);
   const [isPublic, setIsPublic] = useState(Boolean(quest.is_public));
   const [gradeMin, setGradeMin] = useState(metadataValue(quest.grade_min));
@@ -141,6 +160,7 @@ export default function QuestSettingsForm({
         body: JSON.stringify({
           title: normalizedTitle,
           description,
+          subject_id: subjectId || null,
           difficulty: normalizedDifficulty,
           is_public: isPublic,
           grade_min: normalizedGradeMin,
@@ -164,6 +184,7 @@ export default function QuestSettingsForm({
 
       setTitle(result.quest.title ?? "");
       setDescription(result.quest.description ?? "");
+      setSubjectId(result.quest.subject_id ?? "");
       setDifficulty(Number(result.quest.difficulty) || 1);
       setIsPublic(Boolean(result.quest.is_public));
       setGradeMin(metadataValue(result.quest.grade_min));
@@ -213,6 +234,28 @@ export default function QuestSettingsForm({
             onChange={(event) => setDescription(event.target.value)}
             className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
           />
+        </div>
+
+        <div>
+          <label
+            htmlFor="quest-subject"
+            className="mb-2 block text-sm font-semibold text-slate-300"
+          >
+            Subject
+          </label>
+          <select
+            id="quest-subject"
+            value={subjectId}
+            onChange={(event) => setSubjectId(event.target.value)}
+            className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+          >
+            <option value="">No subject</option>
+            {subjects.map((subject) => (
+              <option key={subject.id} value={subject.id}>
+                {formatSubjectOption(subject)}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>

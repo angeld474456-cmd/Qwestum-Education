@@ -5,6 +5,10 @@ import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import Card from "@/components/ui/Card";
 import TaskRenderer from "@/components/tasks/runtime/TaskRenderer";
 import {
+  getTeacherSubjects,
+  type TeacherSubject,
+} from "@/services/subject.server";
+import {
   SingleChoiceRuntimeOption,
 } from "@/components/tasks/runtime/SingleChoiceTaskRenderer";
 import {
@@ -76,6 +80,16 @@ function formatDuration(minutes: number | null) {
   return `${minutes} min`;
 }
 
+function formatSubject(subject: TeacherSubject | undefined) {
+  if (!subject) return null;
+
+  if (subject.grade === null) {
+    return subject.name;
+  }
+
+  return `${subject.name} · Grade ${subject.grade}`;
+}
+
 export default async function TeacherQuestPreviewPage({
   params,
 }: PreviewPageProps) {
@@ -87,7 +101,10 @@ export default async function TeacherQuestPreviewPage({
     notFound();
   }
 
-  const tasks = await getOwnedQuestTasks(id);
+  const [tasks, subjects] = await Promise.all([
+    getOwnedQuestTasks(id),
+    getTeacherSubjects(),
+  ]);
 
   if (!tasks) {
     notFound();
@@ -95,6 +112,9 @@ export default async function TeacherQuestPreviewPage({
 
   const gradeLabel = formatGradeRange(quest.grade_min, quest.grade_max);
   const durationLabel = formatDuration(quest.estimated_duration_minutes);
+  const subjectLabel = quest.subject_id
+    ? formatSubject(subjects.find((subject) => subject.id === quest.subject_id))
+    : null;
 
   return (
     <section className="space-y-8 text-white">
@@ -112,8 +132,13 @@ export default async function TeacherQuestPreviewPage({
           <p className="mt-4 text-sm text-slate-300">
             Tasks: {tasks.length}
           </p>
-          {gradeLabel || durationLabel ? (
+          {subjectLabel || gradeLabel || durationLabel ? (
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
+              {subjectLabel ? (
+                <span className="rounded-full bg-violet-500/10 px-3 py-1 font-semibold text-violet-200">
+                  {subjectLabel}
+                </span>
+              ) : null}
               {gradeLabel ? (
                 <span className="rounded-full bg-cyan-500/10 px-3 py-1 font-semibold text-cyan-200">
                   {gradeLabel}

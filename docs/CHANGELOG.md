@@ -216,6 +216,19 @@
   - Subject row count remained unchanged.
   - Existing `quests` and `quest_tasks` policies were untouched.
   - No subject UI or quest CRUD changes were included.
+- Sprint 12.17.5 - Teacher Quest Subject Selector.
+  - Added nullable `subject_id` to the active teacher quest DTO/selects and shared quest type.
+  - Added a server-only authenticated subject lookup selecting `id`, `name`, and `grade`, ordered by name, grade, and id.
+  - Added an optional Subject selector to Quest Settings using existing `quests.subject_id`.
+  - `No subject` saves `null`; omitted `subject_id` preserves the current value.
+  - The owner-safe settings PATCH validates UUID shape and subject existence.
+  - Teacher Library and Teacher Preview display resolved subjects when present; null or unresolved subjects show no placeholder.
+  - The library uses one subject lookup and an in-memory map, avoiding N+1 subject queries.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - No migration, RLS change, service role, hardcoded UUID mapping, subject create/edit/delete UI, or taxonomy/admin UI was added.
+  - Browser verification passed for subject select/save/refresh, Library display, Preview display, clearing, display removal, and grade/duration regression coverage.
+  - Logged-out PATCH was directly verified as `401` with safe JSON.
+  - Invalid UUID, missing subject UUID, and foreign/missing quest API cases were reviewed in code but not directly executed.
 
 ## Current State On `feature/next-work`
 

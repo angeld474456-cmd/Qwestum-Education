@@ -11,6 +11,7 @@ type QuestPayload = {
   description?: unknown;
   difficulty?: unknown;
   is_public?: unknown;
+  subject_id?: unknown;
   grade_min?: unknown;
   grade_max?: unknown;
   estimated_duration_minutes?: unknown;
@@ -115,6 +116,53 @@ function parseNullableIntegerField(
   };
 }
 
+type SubjectIdFieldResult =
+  | {
+      provided: false;
+      value?: never;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value: string | null;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value?: never;
+      error: string;
+    };
+
+function parseSubjectIdField(body: QuestPayload): SubjectIdFieldResult {
+  if (!("subject_id" in body)) {
+    return {
+      provided: false,
+    };
+  }
+
+  if (body.subject_id === null || body.subject_id === "") {
+    return {
+      provided: true,
+      value: null,
+    };
+  }
+
+  if (
+    typeof body.subject_id !== "string" ||
+    !uuidPattern.test(body.subject_id)
+  ) {
+    return {
+      provided: true,
+      error: "Subject is invalid.",
+    };
+  }
+
+  return {
+    provided: true,
+    value: body.subject_id,
+  };
+}
+
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { id } = await params;
 
@@ -164,6 +212,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     5,
     240
   );
+  const subjectId = parseSubjectIdField(body);
 
   if (gradeMin.error) {
     return NextResponse.json({ error: gradeMin.error }, { status: 400 });
@@ -178,6 +227,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       { error: estimatedDuration.error },
       { status: 400 }
     );
+  }
+
+  if (subjectId.error) {
+    return NextResponse.json({ error: subjectId.error }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -206,6 +259,26 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (!ownedQuest) {
     return NextResponse.json({ error: "Quest not found." }, { status: 404 });
+  }
+
+  if (subjectId.provided && subjectId.value !== null) {
+    const { data: subject, error: subjectError } = await supabase
+      .from("subjects")
+      .select("id")
+      .eq("id", subjectId.value)
+      .maybeSingle();
+
+    if (subjectError) {
+      console.error(subjectError);
+      return NextResponse.json(
+        { error: "Unable to save quest settings." },
+        { status: 500 }
+      );
+    }
+
+    if (!subject) {
+      return NextResponse.json({ error: "Subject is invalid." }, { status: 400 });
+    }
   }
 
   const finalGradeMin = gradeMin.provided
@@ -238,6 +311,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   const updateData = {
     ...parsed.data,
+    ...(subjectId.provided ? { subject_id: subjectId.value } : {}),
     ...(gradeMin.provided ? { grade_min: gradeMin.value } : {}),
     ...(gradeMax.provided ? { grade_max: gradeMax.value } : {}),
     ...(estimatedDuration.provided
@@ -251,7 +325,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .eq("id", id)
     .eq("author_id", user.id)
     .select(
-      "id, title, description, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
+      "id, title, description, subject_id, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
     )
     .maybeSingle();
 

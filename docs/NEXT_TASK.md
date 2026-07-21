@@ -6,17 +6,17 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Add a small teacher-facing subject selector using the verified existing subject lookup.
+Plan the smallest teacher-facing language metadata slice after subject selection.
 
 ## Next Task
 
-Sprint 12.17.5 - Teacher Quest Subject Selector.
+Sprint 12.17.6 - Quest Language Metadata Planning.
 
-Start implementation only after explicit approval.
+Analysis/planning only. Start implementation only after explicit approval.
 
 Goal:
 
-- Let teachers set an optional quest subject in Quest Settings using existing `quests.subject_id` and `public.subjects`.
+- Determine whether quest language metadata should be added next for the teacher MVP, and whether it needs a nullable schema migration or can reuse existing schema.
 
 Current state:
 
@@ -24,35 +24,31 @@ Current state:
 - Dashboard and teacher pages are protected.
 - Owner-scoped quest and task CRUD is implemented.
 - Quest/task RLS hardening is live.
-- Quest Settings supports grade range and estimated duration.
-- `quests.subject_id` is nullable UUID and references `public.subjects.id`.
-- `public.subjects` has usable seeded rows.
-- `public.subjects` RLS is enabled.
-- Authenticated users have SELECT-only access to subjects.
-- No subject INSERT, UPDATE, or DELETE policies exist.
-- All current quests have `subject_id = null`.
+- Quest Settings supports grade range, estimated duration, and optional subject selection.
+- `quests.subject_id` uses the existing `public.subjects` lookup.
+- Teacher Library and Teacher Preview display populated metadata.
+- `NewQuestForm` and Teacher Play/Test are unchanged for metadata.
 
-Planned scope:
+Planning scope:
 
-- Add `subject_id` to the active teacher quest DTO and selects.
-- Add a server-side subject lookup using the authenticated Supabase server client.
-- Add an optional subject selector to Quest Settings.
-- Validate submitted UUID and subject existence in the owner-safe PATCH route.
-- Allow `null` to clear subject.
-- Display subject name in Teacher Library and Preview.
-- Keep `NewQuestForm` unchanged.
+- Audit local and live schema for any existing language field or related metadata.
+- Decide whether language belongs on `quests` as a nullable value.
+- Define a minimal fixed option set if language is implemented.
+- Plan Settings validation, Dashboard display, and Preview display.
+- Preserve owner-scoped settings save and existing RLS boundaries.
 
 Out of scope:
 
-- Subject create/edit/delete UI.
-- Taxonomy/admin UI.
-- Hardcoded UUID mapping.
-- Service role.
-- New schema migration.
+- Subject administration or taxonomy UI.
+- Subject catalog filtering.
+- Tags/category.
+- Quest cover image.
+- Attempt limits.
+- Student catalog changes.
 - Quest deletion.
 - Task editor/runtime/JSONB changes.
 
-Required verification:
+Required validation for any implementation sprint:
 
 ```powershell
 npm.cmd run lint

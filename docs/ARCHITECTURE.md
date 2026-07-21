@@ -140,8 +140,14 @@ Quest metadata:
 - Subject lookup rows exist and no exact duplicate `name + grade` pairs were found during Sprint 12.17.3 planning.
 - `database/migrations/008_add_subjects_read_policy.sql` was applied live. `public.subjects` RLS remains enabled and authenticated users have SELECT-only lookup access.
 - No subject INSERT, UPDATE, or DELETE policies exist, and no subject create/edit/delete UI is planned for the MVP slice.
-- Quest Settings can edit grade range and estimated duration through the owner-safe settings API.
-- Dashboard and Teacher Preview show metadata only when populated. NewQuestForm and Teacher Play/Test remain unchanged.
+- Quest Settings can edit grade range, estimated duration, and optional `subject_id` through the owner-safe settings API.
+- The subject selector uses a server-only authenticated lookup from `public.subjects` and selects only `id`, `name`, and `grade`, ordered by name, grade, and id.
+- No service role or hardcoded subject UUID mapping is used for subject selection.
+- `No subject` submits `null`; omitted `subject_id` preserves the current value.
+- The settings API validates subject UUID shape and subject existence before saving. Invalid UUID and missing subject UUID inputs return safe `400` responses by implementation review; real lookup/database failures return safe `500` responses with server-side logging.
+- Dashboard and Teacher Preview show resolved subject metadata only when populated. Null or unresolved subjects show no placeholder.
+- The Teacher Library uses one subject lookup and an in-memory map, avoiding N+1 subject queries.
+- NewQuestForm and Teacher Play/Test remain unchanged.
 
 Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses owned quest and owned task summary data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
 
@@ -343,10 +349,10 @@ Decisions after audit:
 - Teacher logout/session UX is implemented for the current MVP.
 - Expired-session API `401` UX is implemented for the current teacher client workflows without changing protected API contracts.
 - Grade range and estimated duration metadata are implemented for Quest Settings, Dashboard, and Teacher Preview.
-- Subject lookup access is ready for a small Quest Settings subject selector. Subject creation/editing/deletion and taxonomy administration remain deferred.
+- Subject lookup and the Quest Settings subject selector are implemented. Subject creation/editing/deletion, taxonomy administration, subject catalog filtering, and inactive/status semantics remain deferred.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is quest settings metadata planning.
+- Next safe step is quest language metadata planning.
 
 Schema mismatch risks:
 
@@ -355,4 +361,5 @@ Schema mismatch risks:
 - Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
 - Upload-before-failed-PATCH races may still orphan unattached owner-scoped image objects.
 - Expired-session API `401` responses redirect to `/login?error=session_expired` in current teacher client workflows; unsaved edits are not persisted across the login redirect.
+- Direct authenticated API edge-case verification for invalid subject UUID, missing subject UUID, and foreign quest PATCH was not executed in Sprint 12.17.5 because no safe controllable authenticated API session was available; those paths were verified by code review and browser save/clear covered the authenticated success path.
 - Local migrations are not a reliable source of truth for the live schema yet.

@@ -5,7 +5,7 @@ export interface Quest {
 
   description: string | null;
 
-  subject_id: string;
+  subject_id: string | null;
 
   author_id: string;
 

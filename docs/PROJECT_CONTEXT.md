@@ -225,10 +225,24 @@ Completed Sprint 12 work:
   - Subject row count remained unchanged.
   - Existing `quests` and `quest_tasks` policies were untouched.
   - No subject UI or quest CRUD changes were included.
+- Sprint 12.17.5 - Teacher Quest Subject Selector.
+  - Added nullable `subject_id` to the active teacher quest DTO/selects; shared `Quest.subject_id` matches the nullable live schema.
+  - Added a server-only subject lookup using the authenticated Supabase server client.
+  - Subject lookup selects only `id`, `name`, and `grade`, with deterministic ordering by name, grade, and id.
+  - No service role or hardcoded subject UUID mapping is used.
+  - Quest Settings now has an optional Subject selector; `No subject` submits `null`.
+  - The owner-safe settings PATCH preserves the current value when `subject_id` is omitted.
+  - Implementation review confirmed invalid UUID and missing subject UUID inputs return safe `400` responses, real lookup/database errors return safe `500` responses with server-side logging, and foreign/missing quests remain generic `404`.
+  - Logged-out PATCH was directly verified as `401` with safe JSON.
+  - Teacher Library and Teacher Preview display the resolved subject when present; null or unresolved subjects show no placeholder.
+  - The library uses one subject lookup and an in-memory map, avoiding N+1 subject queries.
+  - `NewQuestForm` and Teacher Play/Test remain unchanged.
+  - No migration, RLS change, subject create/edit/delete UI, or taxonomy/admin UI was added.
+  - Browser verification confirmed subject select/save/refresh, library display, preview display, subject clearing, display removal, and grade/duration regression coverage.
 
 Next sprint:
 
-- Sprint 12.17.5 - Teacher Quest Subject Selector.
+- Sprint 12.17.6 - Quest Language Metadata Planning.
 
 ## Stack
 
@@ -246,7 +260,7 @@ Next sprint:
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, and legacy object migration.
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
-- Deferred quest metadata work includes subject lookup/table audit and subject UI, language, tags/category, quest cover image, attempt limits, and catalog filtering/indexes.
+- Deferred quest metadata work includes language, tags/category, quest cover image, attempt limits, catalog filtering/indexes, and subject catalog filtering/administration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

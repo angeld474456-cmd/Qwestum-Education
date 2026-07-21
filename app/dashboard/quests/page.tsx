@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import Card from "@/components/ui/Card";
 import {
+  getTeacherSubjects,
+  type TeacherSubject,
+} from "@/services/subject.server";
+import {
   getOwnedQuests,
   getOwnedQuestTaskSummary,
 } from "@/services/teacher-quest.server";
@@ -38,11 +42,26 @@ function formatDuration(minutes: number | null) {
   return `${minutes} min`;
 }
 
+function formatSubject(subject: TeacherSubject | undefined) {
+  if (!subject) return null;
+
+  if (subject.grade === null) {
+    return subject.name;
+  }
+
+  return `${subject.name} · Grade ${subject.grade}`;
+}
+
 export default async function TeacherQuestLibraryPage() {
-  const [quests, tasks] = await Promise.all([
+  const [quests, tasks, subjects] = await Promise.all([
     getOwnedQuests(),
     getOwnedQuestTaskSummary(),
+    getTeacherSubjects(),
   ]);
+
+  const subjectsById = new Map(
+    subjects.map((subject) => [subject.id, subject])
+  );
 
   const taskCountsByQuestId = tasks.reduce<Record<string, number>>(
     (counts, task) => {
@@ -156,6 +175,9 @@ export default async function TeacherQuestLibraryPage() {
               const durationLabel = formatDuration(
                 quest.estimated_duration_minutes
               );
+              const subjectLabel = quest.subject_id
+                ? formatSubject(subjectsById.get(quest.subject_id))
+                : null;
 
               return (
                 <Card key={quest.id}>
@@ -190,8 +212,13 @@ export default async function TeacherQuestLibraryPage() {
                         <span>Tasks: {taskCount}</span>
                       </div>
 
-                      {gradeLabel || durationLabel ? (
+                      {subjectLabel || gradeLabel || durationLabel ? (
                         <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                          {subjectLabel ? (
+                            <span className="rounded-full bg-violet-500/10 px-3 py-1 font-semibold text-violet-200">
+                              {subjectLabel}
+                            </span>
+                          ) : null}
                           {gradeLabel ? (
                             <span className="rounded-full bg-cyan-500/10 px-3 py-1 font-semibold text-cyan-200">
                               {gradeLabel}
