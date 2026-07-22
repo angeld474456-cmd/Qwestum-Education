@@ -143,6 +143,40 @@ export async function getOwnedQuestTasks(
   return (data ?? []) as TeacherQuestTask[];
 }
 
+export async function getOwnedQuestTaskCount(
+  questId: string
+): Promise<number | null> {
+  if (!uuidPattern.test(questId)) return null;
+
+  const { supabase, user } = await getAuthenticatedContext();
+
+  if (!user) return null;
+
+  const { data: quest, error: questError } = await supabase
+    .from("quests")
+    .select("id")
+    .eq("id", questId)
+    .eq("author_id", user.id)
+    .maybeSingle();
+
+  if (questError) {
+    throw questError;
+  }
+
+  if (!quest) return null;
+
+  const { count, error } = await supabase
+    .from("quest_tasks")
+    .select("id", { count: "exact", head: true })
+    .eq("quest_id", questId);
+
+  if (error) {
+    throw error;
+  }
+
+  return count ?? 0;
+}
+
 export async function getOwnedQuestTaskSummary(): Promise<
   TeacherQuestTaskSummary[]
 > {

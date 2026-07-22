@@ -474,9 +474,21 @@ Decisions after audit:
 - Preserved behavior: Draft quests with one or multiple tasks may delete tasks; Public quests with multiple tasks may delete one; missing or foreign quest/task keeps existing generic 404; unauthenticated behavior remains unchanged; legacy Public zero-task quests are not modified automatically; Preview and Play/Test remain unchanged.
 - Deferred limitations: count and deletion are non-transactional; concurrent deletion requests on a Public quest with multiple tasks could still race; a future transaction/RPC may provide stronger enforcement; no second confirmation or publication-aware delete UI was added.
 - No automatic unpublishing, transaction/RPC, migration, schema, RLS/policy, index, `QuestTasksClient`, Settings, Preview, Play/Test, public catalog, student-facing, or quest deletion change was included in Sprint 12.18.10.
+- Sprint 12.18.12 adds Settings-side publication-readiness guidance without changing publication API enforcement.
+- Settings loads an owner-safe exact task count server-side through `getOwnedQuestTaskCount(questId)`.
+- The helper validates UUID shape and authentication, verifies ownership with quest id plus authenticated `author_id`, returns `null` for missing, foreign, unauthenticated, or invalid requests, and counts `quest_tasks` only after ownership verification using exact count with `head: true`.
+- Task count stays separate from the quest DTO and is passed to `QuestSettingsForm` as `taskCount`.
+- Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
+- Exact copy: `Для публикации нужен хотя бы один вопрос.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
+- The task link points to `/quests/[id]/tasks`.
+- The publication checkbox remains enabled because the server API remains authoritative and server-rendered task counts may be stale until refresh.
+- No polling or client-side task-count fetch was added.
+- Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks; no data was modified during verification.
+- Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.
+- No migration, schema, RLS/policy, index, polling, client-side task-count request, readiness metadata checklist, task CRUD refactor, publication API change, public catalog, or student-facing change was included in Sprint 12.18.12.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning publication readiness UX.
+- Next safe step is planning teacher quest workflow consolidation.
 
 Schema mismatch risks:
 

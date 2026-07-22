@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import Card from "@/components/ui/Card";
@@ -30,6 +31,7 @@ type QuestSettingsFormProps = {
     estimated_duration_minutes: number | null;
   };
   subjects: SubjectOption[];
+  taskCount: number;
 };
 
 type QuestSettingsResponse = {
@@ -79,6 +81,7 @@ function formatSubjectOption(subject: SubjectOption) {
 export default function QuestSettingsForm({
   quest,
   subjects,
+  taskCount,
 }: QuestSettingsFormProps) {
   const [title, setTitle] = useState(quest.title ?? "");
   const [description, setDescription] = useState(quest.description ?? "");
@@ -88,6 +91,9 @@ export default function QuestSettingsForm({
   const [tagsInput, setTagsInput] = useState(formatTagsInput(quest.tags));
   const [difficulty, setDifficulty] = useState(Number(quest.difficulty) || 1);
   const [isPublic, setIsPublic] = useState(Boolean(quest.is_public));
+  const [persistedIsPublic, setPersistedIsPublic] = useState(
+    Boolean(quest.is_public)
+  );
   const [gradeMin, setGradeMin] = useState(metadataValue(quest.grade_min));
   const [gradeMax, setGradeMax] = useState(metadataValue(quest.grade_max));
   const [estimatedDuration, setEstimatedDuration] = useState(
@@ -96,6 +102,8 @@ export default function QuestSettingsForm({
   const [saving, setSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const hasTasks = taskCount > 0;
+  const showPublishedWithoutTasksWarning = persistedIsPublic && !hasTasks;
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -235,6 +243,7 @@ export default function QuestSettingsForm({
       setTagsInput(formatTagsInput(result.quest.tags));
       setDifficulty(Number(result.quest.difficulty) || 1);
       setIsPublic(Boolean(result.quest.is_public));
+      setPersistedIsPublic(Boolean(result.quest.is_public));
       setGradeMin(metadataValue(result.quest.grade_min));
       setGradeMax(metadataValue(result.quest.grade_max));
       setEstimatedDuration(
@@ -454,20 +463,72 @@ export default function QuestSettingsForm({
           </div>
         </div>
 
-        <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">
-          <span>
-            <span className="block font-semibold">Publication state</span>
-            <span className="mt-1 block text-sm text-slate-400">
-              {isPublic ? "Public" : "Draft"}
+        <div className="space-y-3">
+          <div
+            className={`rounded-xl border p-4 ${
+              showPublishedWithoutTasksWarning
+                ? "border-amber-500/40 bg-amber-500/10"
+                : hasTasks
+                  ? "border-emerald-500/40 bg-emerald-500/10"
+                  : "border-cyan-500/30 bg-cyan-500/10"
+            }`}
+          >
+            {hasTasks ? (
+              <>
+                <p className="text-sm font-semibold text-emerald-200">
+                  Заданий: {taskCount}
+                </p>
+                <p className="mt-1 text-sm text-slate-300">
+                  Квест можно опубликовать.
+                </p>
+              </>
+            ) : showPublishedWithoutTasksWarning ? (
+              <>
+                <p className="text-sm font-semibold text-amber-200">
+                  Квест опубликован, но в нем нет заданий. Снимите публикацию
+                  или добавьте задание.
+                </p>
+                <Link
+                  href={`/quests/${quest.id}/tasks`}
+                  className="mt-3 inline-flex text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+                >
+                  Перейти к заданиям
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-cyan-200">
+                  Для публикации нужен хотя бы один вопрос.
+                </p>
+                <p className="mt-1 text-sm text-slate-300">
+                  Добавьте задание, затем вернитесь в настройки и включите
+                  публикацию.
+                </p>
+                <Link
+                  href={`/quests/${quest.id}/tasks`}
+                  className="mt-3 inline-flex text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
+                >
+                  Перейти к заданиям
+                </Link>
+              </>
+            )}
+          </div>
+
+          <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">
+            <span>
+              <span className="block font-semibold">Publication state</span>
+              <span className="mt-1 block text-sm text-slate-400">
+                {isPublic ? "Public" : "Draft"}
+              </span>
             </span>
-          </span>
-          <input
-            type="checkbox"
-            checked={isPublic}
-            onChange={(event) => setIsPublic(event.target.checked)}
-            className="h-5 w-5"
-          />
-        </label>
+            <input
+              type="checkbox"
+              checked={isPublic}
+              onChange={(event) => setIsPublic(event.target.checked)}
+              className="h-5 w-5"
+            />
+          </label>
+        </div>
 
         {errorMessage ? (
           <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">

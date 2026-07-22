@@ -398,6 +398,19 @@
   - Preserved behavior: Draft quests with one or multiple tasks may delete tasks; Public quests with multiple tasks may delete one; missing or foreign quest/task keeps existing generic 404; unauthenticated behavior remains unchanged; legacy Public zero-task quests are not modified automatically; Preview and Play/Test remain unchanged.
   - Deferred limitations: count and deletion are non-transactional; concurrent deletion requests on a Public quest with multiple tasks could still race; a future transaction/RPC may provide stronger enforcement; no second confirmation or publication-aware delete UI was added.
   - No automatic unpublishing, transaction/RPC, migration, schema, RLS/policy, index, `QuestTasksClient`, Settings, Preview, Play/Test, public catalog, student-facing, or quest deletion change was included.
+- Sprint 12.18.12 - Publication Readiness Settings UX.
+  - Settings now loads an owner-safe exact task count server-side.
+  - Added `getOwnedQuestTaskCount(questId)` with UUID/auth checks, owner verification by quest id plus authenticated `author_id`, `null` for missing/foreign/unauthenticated/invalid requests, and a post-ownership `quest_tasks` exact count with `head: true`.
+  - Task count remains separate from the quest DTO.
+  - Settings passes `taskCount` to `QuestSettingsForm`.
+  - Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
+  - Exact UX copy includes `Для публикации нужен хотя бы один вопрос.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
+  - The task link points to `/quests/[id]/tasks`.
+  - The publication checkbox remains enabled, and the server API remains the publication source of truth.
+  - Server-rendered count may be stale until refresh; no polling or client-side task-count fetch exists.
+  - Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks, and no data was modified.
+  - Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.
+  - No migration, schema, RLS/policy, index, polling, client-side task-count request, readiness metadata checklist, task CRUD refactor, publication API change, public catalog, or student-facing change was included.
 
 ## Current State On `feature/next-work`
 

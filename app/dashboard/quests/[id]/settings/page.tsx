@@ -6,7 +6,10 @@ import QuestSettingsForm from "@/components/dashboard/QuestSettingsForm";
 import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import { getSafeQuestCoverImagePublicUrl } from "@/lib/storage/quest-cover.server";
 import { getTeacherSubjects } from "@/services/subject.server";
-import { getOwnedQuest } from "@/services/teacher-quest.server";
+import {
+  getOwnedQuest,
+  getOwnedQuestTaskCount,
+} from "@/services/teacher-quest.server";
 
 type SettingsPageProps = {
   params: Promise<{
@@ -29,9 +32,10 @@ export default async function TeacherQuestSettingsPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const isNewlyCreated =
     getFirstSearchParam(resolvedSearchParams.created) === "1";
-  const [quest, subjects] = await Promise.all([
+  const [quest, subjects, taskCount] = await Promise.all([
     getOwnedQuest(id),
     getTeacherSubjects(),
+    getOwnedQuestTaskCount(id),
   ]);
 
   if (!quest) {
@@ -89,7 +93,11 @@ export default async function TeacherQuestSettingsPage({
         )}
       />
 
-      <QuestSettingsForm quest={quest} subjects={subjects} />
+      <QuestSettingsForm
+        quest={quest}
+        subjects={subjects}
+        taskCount={taskCount ?? 0}
+      />
     </section>
   );
 }
