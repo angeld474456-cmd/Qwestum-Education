@@ -37,12 +37,12 @@ export default function QuestCoverImageManager({
       const result = await uploadQuestCoverImage(questId, file);
 
       if (result.error || !result.coverImageUrl) {
-        setErrorMessage(result.error ?? "Unable to upload cover image.");
+        setErrorMessage(result.error ?? "Не удалось загрузить обложку.");
         return;
       }
 
       setCoverImageUrl(result.coverImageUrl);
-      setSuccessMessage("Cover image saved.");
+      setSuccessMessage("Обложка сохранена.");
     } catch (error) {
       if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
         setErrorMessage(SESSION_EXPIRED_MESSAGE);
@@ -50,7 +50,7 @@ export default function QuestCoverImageManager({
       }
 
       console.error(error);
-      setErrorMessage("Unable to upload cover image.");
+      setErrorMessage("Не удалось загрузить обложку.");
     } finally {
       setBusy(false);
 
@@ -84,7 +84,7 @@ export default function QuestCoverImageManager({
       }
 
       setCoverImageUrl(null);
-      setSuccessMessage("Cover image removed.");
+      setSuccessMessage("Обложка удалена.");
     } catch (error) {
       if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
         setErrorMessage(SESSION_EXPIRED_MESSAGE);
@@ -92,7 +92,7 @@ export default function QuestCoverImageManager({
       }
 
       console.error(error);
-      setErrorMessage("Unable to remove cover image.");
+      setErrorMessage("Не удалось удалить обложку.");
     } finally {
       setBusy(false);
     }
@@ -102,9 +102,10 @@ export default function QuestCoverImageManager({
     <section className="rounded-2xl border border-slate-800 bg-[#111827] p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Cover image</h2>
+          <h2 className="text-2xl font-bold">Обложка</h2>
           <p className="mt-2 max-w-2xl text-sm text-slate-400">
-            Optional 16:9 image shown in the teacher library and preview.
+            Необязательное изображение 16:9 для библиотеки учителя и
+            предпросмотра.
           </p>
         </div>
 
@@ -114,7 +115,7 @@ export default function QuestCoverImageManager({
               busy ? "cursor-not-allowed opacity-50" : "cursor-pointer"
             }`}
           >
-            {coverImageUrl ? "Replace cover" : "Upload cover"}
+            {coverImageUrl ? "Заменить обложку" : "Загрузить обложку"}
             <input
               ref={inputRef}
               type="file"
@@ -132,7 +133,7 @@ export default function QuestCoverImageManager({
               onClick={handleRemove}
               className="rounded-xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Remove cover
+              Удалить обложку
             </button>
           ) : null}
         </div>
@@ -142,7 +143,7 @@ export default function QuestCoverImageManager({
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
-            alt="Quest cover image"
+            alt="Обложка квеста"
             width={1280}
             height={720}
             unoptimized
@@ -150,7 +151,7 @@ export default function QuestCoverImageManager({
           />
         ) : (
           <div className="flex h-full items-center justify-center px-6 text-center text-sm font-semibold text-slate-400">
-            No cover image
+            Обложка не загружена
           </div>
         )}
       </div>

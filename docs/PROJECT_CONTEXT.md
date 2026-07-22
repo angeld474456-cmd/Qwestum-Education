@@ -431,7 +431,7 @@ Completed Sprint 12 work:
   - The count uses `quest_tasks` exact count with `head: true`.
   - Task count is kept separate from the quest DTO and passed to `QuestSettingsForm` as `taskCount`.
   - Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
-  - Draft zero-task copy: `Для публикации нужен хотя бы один вопрос.` and `Добавьте задание, затем вернитесь в настройки и включите публикацию.`
+  - Draft zero-task copy: `Для публикации нужно хотя бы одно задание.` and `Добавьте задание, затем вернитесь в настройки и включите публикацию.`
   - Ready-state copy: `Заданий: {taskCount}` and `Квест можно опубликовать.`
   - Legacy Public zero-task copy: `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`
   - The task link says `Перейти к заданиям` and points to `/quests/[id]/tasks`.
@@ -467,9 +467,22 @@ Completed Sprint 12 work:
   - Deferred localization scope includes `QuestSettingsForm`, `QuestCoverImageManager`, `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, and client fallback/server API error consistency.
   - No route, API behavior/error-contract, migration/schema, RLS/policy, index, task CRUD refactor, public catalog/student-facing implementation, or broad visual redesign change was included.
 
+- Sprint 12.18.18 - Settings and Cover Manager Copy Localization.
+  - Quest Settings form labels, select placeholders, helper text, category/tag guidance, grade/duration guidance, local validation messages, save/loading labels, success text, client-only fallback errors, and publication state labels are localized to Russian.
+  - Approved Settings terminology includes `Название квеста`, `Описание`, `Предмет`, `Предмет не указан`, `Язык`, `Язык не указан`, `Категория`, `Теги`, `Сложность`, `Класс от`, `Класс до`, `Не указано`, `Примерная длительность, мин.`, `Статус публикации`, `Черновик`, `Опубликован`, `Сохранение...`, and `Сохранить настройки`.
+  - Subject and grade display formatting is localized as `Все классы`, `N класс`, and `N-M классы`; stored values, option keys, field names, and payloads remain unchanged.
+  - Language display labels are localized as `Русский`, `Казахский`, and `Английский` without changing stored language codes.
+  - Generic teacher-facing publication-readiness copy now uses `хотя бы одно задание`; `вопрос` remains reserved for actual question-prompt semantics.
+  - `QuestCoverImageManager` copy is localized, including `Обложка`, Russian optional 16:9 guidance, `Загрузить обложку`, `Заменить обложку`, `Удалить обложку`, `Обложка не загружена`, `Обложка квеста`, success messages, client-only fallback errors, and accessibility labels.
+  - Protected error boundaries are unchanged: server API response shapes, HTTP status handling, server API error contracts, `SESSION_EXPIRED_MESSAGE`, Supabase/internal technical error behavior, Storage service passthrough errors, and returned `result.error` display behavior remain intact.
+  - Preserved behavior: routes, owner-safe loading, field names, payload shape, validation rules and numeric limits, category/tag limits, stored public/draft values, publication behavior, cover upload/remove/replace APIs, file input, accepted file types, schema, migrations, RLS, policies, and indexes remain unchanged.
+  - Manual browser verification passed for Settings labels/helpers, control usability, status labels, publication-readiness terminology, local invalid-input validation, cover manager copy, mojibake absence, and desktop layout.
+  - No save, upload, replace, remove, create, edit, delete, or other live data write was performed during verification.
+  - Deferred localization scope includes `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, broader client/server error consistency, and student/runtime copy outside the teacher-only workflow.
+
 Next sprint:
 
-- Sprint 12.18.17 - Teacher Forms and Task Editor Copy Planning.
+- Sprint 12.18.19 - Task Editor Copy Localization Planning.
 
 ## Stack
 

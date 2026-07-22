@@ -162,6 +162,12 @@ Quest metadata:
 - Malformed or unrelated cover paths are never deleted; cleanup failure after a successful DB update is logged and non-blocking.
 - Quest Settings can edit grade range, estimated duration, optional `subject_id`, and optional `language_code` through the owner-safe settings API.
 - Quest Settings has a separate `QuestCoverImageManager` for optional cover upload, replacement, preview, and removal without submitting the regular settings form.
+- Quest Settings form copy is Russian-first for teacher-visible labels, placeholders, helper text, local validation messages, success text, save/loading labels, and client-only fallback errors.
+- Approved Settings terminology includes `Название квеста`, `Описание`, `Предмет`, `Предмет не указан`, `Язык`, `Язык не указан`, `Категория`, `Теги`, `Сложность`, `Класс от`, `Класс до`, `Не указано`, `Примерная длительность, мин.`, `Статус публикации`, `Черновик`, `Опубликован`, `Сохранение...`, and `Сохранить настройки`.
+- Subject/grade display formatting is localized as `Все классы`, `N класс`, and `N-M классы`; stored values, option keys, field names, and payloads are unchanged.
+- Generic teacher-facing publication-readiness copy uses `хотя бы одно задание`; `вопрос` remains reserved for actual question-prompt semantics.
+- `QuestCoverImageManager` uses Russian teacher-visible copy for `Обложка`, optional 16:9 guidance, upload/replace/remove actions, empty state, alt text, success messages, and client-only fallback errors.
+- Protected API/storage boundaries are unchanged: server response shapes, HTTP status handling, server error contracts, `SESSION_EXPIRED_MESSAGE`, Supabase/internal technical errors, Storage passthrough errors, and returned `result.error` display behavior remain intact.
 - The subject selector uses a server-only authenticated lookup from `public.subjects` and selects only `id`, `name`, and `grade`, ordered by name, grade, and id.
 - No service role or hardcoded subject UUID mapping is used for subject selection.
 - `No subject` submits `null`; omitted `subject_id` preserves the current value.
@@ -484,7 +490,7 @@ Decisions after audit:
 - The helper validates UUID shape and authentication, verifies ownership with quest id plus authenticated `author_id`, returns `null` for missing, foreign, unauthenticated, or invalid requests, and counts `quest_tasks` only after ownership verification using exact count with `head: true`.
 - Task count stays separate from the quest DTO and is passed to `QuestSettingsForm` as `taskCount`.
 - Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
-- Exact copy: `Для публикации нужен хотя бы один вопрос.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
+- Exact copy: `Для публикации нужно хотя бы одно задание.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
 - The task link points to `/quests/[id]/tasks`.
 - The publication checkbox remains enabled because the server API remains authoritative and server-rendered task counts may be stale until refresh.
 - No polling or client-side task-count fetch was added.
@@ -518,7 +524,15 @@ Decisions after audit:
 - Deferred localization scope includes `QuestSettingsForm`, `QuestCoverImageManager`, `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, and client fallback/server API error consistency.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning teacher forms and task editor copy localization.
+- Sprint 12.18.18 localized Settings form and Cover Manager copy without adding an i18n framework or shared copy constants.
+- Settings form visible terminology now includes `Название квеста`, `Описание`, `Предмет`, `Предмет не указан`, `Язык`, `Язык не указан`, `Категория`, `Теги`, `Сложность`, `Класс от`, `Класс до`, `Не указано`, `Примерная длительность, мин.`, `Статус публикации`, `Черновик`, `Опубликован`, `Сохранение...`, and `Сохранить настройки`.
+- Subject/grade formatting uses `Все классы`, `N класс`, and `N-M классы`; language labels use `Русский`, `Казахский`, and `Английский`.
+- Publication-readiness terminology now uses `хотя бы одно задание`, while `вопрос` remains reserved for actual question-prompt semantics.
+- Cover Manager visible terminology now includes `Обложка`, Russian optional 16:9 guidance, `Загрузить обложку`, `Заменить обложку`, `Удалить обложку`, `Обложка не загружена`, and `Обложка квеста`.
+- Server API response shapes, HTTP status handling, server error contracts, `SESSION_EXPIRED_MESSAGE`, Supabase/internal technical error behavior, Storage passthrough errors, and returned `result.error` display behavior remain unchanged.
+- Manual browser verification passed for Settings form copy, cover manager copy, local invalid-input validation, mojibake absence, and desktop layout; no save or cover write operation was performed.
+- Deferred localization scope now includes `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, broader client/server error consistency, and student/runtime copy outside the teacher-only workflow.
+- Next safe step is planning Task Editor copy localization.
 
 Schema mismatch risks:
 

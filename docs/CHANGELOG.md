@@ -404,7 +404,7 @@
   - Task count remains separate from the quest DTO.
   - Settings passes `taskCount` to `QuestSettingsForm`.
   - Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
-  - Exact UX copy includes `Для публикации нужен хотя бы один вопрос.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
+  - Exact UX copy includes `Для публикации нужно хотя бы одно задание.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
   - The task link points to `/quests/[id]/tasks`.
   - The publication checkbox remains enabled, and the server API remains the publication source of truth.
   - Server-rendered count may be stale until refresh; no polling or client-side task-count fetch exists.
@@ -437,6 +437,18 @@
   - Routes, canonical dashboard route map, navigation destinations/active state, filtering, sorting, category/tags, task counts, covers, card links, Settings owner-safe loading, `created=1`, Preview rendering, QuestRunner/runtime, task CRUD, and publication behavior remain unchanged.
   - Manual browser verification passed for Library, Settings with and without `created=1`, Tasks without mojibake, Preview, and `Тестирование`; desktop layout/navigation remained usable and no data changed.
   - Deferred localization scope includes `QuestSettingsForm`, `QuestCoverImageManager`, `QuestTasksClient`, `TaskForm`, `TaskCard`, `TaskEditor`, `components/tasks/editor/*`, `components/media/ImageUploader.tsx`, `components/tasks/runtime/*`, and client fallback/server API error consistency.
+
+- Sprint 12.18.18 - Settings and Cover Manager Copy Localization.
+  - Localized `QuestSettingsForm` teacher-visible copy for labels, select placeholders, subject/grade display formatting, language labels, helper text, category/tag guidance, grade/duration guidance, local validation messages, save/loading labels, success text, client-only fallback errors, and publication state labels.
+  - Approved Settings terminology includes `Название квеста`, `Описание`, `Предмет`, `Предмет не указан`, `Язык`, `Язык не указан`, `Категория`, `Теги`, `Сложность`, `Класс от`, `Класс до`, `Не указано`, `Примерная длительность, мин.`, `Статус публикации`, `Черновик`, `Опубликован`, `Сохранение...`, and `Сохранить настройки`.
+  - Subject/grade display formatting uses `Все классы`, `N класс`, and `N-M классы`; stored values, option keys, field names, and payloads remain unchanged.
+  - Generic readiness copy now uses `хотя бы одно задание`; `вопрос` remains reserved for actual question-prompt semantics.
+  - Localized `QuestCoverImageManager` teacher-visible copy for `Обложка`, Russian optional 16:9 guidance, `Загрузить обложку`, `Заменить обложку`, `Удалить обложку`, `Обложка не загружена`, `Обложка квеста`, loading/success states, client-only fallback errors, and accessibility labels.
+  - Protected error boundaries remain unchanged: server API response shapes, HTTP status handling, server API error contracts, `SESSION_EXPIRED_MESSAGE`, Supabase/internal technical errors, Storage passthrough errors, and returned `result.error` display behavior.
+  - Routes, owner-safe loading, field names, payload shape, validation rules and numeric limits, category/tag limits, stored public/draft values, publication behavior, cover upload/remove/replace APIs, file input, accepted file types, schema, migrations, RLS, policies, and indexes remain unchanged.
+  - Manual browser verification passed for Settings form labels/helpers/control usability/status labels/readiness terminology/local invalid-input validation, Cover Manager copy, no mojibake, and desktop layout.
+  - No save, cover upload, cover replace, cover removal, or other live data write occurred during verification.
+  - Deferred localization scope includes `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, broader client/server error consistency, and student/runtime copy outside the teacher-only workflow.
 
 ## Current State On `feature/next-work`
 

@@ -10,7 +10,6 @@ import {
   SESSION_EXPIRED_MESSAGE,
 } from "@/lib/auth/session-expired.client";
 import {
-  getQuestLanguageLabel,
   QUEST_LANGUAGE_OPTIONS,
   type QuestLanguageCode,
 } from "@/services/quest-language";
@@ -72,10 +71,21 @@ function formatTagsInput(tags: string[] | null | undefined): string {
 
 function formatSubjectOption(subject: SubjectOption) {
   if (subject.grade === null) {
-    return `${subject.name} — all grades`;
+    return `${subject.name} — все классы`;
   }
 
-  return `${subject.name} — Grade ${subject.grade}`;
+  return `${subject.name} — ${subject.grade} класс`;
+}
+
+function formatLanguageOption(code: QuestLanguageCode) {
+  switch (code) {
+    case "ru":
+      return "Русский";
+    case "kk":
+      return "Казахский";
+    case "en":
+      return "Английский";
+  }
 }
 
 export default function QuestSettingsForm({
@@ -131,32 +141,32 @@ export default function QuestSettingsForm({
     setSuccessMessage("");
 
     if (!normalizedTitle) {
-      setErrorMessage("Title is required.");
+      setErrorMessage("Введите название квеста.");
       return;
     }
 
     if (Number.isNaN(normalizedDifficulty)) {
-      setErrorMessage("Difficulty must be a number.");
+      setErrorMessage("Сложность должна быть числом.");
       return;
     }
 
     if (normalizedCategory.length > 40) {
-      setErrorMessage("Category must be 40 characters or fewer.");
+      setErrorMessage("Категория должна быть не длиннее 40 символов.");
       return;
     }
 
     if (normalizedTags.length > 10) {
-      setErrorMessage("A maximum of 10 tags is allowed.");
+      setErrorMessage("Можно указать не больше 10 тегов.");
       return;
     }
 
     if (normalizedTags.some((tag) => tag.length > 24)) {
-      setErrorMessage("Each tag must be 24 characters or fewer.");
+      setErrorMessage("Каждый тег должен быть не длиннее 24 символов.");
       return;
     }
 
     if (gradeMin === "" && gradeMax !== "") {
-      setErrorMessage("Select Grade from before choosing Grade to.");
+      setErrorMessage("Сначала укажите начальный класс.");
       return;
     }
 
@@ -166,7 +176,7 @@ export default function QuestSettingsForm({
         normalizedGradeMin < 1 ||
         normalizedGradeMin > 11)
     ) {
-      setErrorMessage("Grade from must be between 1 and 11.");
+      setErrorMessage("Начальный класс должен быть от 1 до 11.");
       return;
     }
 
@@ -176,7 +186,7 @@ export default function QuestSettingsForm({
         normalizedGradeMax < 1 ||
         normalizedGradeMax > 11)
     ) {
-      setErrorMessage("Grade to must be between 1 and 11.");
+      setErrorMessage("Конечный класс должен быть от 1 до 11.");
       return;
     }
 
@@ -185,7 +195,7 @@ export default function QuestSettingsForm({
       normalizedGradeMax !== null &&
       normalizedGradeMin > normalizedGradeMax
     ) {
-      setErrorMessage("Grade from must be less than or equal to Grade to.");
+      setErrorMessage("Начальный класс должен быть не больше конечного.");
       return;
     }
 
@@ -195,7 +205,7 @@ export default function QuestSettingsForm({
         normalizedDuration < 5 ||
         normalizedDuration > 240)
     ) {
-      setErrorMessage("Estimated duration must be between 5 and 240 minutes.");
+      setErrorMessage("Примерная длительность должна быть от 5 до 240 минут.");
       return;
     }
 
@@ -231,7 +241,7 @@ export default function QuestSettingsForm({
       const result = (await response.json()) as QuestSettingsResponse;
 
       if (!response.ok || !result.quest) {
-        setErrorMessage(result.error ?? "Unable to save quest settings.");
+        setErrorMessage(result.error ?? "Не удалось сохранить настройки квеста.");
         return;
       }
 
@@ -249,10 +259,10 @@ export default function QuestSettingsForm({
       setEstimatedDuration(
         metadataValue(result.quest.estimated_duration_minutes)
       );
-      setSuccessMessage("Quest settings saved.");
+      setSuccessMessage("Настройки квеста сохранены.");
     } catch (error) {
       console.error(error);
-      setErrorMessage("Unable to save quest settings.");
+      setErrorMessage("Не удалось сохранить настройки квеста.");
     } finally {
       setSaving(false);
     }
@@ -266,7 +276,7 @@ export default function QuestSettingsForm({
             htmlFor="quest-title"
             className="mb-2 block text-sm font-semibold text-slate-300"
           >
-            Title
+            Название квеста
           </label>
           <input
             id="quest-title"
@@ -282,7 +292,7 @@ export default function QuestSettingsForm({
             htmlFor="quest-description"
             className="mb-2 block text-sm font-semibold text-slate-300"
           >
-            Description
+            Описание
           </label>
           <textarea
             id="quest-description"
@@ -298,7 +308,7 @@ export default function QuestSettingsForm({
             htmlFor="quest-subject"
             className="mb-2 block text-sm font-semibold text-slate-300"
           >
-            Subject
+            Предмет
           </label>
           <select
             id="quest-subject"
@@ -306,7 +316,7 @@ export default function QuestSettingsForm({
             onChange={(event) => setSubjectId(event.target.value)}
             className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
           >
-            <option value="">No subject</option>
+            <option value="">Предмет не указан</option>
             {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {formatSubjectOption(subject)}
@@ -320,7 +330,7 @@ export default function QuestSettingsForm({
             htmlFor="quest-language"
             className="mb-2 block text-sm font-semibold text-slate-300"
           >
-            Language
+            Язык
           </label>
           <select
             id="quest-language"
@@ -328,10 +338,10 @@ export default function QuestSettingsForm({
             onChange={(event) => setLanguageCode(event.target.value)}
             className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
           >
-            <option value="">No language specified</option>
+            <option value="">Язык не указан</option>
             {QUEST_LANGUAGE_OPTIONS.map((language) => (
               <option key={language.code} value={language.code}>
-                {getQuestLanguageLabel(language.code)}
+                {formatLanguageOption(language.code)}
               </option>
             ))}
           </select>
@@ -342,7 +352,7 @@ export default function QuestSettingsForm({
             htmlFor="quest-category"
             className="mb-2 block text-sm font-semibold text-slate-300"
           >
-            Category
+            Категория
           </label>
           <input
             id="quest-category"
@@ -352,7 +362,7 @@ export default function QuestSettingsForm({
             className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
           />
           <p className="mt-2 text-sm text-slate-400">
-            Optional. Maximum 40 characters.
+            Необязательно. Максимум 40 символов.
           </p>
         </div>
 
@@ -361,7 +371,7 @@ export default function QuestSettingsForm({
             htmlFor="quest-tags"
             className="mb-2 block text-sm font-semibold text-slate-300"
           >
-            Tags
+            Теги
           </label>
           <input
             id="quest-tags"
@@ -371,7 +381,7 @@ export default function QuestSettingsForm({
             className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
           />
           <p className="mt-2 text-sm text-slate-400">
-            Separate tags with commas. Maximum 10 tags, 24 characters each.
+            Разделяйте теги запятыми. Максимум 10 тегов, до 24 символов каждый.
           </p>
         </div>
 
@@ -380,7 +390,7 @@ export default function QuestSettingsForm({
             htmlFor="quest-difficulty"
             className="mb-2 block text-sm font-semibold text-slate-300"
           >
-            Difficulty
+            Сложность
           </label>
           <select
             id="quest-difficulty"
@@ -400,7 +410,7 @@ export default function QuestSettingsForm({
               htmlFor="quest-grade-min"
               className="mb-2 block text-sm font-semibold text-slate-300"
             >
-              Grade from
+              Класс от
             </label>
             <select
               id="quest-grade-min"
@@ -408,7 +418,7 @@ export default function QuestSettingsForm({
               onChange={(event) => setGradeMin(event.target.value)}
               className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
             >
-              <option value="">Not set</option>
+              <option value="">Не указано</option>
               {Array.from({ length: 11 }, (_, index) => index + 1).map(
                 (grade) => (
                   <option key={grade} value={grade}>
@@ -424,7 +434,7 @@ export default function QuestSettingsForm({
               htmlFor="quest-grade-max"
               className="mb-2 block text-sm font-semibold text-slate-300"
             >
-              Grade to
+              Класс до
             </label>
             <select
               id="quest-grade-max"
@@ -432,7 +442,7 @@ export default function QuestSettingsForm({
               onChange={(event) => setGradeMax(event.target.value)}
               className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
             >
-              <option value="">Not set</option>
+              <option value="">Не указано</option>
               {Array.from({ length: 11 }, (_, index) => index + 1).map(
                 (grade) => (
                   <option key={grade} value={grade}>
@@ -448,7 +458,7 @@ export default function QuestSettingsForm({
               htmlFor="quest-estimated-duration"
               className="mb-2 block text-sm font-semibold text-slate-300"
             >
-              Estimated duration (minutes)
+              Примерная длительность, мин.
             </label>
             <input
               id="quest-estimated-duration"
@@ -498,7 +508,7 @@ export default function QuestSettingsForm({
             ) : (
               <>
                 <p className="text-sm font-semibold text-cyan-200">
-                  Для публикации нужен хотя бы один вопрос.
+                  Для публикации нужно хотя бы одно задание.
                 </p>
                 <p className="mt-1 text-sm text-slate-300">
                   Добавьте задание, затем вернитесь в настройки и включите
@@ -516,9 +526,9 @@ export default function QuestSettingsForm({
 
           <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">
             <span>
-              <span className="block font-semibold">Publication state</span>
+              <span className="block font-semibold">Статус публикации</span>
               <span className="mt-1 block text-sm text-slate-400">
-                {isPublic ? "Public" : "Draft"}
+                {isPublic ? "Опубликован" : "Черновик"}
               </span>
             </span>
             <input
@@ -547,7 +557,7 @@ export default function QuestSettingsForm({
           disabled={saving}
           className="rounded-xl bg-violet-600 px-8 py-4 font-semibold text-white transition hover:bg-violet-700 disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save settings"}
+          {saving ? "Сохранение..." : "Сохранить настройки"}
         </button>
       </form>
     </Card>
