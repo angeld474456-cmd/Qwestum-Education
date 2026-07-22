@@ -6,47 +6,48 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the smallest teacher-MVP tags/category metadata slice after subject, language, grade/duration, and cover image support.
+Integrate the live quest category/tags schema into owner-safe Quest Settings.
 
 ## Next Task
 
-Sprint 12.17.10 - Quest Tags / Category Planning.
-
-Analysis/planning only. Start implementation only after explicit approval.
-
-Goal:
-
-- Decide whether tags/category should be added now, what schema or UI is justified for MVP, and how to avoid introducing taxonomy/admin complexity too early.
+Sprint 12.17.13 - Quest Category / Tags Settings Integration.
 
 Current state:
 
-- Supabase SSR session foundation is implemented.
-- Dashboard and teacher pages are protected.
-- Owner-scoped quest and task CRUD is implemented.
-- Quest/task RLS hardening is live.
-- Owner-safe task image upload, explicit removal, replacement cleanup, and task-delete cleanup are implemented.
-- Quest Settings supports grade range, estimated duration, optional subject, optional language, and optional cover image.
-- Teacher Library and Teacher Preview display populated metadata and cover images.
-- `NewQuestForm` and Teacher Play/Test remain unchanged for cover and metadata.
+- Sprint 12.17.12 applied and verified `database/migrations/011_add_quest_category_tags.sql` in live Supabase.
+- `public.quests.category` exists as nullable `text` with default `null`.
+- `public.quests.tags` exists as `text[] not null` with default `'{}'::text[]`.
+- `quests_category_length_check` and `quests_tags_count_check` were verified.
+- All 7 existing quests remained compatible with null categories and empty tag arrays.
+- `public.quests` RLS and owner-scoped policies were unchanged.
+- No application code has been updated for category/tag editing yet.
 
-Planning scope:
+Approved scope:
 
-- Audit whether live `quests` already has tags/category-like columns.
-- Decide whether tags/category should be nullable text, arrays, a lookup table, or deferred.
-- Plan teacher Settings behavior only if the model is MVP-ready.
-- Preserve owner-scoped quest access, current RLS, and existing metadata behavior.
-- Keep public/student catalog filtering as a later step unless the data model requires planning now.
+- Add `category` and `tags` to TypeScript quest types.
+- Include `category` and `tags` in owner-scoped server selects.
+- Add owner-safe PATCH support.
+- Add category and tags controls to Quest Settings.
+- Implement server-side normalization and validation.
+- Preserve tag display casing.
+- Deduplicate tags case-insensitively.
+- Remove empty tags.
+- Enforce maximum category length of 40 characters.
+- Enforce maximum 10 tags.
+- Enforce maximum tag length of 24 characters.
 
 Out of scope:
 
+- Quest Library filtering.
+- NewQuestForm changes.
+- Play/Test changes.
 - Quest deletion.
-- Cover image enhancements.
-- Student catalog filtering implementation.
-- Subject or language administration.
-- Attempt limits.
-- Task editor/runtime/JSONB changes.
+- New RLS policies.
+- New indexes.
+- Normalized taxonomy tables.
+- Public/student catalog filtering.
 
-Required validation for any implementation sprint:
+Required validation:
 
 ```powershell
 npm.cmd run lint

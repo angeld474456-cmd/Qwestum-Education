@@ -167,6 +167,18 @@ Quest metadata:
 - Teacher Library shows a 16:9 cover thumbnail or stable fallback. Teacher Preview shows a larger 16:9 cover when present. Null or malformed cover paths do not show broken images.
 - The Teacher Library uses one subject lookup and an in-memory map, avoiding N+1 subject queries.
 - NewQuestForm and Teacher Play/Test remain unchanged.
+- Sprint 12.17.10 approved a direct quest-column MVP category/tag model.
+- `category` is one optional teacher-defined text value.
+- `tags` is a teacher-defined text array with display casing preserved.
+- Normalized taxonomy tables such as `quest_categories`, `tags`, and `quest_tags` are deferred until marketplace, public catalog, multilingual taxonomy, or platform-defined taxonomy needs are clearer.
+- `database/migrations/011_add_quest_category_tags.sql` was applied live after Sprint 12.17.12 verification.
+- Live `quests.category` is nullable `text` with default `null`.
+- Live `quests.tags` is `text[] not null` with default `'{}'::text[]`.
+- `quests_category_length_check` enforces category values as null or 1-40 characters.
+- `quests_tags_count_check` enforces at most 10 tags.
+- All 7 existing quests remained compatible after migration; existing categories are null and existing tags are empty arrays.
+- Per-tag length up to 24 characters, empty-tag removal, display casing preservation, and case-insensitive duplicate removal are planned for server-side validation in the next app implementation sprint.
+- No category/tag indexes, RLS changes, policies, or app code changes are included in Sprint 12.17.12.
 
 Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses owned quest and owned task summary data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
 
@@ -382,9 +394,11 @@ Decisions after audit:
 - Subject lookup and the Quest Settings subject selector are implemented. Subject creation/editing/deletion, taxonomy administration, subject catalog filtering, and inactive/status semantics remain deferred.
 - Quest content language metadata is implemented for Quest Settings, Dashboard, and Teacher Preview. Language during quest creation, catalog language filtering/indexes, multilingual variants, UI localization/i18n, and language administration remain deferred.
 - Quest cover images are implemented for Quest Settings, Dashboard, and Teacher Preview. Cover selection during quest creation, image resizing/cropping, private media/signed URLs, and orphan cleanup tooling remain deferred.
+- The teacher-MVP category/tag model is approved as direct nullable/array columns on `quests`, with normalized taxonomy deferred.
+- `database/migrations/011_add_quest_category_tags.sql` was applied live and verified for category/tag schema only.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is tags/category planning for the teacher MVP.
+- Next safe step is integrating category/tag editing into owner-safe Quest Settings.
 
 Schema mismatch risks:
 
@@ -394,6 +408,8 @@ Schema mismatch risks:
 - Legacy non-owner-scoped `tasks/{uuid}` objects remain for compatibility.
 - Upload-before-failed-PATCH races may still orphan unattached owner-scoped image objects.
 - Failed best-effort cover cleanup may leave orphaned cover objects.
+- Direct quest-column category/tags will need a future normalization path if marketplace taxonomy, multilingual category labels, platform-defined categories, or public catalog indexing become requirements.
+- Server-side tag normalization must remove empty tags and case-insensitive duplicates before the UI writes category/tag metadata.
 - Expired-session API `401` responses redirect to `/login?error=session_expired` in current teacher client workflows; unsaved edits are not persisted across the login redirect.
 - Direct authenticated API edge-case verification for invalid subject UUID, missing subject UUID, and foreign quest PATCH was not executed in Sprint 12.17.5 because no safe controllable authenticated API session was available; those paths were verified by code review and browser save/clear covered the authenticated success path.
 - Local migrations are not a reliable source of truth for the live schema yet.

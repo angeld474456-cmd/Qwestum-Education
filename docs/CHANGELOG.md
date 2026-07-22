@@ -263,6 +263,29 @@
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - Browser verification passed for upload, persistence after refresh, Settings preview, Library thumbnail, Preview display, replacement, removal, task image regression, and subject/grade/duration/language regression coverage.
   - Known limitations: public bucket reads remain, MIME verification relies on `File.type`, best-effort cleanup can leave orphan objects, no cropper/resizing, no private bucket/signed URLs, no cover in NewQuestForm or Play/Test, and no gallery/multiple covers.
+- Sprint 12.17.10 - Quest Tags / Category Planning.
+  - Approved one optional teacher-defined category per quest and multiple teacher-defined tags per quest.
+  - Chose direct `public.quests` columns for the teacher MVP.
+  - Recommended `category text null` and `tags text[] not null default '{}'`.
+  - Deferred normalized taxonomy tables until marketplace, public catalog, multilingual taxonomy, or platform-defined taxonomy needs are clearer.
+  - Deferred Quest Library filtering, NewQuestForm changes, Play/Test changes, indexes, RLS changes, and quest deletion.
+- Sprint 12.17.11 - Quest Category / Tags Migration.
+  - Prepared `database/migrations/011_add_quest_category_tags.sql`.
+  - The migration adds nullable `quests.category` and `quests.tags text[] not null default '{}'`.
+  - Added idempotent CHECK constraints for category length up to 40 characters and maximum 10 tags.
+  - Per-tag length, empty-tag removal, and case-insensitive duplicate removal are planned for server-side validation in the app implementation sprint.
+  - No live Supabase application, backfill, index, RLS change, policy change, application code change, commit, or push was performed during preparation.
+- Sprint 12.17.12 - Apply and Verify Quest Category / Tags Migration.
+  - Manually applied `database/migrations/011_add_quest_category_tags.sql` to live Supabase after product-owner approval.
+  - Verified `public.quests.category` exists as nullable `text` with default `null`.
+  - Verified `public.quests.tags` exists as `text[] not null` with default `'{}'::text[]`.
+  - Verified `quests_category_length_check` and `quests_tags_count_check`.
+  - Confirmed all 7 existing quest rows remained present and compatible.
+  - Confirmed existing categories are `null`, existing tags are empty arrays, and no tag arrays exceed 10 items.
+  - Confirmed existing quest metadata remained compatible.
+  - Confirmed `public.quests` RLS and owner-scoped SELECT, INSERT, and UPDATE policies were unchanged.
+  - Confirmed no `quests` DELETE policy exists.
+  - No application TypeScript, React components, API routes, RLS policies, indexes, or migration SQL were changed in this documentation step.
 
 ## Current State On `feature/next-work`
 

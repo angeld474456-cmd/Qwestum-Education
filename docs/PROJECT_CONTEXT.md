@@ -283,10 +283,33 @@ Completed Sprint 12 work:
   - Null or malformed cover paths do not show broken images.
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - Browser verification confirmed cover upload, persistence after refresh, Settings preview, Library thumbnail, Preview display, replacement, removal, task image regression coverage, and subject/grade/duration/language regression coverage.
+- Sprint 12.17.10 - Quest Tags / Category Planning.
+  - Approved the MVP category/tag architecture.
+  - One optional teacher-defined category and multiple teacher-defined tags will be stored directly on `public.quests`.
+  - The MVP model uses `category text null` and `tags text[] not null default '{}'`.
+  - Normalized taxonomy tables such as `quest_categories`, `tags`, and `quest_tags` are deferred until marketplace, public catalog, multilingual taxonomy, or platform-defined taxonomy needs are clearer.
+  - Quest Library filtering, NewQuestForm changes, Play/Test changes, RLS changes, indexes, and quest deletion are not part of the first category/tag migration slice.
+- Sprint 12.17.11 - Quest Category / Tags Migration.
+  - Prepared `database/migrations/011_add_quest_category_tags.sql`.
+  - The migration adds nullable `quests.category` and `quests.tags text[] not null default '{}'`.
+  - It adds idempotent CHECK constraints for category length up to 40 characters and maximum 10 tags.
+  - Per-tag length, empty-tag removal, and case-insensitive duplicate removal are planned for server-side validation in the following app implementation sprint.
+  - No backfill, index, RLS change, policy change, or application code change is included.
+- Sprint 12.17.12 - Apply and Verify Quest Category / Tags Migration.
+  - Manually applied `database/migrations/011_add_quest_category_tags.sql` to live Supabase after product-owner approval.
+  - Verified `public.quests.category` exists as nullable `text` with default `null`.
+  - Verified `public.quests.tags` exists as `text[] not null` with default `'{}'::text[]`.
+  - Verified `quests_category_length_check` and `quests_tags_count_check`.
+  - Verified all 7 existing quest rows remained present and compatible.
+  - Existing categories are `null`, existing tags are empty arrays, and no tag arrays exceed 10 items.
+  - Existing quest metadata remained compatible.
+  - `public.quests` RLS remains enabled and owner-scoped SELECT, INSERT, and UPDATE policies remained unchanged.
+  - No `quests` DELETE policy exists.
+  - No application code, RLS policy, index, or unrelated schema change was included.
 
 Next sprint:
 
-- Sprint 12.17.10 - Quest Tags / Category Planning.
+- Sprint 12.17.13 - Quest Category / Tags Settings Integration.
 
 ## Stack
 
@@ -304,7 +327,7 @@ Next sprint:
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, orphan cleanup tooling, image resizing/cropping, and legacy object migration.
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
-- Deferred quest metadata work includes language during quest creation, catalog language filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, tags/category, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
+- Deferred quest metadata work includes category/tag UI and filtering, language during quest creation, catalog language filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

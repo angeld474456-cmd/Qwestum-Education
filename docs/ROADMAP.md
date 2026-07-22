@@ -239,14 +239,32 @@ Completed:
   - Teacher Library shows a 16:9 thumbnail or stable fallback; Teacher Preview shows a larger cover when present.
   - `NewQuestForm` and Teacher Play/Test remain unchanged.
   - Browser verification passed for upload, persistence, Settings preview, Library thumbnail, Preview display, replacement, removal, task image regression, and subject/grade/duration/language regression coverage.
+- Sprint 12.17.10 - Quest Tags / Category Planning.
+  - Approved one optional teacher-defined category per quest and multiple teacher-defined tags per quest.
+  - Chose direct `public.quests` columns for the MVP instead of normalized taxonomy tables.
+  - Deferred normalized `quest_categories`, `tags`, and `quest_tags` until marketplace, public catalog, multilingual taxonomy, or platform-defined taxonomy needs are clearer.
+  - Deferred Quest Library filtering, NewQuestForm changes, Play/Test changes, indexes, RLS changes, and quest deletion.
+- Sprint 12.17.11 - Quest Category / Tags Migration.
+  - Prepared `database/migrations/011_add_quest_category_tags.sql`.
+  - The migration adds nullable `quests.category` and `quests.tags text[] not null default '{}'`.
+  - Added planned constraints for category length up to 40 characters and maximum 10 tags.
+  - No backfill, index, RLS change, policy change, or application code change is included.
+- Sprint 12.17.12 - Apply and Verify Quest Category / Tags Migration.
+  - Manually applied `database/migrations/011_add_quest_category_tags.sql` to live Supabase after product-owner approval.
+  - Verified `quests.category` exists as nullable `text` with default `null`.
+  - Verified `quests.tags` exists as `text[] not null` with default `'{}'::text[]`.
+  - Verified `quests_category_length_check` and `quests_tags_count_check`.
+  - Confirmed all 7 existing quests remained present and compatible, with null categories and empty tag arrays.
+  - Confirmed `public.quests` RLS and owner-scoped policies were unchanged, and no DELETE policy exists.
+  - No application code, index, RLS policy, or unrelated schema change was included.
 
 Next:
 
-- Sprint 12.17.10 - Quest Tags / Category Planning.
-  - Analyze the smallest teacher-MVP taxonomy slice after subject, language, grade/duration, and cover metadata.
-  - Decide whether tags/category need schema, static options, or deferral.
-  - Keep subject/language administration, catalog filtering, cover enhancements, and quest deletion deferred.
-  - Do not add quest deletion unless explicitly required.
+- Sprint 12.17.13 - Quest Category / Tags Settings Integration.
+  - Add category and tags to TypeScript quest types and owner-scoped server selects.
+  - Add owner-safe PATCH support and Quest Settings controls.
+  - Implement server-side normalization and validation while preserving tag display casing.
+  - Do not add Quest Library filtering, NewQuestForm changes, Play/Test changes, RLS policies, indexes, or quest deletion.
 
 ## Suggested Future Milestones
 
