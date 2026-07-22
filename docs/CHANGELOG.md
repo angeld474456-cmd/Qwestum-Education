@@ -356,6 +356,18 @@
   - No publication control exists on the creation form.
   - Manual visual browser verification passed on authenticated `/quests/new` without creating a new quest.
   - No create API, route move, metadata expansion, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase write, RLS/policy, index, public catalog, or student-facing change was included.
+- Sprint 12.18.6 - Quest Creation Step 2 Settings UX.
+  - `NewQuestForm` redirects after creation to `/dashboard/quests/[id]/settings?created=1`.
+  - Settings accepts Next.js 16 async `searchParams`.
+  - `created` supports `string | string[] | undefined`; arrays use the first value and only exact `created=1` enables onboarding.
+  - Onboarding is server-rendered, non-persistent, and appears only for post-create query visits.
+  - Direct Settings visits remain unchanged.
+  - `getOwnedQuest(id)` remains the owner-safe access gate, and onboarding does not affect authorization or data loading.
+  - The task link points to `/quests/[id]/tasks`.
+  - Publication behavior remains unchanged.
+  - No client state or dismiss behavior was added.
+  - Browser verification passed with and without the query parameter, and no data was modified during verification.
+  - No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included.
 
 ## Current State On `feature/next-work`
 

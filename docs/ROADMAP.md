@@ -318,12 +318,23 @@ Completed:
   - Draft-only server enforcement remains unchanged and no publication control exists.
   - Manual visual browser verification passed on authenticated `/quests/new` without creating a new quest.
   - No create API, route move, metadata expansion, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase write, RLS/policy, index, public catalog, or student-facing change was included.
+- Sprint 12.18.6 - Quest Creation Step 2 Settings UX.
+  - `NewQuestForm` redirects successful creation to `/dashboard/quests/[id]/settings?created=1`.
+  - Quest Settings accepts Next.js 16 async `searchParams`.
+  - `created` supports `string | string[] | undefined`; arrays use the first value and only exact `created=1` enables onboarding.
+  - Step 2 onboarding is server-rendered and non-persistent.
+  - Onboarding appears only for post-create query visits; direct Settings visits remain unchanged.
+  - `getOwnedQuest(id)` remains the owner-safe access gate, and onboarding does not affect authorization or data loading.
+  - The task link points to `/quests/[id]/tasks`.
+  - Publication behavior remains unchanged, and no client state or dismiss behavior was added.
+  - Browser verification passed with and without the query parameter, and no data was modified.
+  - No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included.
 
 Next:
 
-- Sprint 12.18.5 - Quest Creation Step 2 Settings UX Planning.
-  - Plan whether Quest Settings should show `Шаг 2 из 2` for newly created drafts.
-  - Plan post-create arrival detection, possible `?created=1` behavior, onboarding banner lifetime, task-before-publication emphasis, and future publication gating.
+- Sprint 12.18.7 - Publication Readiness Rule Planning.
+  - Plan whether quests may be published with zero tasks and whether metadata such as cover, category, tags, description, grade, duration, or subject should be required.
+  - Plan API versus UI validation, owner-safe validation paths, error-message UX, existing published quest compatibility, and manual verification.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

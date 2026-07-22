@@ -291,6 +291,7 @@ Current limitations:
 - `NewQuestForm` sends only title, description, and difficulty; it does not include publication state, and any client-provided `is_public` value is ignored by the create API.
 - Quest creation is a two-step workflow: create a draft shell first, then complete metadata, cover image, tasks, and publication in Quest Settings.
 - `NewQuestForm` presents creation as `Шаг 1 из 2`, uses Russian draft-workflow copy, and offers a secondary link back to `/dashboard/quests`.
+- Post-create redirects append `?created=1` so Settings can show server-rendered Step 2 onboarding without persistent state.
 - Quest settings save matches both quest `id` and `author_id`.
 - Task CRUD verifies ownership through the parent quest.
 - Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
@@ -439,9 +440,15 @@ Decisions after audit:
 - Sprint 12.18.4 polished `NewQuestForm` with `Шаг 1 из 2`, Russian draft-workflow copy, `Создать черновик` submit copy, `Создание черновика...` loading copy, and a secondary `Вернуться к библиотеке` link to `/dashboard/quests`.
 - Visual verification passed on authenticated `/quests/new` without creating a new quest.
 - Sprint 12.18.4 did not change the create API, routes, metadata fields, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase state, RLS/policies, indexes, public catalog, or student-facing behavior.
+- Sprint 12.18.6 added Step 2 Settings onboarding for `/dashboard/quests/[id]/settings?created=1`.
+- Settings accepts Next.js 16 async `searchParams`; `created` supports `string | string[] | undefined`, arrays use the first value, and only exact `created=1` enables onboarding.
+- Direct Settings visits remain unchanged; `getOwnedQuest(id)` remains the owner-safe access gate and the query parameter does not affect authorization or data loading.
+- The onboarding is server-rendered, non-persistent, has no client state or dismiss behavior, links to `/quests/[id]/tasks`, and leaves publication behavior unchanged.
+- Browser verification passed with and without `created=1`, and no data was modified during verification.
+- No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included in Sprint 12.18.6.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning the Quest Settings Step 2 UX for newly created drafts.
+- Next safe step is planning publication readiness rules.
 
 Schema mismatch risks:
 

@@ -66,7 +66,7 @@ export default function NewQuestForm() {
         return;
       }
 
-      router.push(`/dashboard/quests/${result.quest.id}/settings`);
+      router.push(`/dashboard/quests/${result.quest.id}/settings?created=1`);
       router.refresh();
     } catch (error) {
       console.error(error);
