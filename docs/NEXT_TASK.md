@@ -6,40 +6,39 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan teacher quest workflow consolidation.
+Plan teacher workflow copy consistency.
 
 ## Next Task
 
-Sprint 12.18.13 - Teacher Quest Workflow Consolidation Planning.
+Sprint 12.18.15 - Teacher Workflow Copy Consistency Planning.
 
 Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.18.12 added Settings-side publication-readiness guidance.
-- Settings loads an owner-safe exact task count server-side through `getOwnedQuestTaskCount(questId)`.
-- The helper validates UUID shape and authentication, verifies ownership with quest id plus authenticated `author_id`, returns `null` for missing, foreign, unauthenticated, or invalid requests, and counts `quest_tasks` only after ownership verification using exact count with `head: true`.
-- Task count remains separate from the quest DTO and is passed to `QuestSettingsForm` as `taskCount`.
-- Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
-- The task link points to `/quests/[id]/tasks`.
-- The publication checkbox remains enabled, and the server API remains the publication source of truth.
-- Server-rendered count may be stale until refresh; no polling or client-side task-count fetch exists.
-- Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks, and no data was modified.
-- Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.
-- No migration, schema, RLS/policy, index, polling, client-side task-count request, readiness metadata checklist, task CRUD refactor, publication API change, public catalog, or student-facing change was included.
+- Sprint 12.18.14 consolidated teacher Create and Tasks routes under `/dashboard/quests`.
+- Canonical teacher routes are Library `/dashboard/quests`, Create `/dashboard/quests/new`, Settings `/dashboard/quests/[id]/settings`, Tasks `/dashboard/quests/[id]/tasks`, Preview `/dashboard/quests/[id]/preview`, and Play/Test `/dashboard/quests/[id]/play`.
+- Legacy redirects remain for `/quests/new`, `/quests/[id]/tasks`, `/quests`, and `/quests/[id]`.
+- All internal teacher Create and Tasks links use canonical dashboard routes.
+- `QuestWorkspaceNav` ordering, labels, and active behavior remain unchanged.
+- The post-create Settings redirect remains `/dashboard/quests/[id]/settings?created=1`.
+- `NewQuestForm` and `QuestTasksClient` received only minimal dashboard-layout fit adjustments.
+- Task CRUD, validation, payloads, errors, loading, scrolling behavior, publication behavior, dashboard layout guard, and owner-safe route loading remain intact.
+- Manual browser verification passed for both canonical routes, both legacy redirects, no redirect loops, dashboard task-editor layout/scrolling, internal links staying within `/dashboard/quests`, and no data changes.
+- Remaining intentional legacy occurrences are redirect pages, historical documentation references, and `/api/teacher/quests` API routes.
+- No API, schema/migration, RLS/policy, index, task CRUD refactor, Preview or Play/Test behavior change, publication behavior change, public catalog/student-facing implementation, broad visual redesign, or broad localization change was included.
 
 Planning topics:
 
-- Review the complete teacher flow: Library -> Create Draft -> Settings -> Tasks -> Preview -> Play/Test.
-- Identify inconsistent routes between `/dashboard/quests` and `/quests`.
-- Assess whether task editing should move under `/dashboard/quests/[id]/tasks`.
-- Preserve backward-compatible redirects.
-- Review workspace navigation consistency.
-- Identify duplicate headings, guidance, status labels, and actions.
-- Identify the smallest safe consolidation scope.
-- Avoid broad redesign.
-- Exact files likely to change.
-- Manual verification strategy.
+- Audit Russian and English copy across Library, Create, Settings, Tasks, Preview, and Play/Test.
+- Review status labels `Draft` and `Public`.
+- Review navigation labels `Settings`, `Edit tasks`, `Preview`, and `Play/Test`.
+- Review headings and supporting text.
+- Assess task editor mojibake risk.
+- Define consistent terminology for quest, task, and question.
+- Decide whether localization should be Russian-only for the MVP.
+- Identify exact files likely to change.
+- Plan a phased low-risk copy update.
 
 Out of scope:
 

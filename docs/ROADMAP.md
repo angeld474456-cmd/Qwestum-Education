@@ -370,15 +370,25 @@ Completed:
   - Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks, and no data was modified.
   - Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.
   - No migration, schema, RLS/policy, index, polling, client-side task-count request, readiness metadata checklist, task CRUD refactor, publication API change, public catalog, or student-facing change was included.
+- Sprint 12.18.14 - Dashboard Quest Create and Tasks Route Consolidation.
+  - Canonical teacher routes are now Library `/dashboard/quests`, Create `/dashboard/quests/new`, Settings `/dashboard/quests/[id]/settings`, Tasks `/dashboard/quests/[id]/tasks`, Preview `/dashboard/quests/[id]/preview`, and Play/Test `/dashboard/quests/[id]/play`.
+  - Legacy redirects are `/quests/new` -> `/dashboard/quests/new`, `/quests/[id]/tasks` -> `/dashboard/quests/[id]/tasks`, `/quests` -> `/dashboard/quests`, and `/quests/[id]` -> `/dashboard/quests/[id]/preview`.
+  - Canonical dashboard Create and Tasks pages own the actual authenticated/owner-safe implementations; legacy Create and Tasks pages are minimal server-side redirects.
+  - All internal teacher Create and Tasks links use canonical dashboard routes.
+  - `QuestWorkspaceNav` ordering, labels, and active behavior remain unchanged.
+  - The post-create Settings redirect remains `/dashboard/quests/[id]/settings?created=1`.
+  - `NewQuestForm` and `QuestTasksClient` received only minimal dashboard-layout fit adjustments.
+  - Task CRUD, validation, payloads, errors, loading, scrolling behavior, publication behavior, dashboard layout guard, and owner-safe route loading remain intact.
+  - Manual browser verification passed for canonical route loading, legacy redirects, no redirect loops, dashboard task-editor layout/scrolling, internal links staying within `/dashboard/quests`, and no data changes.
+  - Remaining intentional legacy occurrences are redirect pages, historical documentation references, and `/api/teacher/quests` API routes.
+  - No API, schema/migration, RLS/policy, index, task CRUD refactor, Preview or Play/Test behavior change, publication behavior change, public catalog/student-facing implementation, broad visual redesign, or broad localization change was included.
 
 Next:
 
-- Sprint 12.18.13 - Teacher Quest Workflow Consolidation Planning.
-  - Review the complete teacher flow: Library -> Create Draft -> Settings -> Tasks -> Preview -> Play/Test.
-  - Identify inconsistent routes between `/dashboard/quests` and `/quests`.
-  - Assess whether task editing should move under `/dashboard/quests/[id]/tasks` while preserving backward-compatible redirects.
-  - Review workspace navigation consistency, duplicate headings, guidance, status labels, and actions.
-  - Identify the smallest safe consolidation scope and avoid broad redesign.
+- Sprint 12.18.15 - Teacher Workflow Copy Consistency Planning.
+  - Audit Russian and English copy across Library, Create, Settings, Tasks, Preview, and Play/Test.
+  - Review `Draft`/`Public`, `Settings`, `Edit tasks`, `Preview`, `Play/Test`, headings, supporting text, task editor mojibake risk, and terminology for quest/task/question.
+  - Decide whether localization should be Russian-only for the MVP and plan a phased low-risk copy update.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

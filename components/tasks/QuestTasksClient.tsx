@@ -331,8 +331,8 @@ export default function QuestTasksClient({
   }
 
   return (
-    <main className="h-screen overflow-y-auto bg-[#070B14] p-8 text-white">
-      <div className="mx-auto max-w-7xl pb-8">
+    <section className="text-white">
+      <div className="max-w-7xl pb-8">
         <h1 className="text-4xl font-bold">
           Конструктор Questum
         </h1>
@@ -394,6 +394,6 @@ export default function QuestTasksClient({
           </div>
         </div>
       </div>
-    </main>
+    </section>
   );
 }

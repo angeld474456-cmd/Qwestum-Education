@@ -87,17 +87,22 @@ Teacher Play/Test also renders task images when `quest_tasks.image_url` is prese
 Teacher-facing quest management currently lives under dashboard routes:
 
 - `/dashboard/quests` — Teacher Quest Library.
+- `/dashboard/quests/new` — authenticated draft quest creation.
 - `/dashboard/quests/[id]/settings` — basic quest metadata and publish controls.
+- `/dashboard/quests/[id]/tasks` — owner-safe task editor.
 - `/dashboard/quests/[id]/preview` — read-only teacher preview using `TaskRenderer` in preview mode.
 - `/dashboard/quests/[id]/play` — teacher test flow using `QuestRunner`.
 
 In the Teacher Quest Library, the primary `Open / Edit quest` action points to `/dashboard/quests/[id]/settings`. Quest cards also link to edit tasks, preview, and play/test. The duplicate `Settings` action was removed in Sprint 12.6.
 
-The task editor remains on the existing non-dashboard route:
+Legacy teacher routes remain as server-side redirects for backward compatibility:
 
-- `/quests/[id]/tasks`
+- `/quests/new` -> `/dashboard/quests/new`
+- `/quests/[id]/tasks` -> `/dashboard/quests/[id]/tasks`
+- `/quests` -> `/dashboard/quests`
+- `/quests/[id]` -> `/dashboard/quests/[id]/preview`
 
-Sprint 12.5 integrated this existing task editor route into the teacher workspace by rendering `QuestWorkspaceNav` with `active="tasks"` directly on the page. The editor was not moved to `/dashboard`, and no new `/dashboard/quests/[id]/tasks` route exists yet.
+Sprint 12.18.14 consolidated teacher Create and Tasks under dashboard routes. The canonical dashboard Create page owns the authenticated create implementation, and the canonical dashboard Tasks page owns the owner-safe task editor implementation. The legacy Create and Tasks pages are minimal server-side redirects.
 
 `components/dashboard/QuestWorkspaceNav.tsx` centralizes teacher workspace links:
 
@@ -107,9 +112,9 @@ Sprint 12.5 integrated this existing task editor route into the teacher workspac
 - Preview
 - Play/Test
 
-Future route work should analyze breadcrumbs, page titles, and whether a dashboard task route is needed before moving or replacing existing `/quests/*` pages.
+Future route work should preserve the dashboard canonical teacher flow and keep legacy redirects working until a public/student `/quests` plan is approved.
 
-Sprint 12.7 decision: do not add breadcrumbs or a shared `QuestWorkspaceHeader` yet. `QuestWorkspaceNav` already provides practical navigation, dashboard header duplication is still small, and the task editor remains on `/quests/[id]/tasks` with existing Russian UI text. Revisit shared headers or breadcrumbs only if the dashboard workspace grows.
+Sprint 12.7 decision: do not add breadcrumbs or a shared `QuestWorkspaceHeader` yet. `QuestWorkspaceNav` already provides practical navigation, and dashboard header duplication is still small. Revisit shared headers or breadcrumbs only if the dashboard workspace grows.
 
 ## Data Layer
 
@@ -486,9 +491,21 @@ Decisions after audit:
 - Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks; no data was modified during verification.
 - Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.
 - No migration, schema, RLS/policy, index, polling, client-side task-count request, readiness metadata checklist, task CRUD refactor, publication API change, public catalog, or student-facing change was included in Sprint 12.18.12.
+- Sprint 12.18.14 consolidated teacher Create and Tasks routes under `/dashboard/quests`.
+- The canonical teacher route map is Library `/dashboard/quests`, Create `/dashboard/quests/new`, Settings `/dashboard/quests/[id]/settings`, Tasks `/dashboard/quests/[id]/tasks`, Preview `/dashboard/quests/[id]/preview`, and Play/Test `/dashboard/quests/[id]/play`.
+- Legacy redirects are `/quests/new` -> `/dashboard/quests/new`, `/quests/[id]/tasks` -> `/dashboard/quests/[id]/tasks`, `/quests` -> `/dashboard/quests`, and `/quests/[id]` -> `/dashboard/quests/[id]/preview`.
+- The canonical dashboard Create page owns the authenticated create implementation; the legacy Create page is a minimal server-side redirect.
+- The canonical dashboard Tasks page owns the owner-safe task editor implementation; the legacy Tasks page is a minimal server-side redirect.
+- All internal teacher Create and Tasks links use canonical dashboard routes.
+- `QuestWorkspaceNav` ordering, labels, and active behavior remain unchanged, and the post-create Settings redirect remains `/dashboard/quests/[id]/settings?created=1`.
+- `NewQuestForm` and `QuestTasksClient` received only minimal dashboard-layout fit adjustments.
+- Task CRUD, validation, payloads, errors, loading, scrolling behavior, publication behavior, dashboard layout guard, and owner-safe route loading remain intact.
+- Manual browser verification passed for both canonical routes, both legacy redirects, no redirect loops, visible task editor inside dashboard chrome, vertical scrolling, dashboard navigation not covering content, internal links staying within `/dashboard/quests`, and no data changes during verification.
+- Remaining legacy occurrences are intentional redirect pages, historical documentation references, and `/api/teacher/quests` API paths.
+- No API, schema/migration, RLS/policy, index, task CRUD refactor, Preview or Play/Test behavior change, publication behavior change, public catalog/student-facing implementation, broad visual redesign, or broad localization change was included in Sprint 12.18.14.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning teacher quest workflow consolidation.
+- Next safe step is planning teacher workflow copy consistency.
 
 Schema mismatch risks:
 

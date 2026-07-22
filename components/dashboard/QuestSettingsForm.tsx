@@ -489,7 +489,7 @@ export default function QuestSettingsForm({
                   или добавьте задание.
                 </p>
                 <Link
-                  href={`/quests/${quest.id}/tasks`}
+                  href={`/dashboard/quests/${quest.id}/tasks`}
                   className="mt-3 inline-flex text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
                 >
                   Перейти к заданиям
@@ -505,7 +505,7 @@ export default function QuestSettingsForm({
                   публикацию.
                 </p>
                 <Link
-                  href={`/quests/${quest.id}/tasks`}
+                  href={`/dashboard/quests/${quest.id}/tasks`}
                   className="mt-3 inline-flex text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
                 >
                   Перейти к заданиям

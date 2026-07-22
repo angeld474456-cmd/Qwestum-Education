@@ -38,7 +38,7 @@ export default function QuestWorkspaceNav({
       </Link>
 
       <Link
-        href={`/quests/${questId}/tasks`}
+        href={`/dashboard/quests/${questId}/tasks`}
         className={getLinkClass(active, "tasks")}
       >
         Edit tasks

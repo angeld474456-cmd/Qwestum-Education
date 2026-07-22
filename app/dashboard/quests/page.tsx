@@ -204,7 +204,7 @@ export default async function TeacherQuestLibraryPage({
         </div>
 
         <Link
-          href="/quests/new"
+          href="/dashboard/quests/new"
           className="inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
         >
           Create new quest
@@ -222,7 +222,7 @@ export default async function TeacherQuestLibraryPage({
           </p>
 
           <Link
-            href="/quests/new"
+            href="/dashboard/quests/new"
             className="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
           >
             Create new quest
@@ -482,7 +482,7 @@ export default async function TeacherQuestLibraryPage({
                       </Link>
 
                       <Link
-                        href={`/quests/${quest.id}/tasks`}
+                        href={`/dashboard/quests/${quest.id}/tasks`}
                         className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
                       >
                         Edit tasks

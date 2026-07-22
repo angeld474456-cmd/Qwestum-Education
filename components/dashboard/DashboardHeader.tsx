@@ -28,7 +28,7 @@ export default function DashboardHeader({
           ) : null}
 
           <Link
-            href="/quests/new"
+            href="/dashboard/quests/new"
             className="rounded-xl bg-violet-600 px-6 py-3 text-white hover:bg-violet-700"
           >
             Создать квест

@@ -77,8 +77,8 @@ export default function NewQuestForm() {
   }
 
   return (
-    <main className="min-h-screen bg-[#070B14] p-8 text-white">
-      <div className="mx-auto max-w-3xl">
+    <section className="text-white">
+      <div className="max-w-3xl">
         <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">
           Шаг 1 из 2
         </p>
@@ -165,6 +165,6 @@ export default function NewQuestForm() {
           </div>
         </div>
       </div>
-    </main>
+    </section>
   );
 }
