@@ -6,55 +6,50 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the next small polish pass for the new-quest draft creation workflow.
+Plan the second-step Settings experience after creating a new draft quest.
 
 ## Next Task
 
-Sprint 12.18.3 - New Quest Creation UX Polish Planning.
+Sprint 12.18.5 - Quest Creation Step 2 Settings UX Planning.
 
 Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.18.2 implemented the new-quest draft creation UX.
-- Quest creation is an explicit two-step workflow.
-- Step 1 creates a minimal draft quest shell.
-- Step 2 redirects to Quest Settings for metadata, cover image, tasks, and publication.
-- `NewQuestForm` sends only title, description, and difficulty.
-- `NewQuestForm` no longer includes publication state or a publication control.
-- The create API ignores any client-provided `is_public` value and always inserts `is_public: false`.
-- `author_id` continues to come only from the authenticated server session.
-- Existing title, description, difficulty, validation, loading, error, and redirect behavior remain intact.
-- Manual authenticated browser verification passed with test quest `DRAFT CREATION TEST 12.18.2` (`0a6d4d54-37ca-4274-aea4-3e127c3a593d`).
-- Verified redirect to `/dashboard/quests/0a6d4d54-37ca-4274-aea4-3e127c3a593d/settings`, Settings load, Draft status, empty category/tags, no cover image, no tasks, and Teacher Quest Library appearance.
-- Exactly one test quest was created, no other quest data was intentionally changed, and the test quest remains in place because quest deletion is not implemented.
-- No subject, language, grade, duration, category, tags, cover, Settings, Library, Preview, Play/Test, quest deletion, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included.
+- Sprint 12.18.2 made quest creation draft-only and redirected successful creation to Quest Settings.
+- Sprint 12.18.4 polished `NewQuestForm` as the first step of the workflow.
+- `NewQuestForm` now shows `Шаг 1 из 2`.
+- The draft-workflow explanation is localized to Russian.
+- Submit copy is `Создать черновик`.
+- Loading copy is `Создание черновика...`.
+- A secondary `Вернуться к библиотеке` link returns to `/dashboard/quests`.
+- The form still submits only title, description, and difficulty.
+- The redirect remains `/dashboard/quests/[id]/settings`.
+- Draft-only server enforcement remains unchanged.
+- No publication control exists on the creation form.
+- Manual visual browser verification passed on authenticated `/quests/new` without creating a new quest.
+- No create API, route move, metadata expansion, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase write, RLS/policy, index, public catalog, or student-facing change was included.
 
 Planning topics:
 
-- Whether the draft-workflow copy should be localized consistently.
-- Whether the create form needs clearer step numbering.
-- Whether difficulty should remain required at creation.
-- Whether description should remain required.
-- Whether the route should use `/dashboard/quests/new` instead of `/quests/new` later.
-- Whether a progress indicator is justified.
-- Whether the test quest cleanup strategy should wait for quest deletion.
-- Exact files that would change.
+- Whether Quest Settings should show `Шаг 2 из 2` for newly created drafts.
+- How to detect post-create arrival without persistent state.
+- Whether a query parameter such as `?created=1` is appropriate.
+- Whether a temporary onboarding banner is useful.
+- Whether the banner should disappear after refresh or persist.
+- Whether task creation should be emphasized before publication.
+- Whether publication should eventually require at least one task.
+- Exact files likely to change.
 
 Out of scope:
 
 - Implementation before architecture approval.
-- New metadata fields in the creation form.
-- Cover upload during creation.
-- Quest Settings changes.
-- Quest Library changes.
-- Preview changes.
-- Play/Test changes.
 - Quest deletion.
-- Public catalog or student discovery.
 - New migrations.
+- Live Supabase writes.
 - New RLS policies.
 - New indexes.
+- Public catalog or student-facing changes.
 
 Required validation for any later implementation:
 

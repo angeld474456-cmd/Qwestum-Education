@@ -308,15 +308,22 @@ Completed:
   - Verified redirect to `/dashboard/quests/0a6d4d54-37ca-4274-aea4-3e127c3a593d/settings`, Settings load, Draft status, empty category/tags, no cover, no tasks, and Teacher Quest Library Draft display.
   - Exactly one test quest was created and no other quest data was intentionally changed.
   - No subject, language, grade, duration, category, tags, cover, Settings, Library, Preview, Play/Test, quest deletion, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included.
+- Sprint 12.18.4 - New Quest Creation UX Polish.
+  - Added compact `Шаг 1 из 2` framing to `NewQuestForm`.
+  - Localized the draft-workflow explanation to Russian.
+  - Changed submit copy to `Создать черновик` and loading copy to `Создание черновика...`.
+  - Added a secondary `Вернуться к библиотеке` link to `/dashboard/quests`.
+  - Preserved the title, description, and difficulty-only POST payload.
+  - Preserved the redirect to `/dashboard/quests/[id]/settings`.
+  - Draft-only server enforcement remains unchanged and no publication control exists.
+  - Manual visual browser verification passed on authenticated `/quests/new` without creating a new quest.
+  - No create API, route move, metadata expansion, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase write, RLS/policy, index, public catalog, or student-facing change was included.
 
 Next:
 
-- Sprint 12.18.3 - New Quest Creation UX Polish Planning.
-  - Plan whether draft-workflow copy should be localized consistently.
-  - Plan whether the create form needs clearer step numbering.
-  - Re-evaluate whether difficulty and description should remain part of creation.
-  - Consider whether the route should later move from `/quests/new` to `/dashboard/quests/new`.
-  - Consider whether a progress indicator is justified and whether test quest cleanup should wait for quest deletion.
+- Sprint 12.18.5 - Quest Creation Step 2 Settings UX Planning.
+  - Plan whether Quest Settings should show `Шаг 2 из 2` for newly created drafts.
+  - Plan post-create arrival detection, possible `?created=1` behavior, onboarding banner lifetime, task-before-publication emphasis, and future publication gating.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

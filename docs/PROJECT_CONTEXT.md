@@ -365,10 +365,22 @@ Completed Sprint 12 work:
   - Exactly one test quest was created, no other quest data was intentionally changed, and the test quest remains in place because quest deletion is not implemented.
   - No subject, language, grade, duration, category, tags, or cover controls were added to `NewQuestForm`.
   - No Settings, Library, Preview, Play/Test, quest deletion, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included.
+- Sprint 12.18.4 - New Quest Creation UX Polish.
+  - `NewQuestForm` now explicitly presents draft creation as `Шаг 1 из 2`.
+  - The draft-workflow explanation is localized to Russian.
+  - Submit copy is `Создать черновик`.
+  - Loading copy is `Создание черновика...`.
+  - A secondary `Вернуться к библиотеке` link returns to `/dashboard/quests`.
+  - The POST payload remains title, description, and difficulty only.
+  - The redirect remains `/dashboard/quests/[id]/settings`.
+  - Draft-only server enforcement remains unchanged.
+  - No publication control exists.
+  - Manual visual browser verification passed on authenticated `/quests/new` without creating a new quest.
+  - No create API, route move, metadata expansion, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase write, RLS/policy, index, public catalog, or student-facing change was included.
 
 Next sprint:
 
-- Sprint 12.18.3 - New Quest Creation UX Polish Planning.
+- Sprint 12.18.5 - Quest Creation Step 2 Settings UX Planning.
 
 ## Stack
 

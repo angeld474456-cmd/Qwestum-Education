@@ -344,6 +344,18 @@
   - Verified redirect to `/dashboard/quests/0a6d4d54-37ca-4274-aea4-3e127c3a593d/settings`, Settings load, Draft status, empty category/tags, no cover image, no tasks, and Teacher Quest Library Draft display.
   - Exactly one test quest was created, no other quest data was intentionally changed, and the test quest remains in place because quest deletion is not implemented.
   - No subject, language, grade, duration, category, tags, cover, Settings, Library, Preview, Play/Test, quest deletion, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included.
+- Sprint 12.18.4 - New Quest Creation UX Polish.
+  - Added `Шаг 1 из 2` framing to `NewQuestForm`.
+  - Localized the draft-workflow explanation to Russian.
+  - Changed submit copy to `Создать черновик`.
+  - Changed loading copy to `Создание черновика...`.
+  - Added a secondary `Вернуться к библиотеке` link to `/dashboard/quests`.
+  - Preserved the title, description, and difficulty-only POST payload.
+  - Preserved the redirect to `/dashboard/quests/[id]/settings`.
+  - Draft-only server enforcement remains unchanged.
+  - No publication control exists on the creation form.
+  - Manual visual browser verification passed on authenticated `/quests/new` without creating a new quest.
+  - No create API, route move, metadata expansion, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase write, RLS/policy, index, public catalog, or student-facing change was included.
 
 ## Current State On `feature/next-work`
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
@@ -78,6 +79,10 @@ export default function NewQuestForm() {
   return (
     <main className="min-h-screen bg-[#070B14] p-8 text-white">
       <div className="mx-auto max-w-3xl">
+        <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">
+          Шаг 1 из 2
+        </p>
+
         <h1 className="text-4xl font-bold">
           Создание нового квеста
         </h1>
@@ -87,8 +92,8 @@ export default function NewQuestForm() {
         </p>
 
         <p className="mt-3 rounded-xl border border-slate-800 bg-[#111827] px-4 py-3 text-sm text-slate-300">
-          This creates a draft quest. Metadata, cover image, tasks, and
-          publication are completed after creation in Settings.
+          Создайте черновик квеста. Метаданные, обложка, задания и публикация
+          настраиваются на следующем шаге в настройках.
         </p>
 
         <div className="mt-10 rounded-3xl bg-[#111827] p-8">
@@ -142,13 +147,22 @@ export default function NewQuestForm() {
             </p>
           ) : null}
 
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50"
-          >
-            {loading ? "Сохранение..." : "Сохранить квест"}
-          </button>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50"
+            >
+              {loading ? "Создание черновика..." : "Создать черновик"}
+            </button>
+
+            <Link
+              href="/dashboard/quests"
+              className="rounded-xl border border-slate-700 px-6 py-4 text-center font-semibold text-slate-300 hover:border-slate-500 hover:text-white"
+            >
+              Вернуться к библиотеке
+            </Link>
+          </div>
         </div>
       </div>
     </main>

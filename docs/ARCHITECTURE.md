@@ -290,6 +290,7 @@ Current limitations:
 - Quest creation sets `author_id` from the authenticated server session and always creates a draft by inserting `is_public: false` server-side.
 - `NewQuestForm` sends only title, description, and difficulty; it does not include publication state, and any client-provided `is_public` value is ignored by the create API.
 - Quest creation is a two-step workflow: create a draft shell first, then complete metadata, cover image, tasks, and publication in Quest Settings.
+- `NewQuestForm` presents creation as `Шаг 1 из 2`, uses Russian draft-workflow copy, and offers a secondary link back to `/dashboard/quests`.
 - Quest settings save matches both quest `id` and `author_id`.
 - Task CRUD verifies ownership through the parent quest.
 - Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
@@ -435,9 +436,12 @@ Decisions after audit:
 - Sprint 12.18.2 verified draft-only quest creation through the authenticated UI with test quest `DRAFT CREATION TEST 12.18.2` (`0a6d4d54-37ca-4274-aea4-3e127c3a593d`).
 - The test quest redirected to Settings, loaded as Draft/not public, had empty category/tags, no cover image, and no tasks; it remains in place because quest deletion is not implemented.
 - No subject, language, grade, duration, category, tags, cover, Settings, Library, Preview, Play/Test, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included in Sprint 12.18.2.
+- Sprint 12.18.4 polished `NewQuestForm` with `Шаг 1 из 2`, Russian draft-workflow copy, `Создать черновик` submit copy, `Создание черновика...` loading copy, and a secondary `Вернуться к библиотеке` link to `/dashboard/quests`.
+- Visual verification passed on authenticated `/quests/new` without creating a new quest.
+- Sprint 12.18.4 did not change the create API, routes, metadata fields, Settings, Library, Preview, Play/Test, quest deletion, migration, live Supabase state, RLS/policies, indexes, public catalog, or student-facing behavior.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning New Quest Creation UX polish.
+- Next safe step is planning the Quest Settings Step 2 UX for newly created drafts.
 
 Schema mismatch risks:
 
