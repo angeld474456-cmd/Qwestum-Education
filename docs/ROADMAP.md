@@ -341,12 +341,28 @@ Completed:
   - Legacy public zero-task quests are not modified automatically, and Preview/Play/Test zero-task handling remains unchanged.
   - Deferred limitations: deleting the last task from a public quest may still leave it public with zero tasks; the count and publication update are not transactional; full readiness checklist is deferred; subject, language, grade, duration, category, tags, description, and cover are not publication requirements yet.
   - No migration, schema, RLS/policy, index, `QuestSettingsForm`, Preview, Play/Test, task deletion, public catalog, or student-facing change was included.
+- Sprint 12.18.10 - Block Last Public Task Deletion.
+  - Deleting the last task from a Public quest is blocked.
+  - Teachers must explicitly unpublish before deleting the final task; automatic unpublishing is not performed.
+  - The owner-safe task route quest lookup now includes `is_public`.
+  - Draft quests skip the new readiness check.
+  - Public quests verify the target task before counting sibling tasks, with the target task lookup scoped by task id and quest id.
+  - Task count runs only after authentication, ownership, and target-task verification using `quest_tasks` exact count with `head: true`; client-provided task counts are not trusted.
+  - Public quests with more than one task can still delete a task; Public quests with one or fewer tasks return HTTP 400 with `Сначала снимите квест с публикации, затем удалите последнее задание.`
+  - Blocked deletion performs no task deletion or Storage cleanup.
+  - Task-count failure returns the existing safe HTTP 500 response.
+  - Successful deletion response and Storage cleanup remain unchanged.
+  - `QuestTasksClient` already displays API errors and required no change.
+  - Manual browser verification passed; the task and Public state remained unchanged after refresh, no Storage cleanup occurred, and no other task or quest data changed.
+  - Draft task deletion, Public multi-task deletion, generic 404, unauthenticated behavior, legacy Public zero-task quests, Preview, and Play/Test remain unchanged.
+  - Deferred limitations: count and deletion are non-transactional; concurrent deletion requests on a Public quest with multiple tasks could still race; a future transaction/RPC may provide stronger enforcement; no second confirmation or publication-aware delete UI was added.
+  - No automatic unpublishing, transaction/RPC, migration, schema, RLS/policy, index, `QuestTasksClient`, Settings, Preview, Play/Test, public catalog, student-facing, or quest deletion change was included.
 
 Next:
 
-- Sprint 12.18.9 - Published Quest Last-Task Deletion Planning.
-  - Plan what should happen when deleting the last task from a published quest.
-  - Plan block deletion versus automatic unpublish, owner-safe server enforcement, direct API behavior, concurrency/transaction limitations, UI warning and Russian error copy, legacy published zero-task behavior, task deletion response shape, likely files, and manual verification.
+- Sprint 12.18.11 - Publication Readiness UX Planning.
+  - Plan whether Settings should show task count and a compact publication-readiness checklist.
+  - Plan how to explain that at least one task is required, whether the publication control should be disabled when task count is zero, server/API source-of-truth behavior, owner-safe task-count loading, loading and stale-count behavior, Russian UX copy, direct API compatibility, likely files, and manual verification.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

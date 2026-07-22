@@ -298,6 +298,8 @@ Current limitations:
 - Task-count query failures use the existing safe HTTP 500 settings-save response without exposing Supabase internals.
 - Draft saves, already-public saves, and unpublishing do not trigger task counting. Existing public zero-task quests are not automatically modified.
 - Task CRUD verifies ownership through the parent quest.
+- Task deletion blocks deleting the last task from a Public quest. The task route owner-safe quest lookup includes `is_public`, verifies the target task by task id and quest id, then counts sibling tasks only after authentication, ownership, and target-task verification.
+- Public quests with one or fewer tasks return HTTP 400 with `Сначала снимите квест с публикации, затем удалите последнее задание.` before task deletion or Storage cleanup. Public quests with multiple tasks and Draft quests preserve existing deletion behavior.
 - Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
 - Task image removal uses an authenticated server route, clears `quest_tasks.image_url` first, and then performs best-effort Storage cleanup only for verified owner-scoped paths.
 - Task image replacement cleanup uses a server-only owner-scoped image URL parser, saves the new `image_url` first, and then performs best-effort cleanup of the previous verified owner-scoped object.
@@ -459,9 +461,22 @@ Decisions after audit:
 - Preserved behavior: draft remaining draft, public remaining public, editing already-public quests, and unpublishing do not trigger task counting; legacy public zero-task quests are not modified automatically; existing title, difficulty, metadata, authentication, ownership, 404, 401, Preview, and Play/Test zero-task behavior remains unchanged.
 - Deferred limitations: deleting the last task from a public quest may still leave it public with zero tasks; the count and publication update are not transactional; full readiness checklist is deferred; subject, language, grade, duration, category, tags, description, and cover are not publication requirements yet.
 - No migration, schema, RLS/policy, index, `QuestSettingsForm`, Preview, Play/Test, task deletion, public catalog, or student-facing change was included in Sprint 12.18.8.
+- Sprint 12.18.10 blocks deleting the last task from a Public quest.
+- Teachers must explicitly unpublish before deleting the final task; automatic unpublishing is not performed.
+- The owner-safe task route quest lookup now includes `is_public`; Draft quests skip the new readiness check.
+- Public quests verify the target task before counting sibling tasks, with target task lookup scoped by task id and quest id.
+- Task count runs only after authentication, ownership, and target-task verification, uses `quest_tasks` exact count with `head: true`, and never trusts client-provided task counts.
+- A Public quest with more than one task can still delete a task; a Public quest with one or fewer tasks returns HTTP 400 with `Сначала снимите квест с публикации, затем удалите последнее задание.`
+- Blocked deletion performs no task deletion or Storage cleanup.
+- Task-count failure returns the existing safe HTTP 500 response; successful deletion response and Storage cleanup remain unchanged.
+- `QuestTasksClient` already displays API errors and required no change.
+- Manual browser verification passed: an owned Public one-task quest showed the Russian error, the request was rejected, the task remained after refresh, the quest remained Public, no Storage cleanup occurred, and no other task or quest data changed.
+- Preserved behavior: Draft quests with one or multiple tasks may delete tasks; Public quests with multiple tasks may delete one; missing or foreign quest/task keeps existing generic 404; unauthenticated behavior remains unchanged; legacy Public zero-task quests are not modified automatically; Preview and Play/Test remain unchanged.
+- Deferred limitations: count and deletion are non-transactional; concurrent deletion requests on a Public quest with multiple tasks could still race; a future transaction/RPC may provide stronger enforcement; no second confirmation or publication-aware delete UI was added.
+- No automatic unpublishing, transaction/RPC, migration, schema, RLS/policy, index, `QuestTasksClient`, Settings, Preview, Play/Test, public catalog, student-facing, or quest deletion change was included in Sprint 12.18.10.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning published quest last-task deletion behavior.
+- Next safe step is planning publication readiness UX.
 
 Schema mismatch risks:
 

@@ -41,7 +41,7 @@ async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>,
 
   const { data, error } = await supabase
     .from("quests")
-    .select("id")
+    .select("id, is_public")
     .eq("id", questId)
     .eq("author_id", user.id)
     .maybeSingle();
@@ -62,6 +62,7 @@ async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>,
   return {
     status: "ok" as const,
     userId: user.id,
+    isPublic: data.is_public,
   };
 }
 
@@ -273,6 +274,58 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       { error: "Unable to delete task." },
       { status: 500 }
     );
+  }
+
+  if (ownedQuest.isPublic) {
+    const { data: currentTask, error: currentTaskError } = await supabase
+      .from("quest_tasks")
+      .select("id")
+      .eq("id", taskId)
+      .eq("quest_id", id)
+      .maybeSingle();
+
+    if (currentTaskError) {
+      console.error("Task lookup failed before public task deletion.", {
+        questId: id,
+        taskId,
+        error: currentTaskError.message,
+      });
+      return NextResponse.json(
+        { error: "Unable to delete task." },
+        { status: 500 }
+      );
+    }
+
+    if (!currentTask) {
+      return NextResponse.json({ error: "Task not found." }, { status: 404 });
+    }
+
+    const { count, error: taskCountError } = await supabase
+      .from("quest_tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("quest_id", id);
+
+    if (taskCountError) {
+      console.error("Task count lookup failed before public task deletion.", {
+        questId: id,
+        taskId,
+        error: taskCountError.message,
+      });
+      return NextResponse.json(
+        { error: "Unable to delete task." },
+        { status: 500 }
+      );
+    }
+
+    if ((count ?? 0) <= 1) {
+      return NextResponse.json(
+        {
+          error:
+            "Сначала снимите квест с публикации, затем удалите последнее задание.",
+        },
+        { status: 400 }
+      );
+    }
   }
 
   const { data, error } = await supabase
