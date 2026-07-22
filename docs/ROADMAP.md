@@ -329,12 +329,24 @@ Completed:
   - Publication behavior remains unchanged, and no client state or dismiss behavior was added.
   - Browser verification passed with and without the query parameter, and no data was modified.
   - No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included.
+- Sprint 12.18.8 - Enforce Task Required Before Publication.
+  - Publication now requires at least one task only during a Draft-to-Public transition.
+  - Current `is_public` is loaded through the existing owner-safe quest lookup.
+  - Task count is queried only after authenticated ownership verification using `quest_tasks` exact count with `head: true`; client-provided task counts are never trusted.
+  - Zero or null task count returns HTTP 400 with `Добавьте хотя бы одно задание перед публикацией.`, and the quest update is not executed.
+  - Task-count query failure uses the existing safe HTTP 500 response and does not expose Supabase internals.
+  - Direct API requests cannot bypass the rule, and `QuestSettingsForm` already displayed the API error without changes.
+  - Manual browser verification passed; the tested quest remained Draft after refresh, and no other quest fields, task, cover, metadata, or publication data changed.
+  - Draft remaining draft, public remaining public, editing already-public quests, and unpublishing do not trigger the task count.
+  - Legacy public zero-task quests are not modified automatically, and Preview/Play/Test zero-task handling remains unchanged.
+  - Deferred limitations: deleting the last task from a public quest may still leave it public with zero tasks; the count and publication update are not transactional; full readiness checklist is deferred; subject, language, grade, duration, category, tags, description, and cover are not publication requirements yet.
+  - No migration, schema, RLS/policy, index, `QuestSettingsForm`, Preview, Play/Test, task deletion, public catalog, or student-facing change was included.
 
 Next:
 
-- Sprint 12.18.7 - Publication Readiness Rule Planning.
-  - Plan whether quests may be published with zero tasks and whether metadata such as cover, category, tags, description, grade, duration, or subject should be required.
-  - Plan API versus UI validation, owner-safe validation paths, error-message UX, existing published quest compatibility, and manual verification.
+- Sprint 12.18.9 - Published Quest Last-Task Deletion Planning.
+  - Plan what should happen when deleting the last task from a published quest.
+  - Plan block deletion versus automatic unpublish, owner-safe server enforcement, direct API behavior, concurrency/transaction limitations, UI warning and Russian error copy, legacy published zero-task behavior, task deletion response shape, likely files, and manual verification.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

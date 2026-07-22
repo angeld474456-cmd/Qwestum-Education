@@ -6,43 +6,46 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan publication readiness rules for teacher-owned draft quests.
+Plan the safest behavior when a published quest would lose its last task.
 
 ## Next Task
 
-Sprint 12.18.7 - Publication Readiness Rule Planning.
+Sprint 12.18.9 - Published Quest Last-Task Deletion Planning.
 
 Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.18.6 implemented Step 2 Settings onboarding for newly created draft quests.
-- `NewQuestForm` redirects after creation to `/dashboard/quests/[id]/settings?created=1`.
-- Quest Settings accepts Next.js 16 async `searchParams`.
-- `created` supports `string | string[] | undefined`; arrays use the first value.
-- Only exact `created=1` enables onboarding.
-- Onboarding is server-rendered and non-persistent.
-- Onboarding appears only for post-create query visits.
-- Direct Settings visits remain unchanged.
-- `getOwnedQuest(id)` remains the owner-safe access gate.
-- Onboarding does not affect authorization or data loading.
-- The task link points to `/quests/[id]/tasks`.
-- Publication behavior remains unchanged.
-- No client state or dismiss behavior was added.
-- Browser verification passed with and without the query parameter.
-- No data was modified during browser verification.
-- No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included.
+- Sprint 12.18.8 implemented the first publication-readiness rule.
+- Publication now requires at least one task only during a Draft-to-Public transition.
+- Current `is_public` is loaded through the existing owner-safe quest lookup.
+- Task count is queried only after authenticated ownership verification.
+- Task count uses `quest_tasks` with exact count and `head: true`.
+- Client-provided task counts are never trusted.
+- Zero or null task count returns HTTP 400 with `Добавьте хотя бы одно задание перед публикацией.`
+- The quest update is not executed when readiness validation fails.
+- Task-count query failure uses the existing safe HTTP 500 response and does not expose Supabase internals.
+- Direct API requests cannot bypass the rule.
+- `QuestSettingsForm` already displayed the API error and required no change.
+- Manual browser verification passed.
+- The tested quest remained Draft after refresh.
+- Draft remaining draft, public remaining public, editing already-public quests, and unpublishing do not trigger task counting.
+- Legacy public zero-task quests are not modified automatically.
+- Existing title, difficulty, metadata, authentication, ownership, 404, 401, Preview, and Play/Test zero-task behavior remains unchanged.
+- Deferred limitations remain: deleting the last task from a public quest may still leave it public with zero tasks; the count and publication update are not transactional; full readiness checklist is deferred; subject, language, grade, duration, category, tags, description, and cover are not publication requirements yet.
+- No migration, schema, RLS/policy, index, `QuestSettingsForm`, Preview, Play/Test, task deletion, public catalog, or student-facing change was included.
 
 Planning topics:
 
-- Whether a quest may be published with zero tasks.
-- Whether publication should require at least one task.
-- Whether cover, category, tags, description, grade, duration, or subject should be required.
-- Which rules belong in the API versus UI.
-- Exact owner-safe validation path.
-- Error-message UX.
-- Impact on existing published quests with zero tasks.
-- Migration/backward-compatibility considerations.
+- What should happen when deleting the last task from a published quest.
+- Block deletion versus automatically unpublish.
+- Server-side owner-safe enforcement.
+- Direct API behavior.
+- Concurrency and transaction limitations.
+- UI warning and Russian error copy.
+- Behavior for legacy published zero-task quests.
+- Whether publication state should be returned with task deletion responses.
+- Exact files likely to change.
 - Manual verification strategy.
 
 Out of scope:

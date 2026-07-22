@@ -293,6 +293,10 @@ Current limitations:
 - `NewQuestForm` presents creation as `Шаг 1 из 2`, uses Russian draft-workflow copy, and offers a secondary link back to `/dashboard/quests`.
 - Post-create redirects append `?created=1` so Settings can show server-rendered Step 2 onboarding without persistent state.
 - Quest settings save matches both quest `id` and `author_id`.
+- Publishing from Draft to Public requires at least one task. The `PATCH /api/teacher/quests/[id]` route loads current `is_public` through the owner-safe quest lookup and only counts `quest_tasks` after authenticated ownership is verified.
+- The publication-readiness count uses exact count with `head: true`; client-provided task counts are ignored. Zero or null count returns HTTP 400 with `Добавьте хотя бы одно задание перед публикацией.` before the quest update runs.
+- Task-count query failures use the existing safe HTTP 500 settings-save response without exposing Supabase internals.
+- Draft saves, already-public saves, and unpublishing do not trigger task counting. Existing public zero-task quests are not automatically modified.
 - Task CRUD verifies ownership through the parent quest.
 - Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
 - Task image removal uses an authenticated server route, clears `quest_tasks.image_url` first, and then performs best-effort Storage cleanup only for verified owner-scoped paths.
@@ -446,9 +450,18 @@ Decisions after audit:
 - The onboarding is server-rendered, non-persistent, has no client state or dismiss behavior, links to `/quests/[id]/tasks`, and leaves publication behavior unchanged.
 - Browser verification passed with and without `created=1`, and no data was modified during verification.
 - No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included in Sprint 12.18.6.
+- Sprint 12.18.8 added the first publication-readiness rule: Draft-to-Public transitions require at least one task.
+- The route reads current `is_public` through the existing owner-safe lookup, counts `quest_tasks` only after authentication and ownership verification, uses exact count with `head: true`, and never trusts client task counts.
+- Zero or null task count returns HTTP 400 with `Добавьте хотя бы одно задание перед публикацией.`, and the quest update is not executed.
+- Task-count query failure uses the existing safe HTTP 500 response and does not expose Supabase internals; direct API requests cannot bypass the rule.
+- `QuestSettingsForm` already displayed the API error and required no change.
+- Manual browser verification passed for an owned draft with zero tasks: the UI showed the Russian error, the request was rejected, the quest remained Draft after refresh, and no other quest fields, task, cover, metadata, or publication data changed.
+- Preserved behavior: draft remaining draft, public remaining public, editing already-public quests, and unpublishing do not trigger task counting; legacy public zero-task quests are not modified automatically; existing title, difficulty, metadata, authentication, ownership, 404, 401, Preview, and Play/Test zero-task behavior remains unchanged.
+- Deferred limitations: deleting the last task from a public quest may still leave it public with zero tasks; the count and publication update are not transactional; full readiness checklist is deferred; subject, language, grade, duration, category, tags, description, and cover are not publication requirements yet.
+- No migration, schema, RLS/policy, index, `QuestSettingsForm`, Preview, Play/Test, task deletion, public catalog, or student-facing change was included in Sprint 12.18.8.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning publication readiness rules.
+- Next safe step is planning published quest last-task deletion behavior.
 
 Schema mismatch risks:
 

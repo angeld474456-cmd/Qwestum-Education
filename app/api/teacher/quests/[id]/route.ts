@@ -463,7 +463,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   const { data: ownedQuest, error: ownedQuestError } = await supabase
     .from("quests")
-    .select("id, grade_min, grade_max")
+    .select("id, is_public, grade_min, grade_max")
     .eq("id", id)
     .eq("author_id", user.id)
     .maybeSingle();
@@ -526,6 +526,30 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       { error: "Grade from must be less than or equal to Grade to." },
       { status: 400 }
     );
+  }
+
+  const isDraftToPublic = !ownedQuest.is_public && parsed.data.is_public;
+
+  if (isDraftToPublic) {
+    const { count, error: taskCountError } = await supabase
+      .from("quest_tasks")
+      .select("id", { count: "exact", head: true })
+      .eq("quest_id", id);
+
+    if (taskCountError) {
+      console.error(taskCountError);
+      return NextResponse.json(
+        { error: "Unable to save quest settings." },
+        { status: 500 }
+      );
+    }
+
+    if ((count ?? 0) === 0) {
+      return NextResponse.json(
+        { error: "Добавьте хотя бы одно задание перед публикацией." },
+        { status: 400 }
+      );
+    }
   }
 
   const updateData = {
