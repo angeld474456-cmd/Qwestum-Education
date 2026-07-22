@@ -303,6 +303,23 @@
   - Manual authenticated browser verification passed for save, refresh persistence, whitespace normalization, empty tag removal, dedupe, validation, clearing, and restoration.
   - The test quest was restored to `category = null` and `tags = []`.
   - No Quest Library category/tag display or filtering, NewQuestForm controls, Preview display, Play/Test changes, quest deletion, migration change, RLS/policy change, or index was included.
+- Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering.
+  - Kept `/dashboard/quests` as a Server Component and added Next.js 16 async `searchParams`.
+  - Supported URL parameters are `category` and `tag`.
+  - Owned quests are fetched once through `getOwnedQuests()`.
+  - Filter values are derived only from the authenticated teacher's owned quests.
+  - Filtering is performed in memory for the current MVP scale.
+  - Category and tag filters combine with AND semantics.
+  - Missing or empty parameters mean no filter; only the first query value is used when an array is supplied.
+  - Unknown values produce a safe filtered-empty state.
+  - Category and tag matching is whitespace-normalized and case-insensitive, while stored display casing is preserved.
+  - Filter options are deduplicated case-insensitively and sorted.
+  - Quest cards display category and tag chips only when populated.
+  - Native GET controls support shareable URLs, refresh persistence, and browser back/forward behavior.
+  - Clear filters returns to `/dashboard/quests`.
+  - Defensive handling prevents malformed legacy category/tags values from crashing the page.
+  - Manual browser verification passed for full owned list display, category chips, tag chips/wrapping, category-only filtering, tag-only filtering, combined AND filtering, clear filters, refresh persistence, browser back/forward, unknown filter empty state, and existing card metadata/actions.
+  - No Preview category/tag display, NewQuestForm controls, Play/Test changes, quest deletion, public catalog/student discovery, migration, RLS/policy change, index, or normalized taxonomy was included.
 
 ## Current State On `feature/next-work`
 

@@ -187,7 +187,21 @@ Quest metadata:
 - Control characters are rejected server-side, and invalid category or tags return safe `400` responses before updates.
 - Defensive Settings form handling prevents stale null or undefined tags from crashing the form.
 - Manual authenticated browser verification passed, and the test quest was restored to `category = null` and `tags = []`.
-- No Quest Library category/tag display or filtering, NewQuestForm controls, Preview display, Play/Test changes, category/tag indexes, RLS changes, policies, or quest deletion are included in Sprint 12.17.13.
+- Sprint 12.17.14 added Teacher Library category/tag display and filtering.
+- `/dashboard/quests` remains a Server Component and accepts Next.js 16 async `searchParams`.
+- Supported Teacher Library URL parameters are `category` and `tag`.
+- Owned quests are fetched once through `getOwnedQuests()`, filter values are derived only from the authenticated teacher's owned quests, and filtering is performed in memory for the current MVP scale.
+- Category and tag filters combine with AND semantics.
+- Missing or empty parameters mean no filter; only the first query value is used when an array is supplied.
+- Unknown filter values produce a safe filtered-empty state.
+- Category and tag matching is whitespace-normalized and case-insensitive, while stored display casing is preserved.
+- Filter options are deduplicated case-insensitively and sorted.
+- Quest cards display category and tag chips only when populated.
+- Native GET controls support shareable URLs, refresh persistence, and browser back/forward behavior.
+- Clear filters returns to `/dashboard/quests`.
+- Defensive Library handling prevents malformed legacy category/tags values from crashing the page.
+- Manual authenticated browser verification passed for all-owned display, chips, category-only filtering, tag-only filtering, combined filtering, clear filters, refresh persistence, browser back/forward, unknown-value empty state, and existing card metadata/actions.
+- No Preview category/tag display, NewQuestForm controls, Play/Test changes, public catalog/student discovery, migration, RLS/policy change, index, normalized taxonomy, or quest deletion are included in Sprint 12.17.14.
 
 Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses owned quest and owned task summary data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
 
@@ -407,7 +421,7 @@ Decisions after audit:
 - `database/migrations/011_add_quest_category_tags.sql` was applied live and verified for category/tag schema only.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning Teacher Library category/tag display and filtering.
+- Next safe step is planning Teacher Preview category/tag display.
 
 Schema mismatch risks:
 

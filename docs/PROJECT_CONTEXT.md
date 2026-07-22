@@ -322,10 +322,27 @@ Completed Sprint 12 work:
   - Manual authenticated browser verification passed for save, refresh persistence, normalization, validation, dedupe, clearing, and restoration.
   - The test quest was restored to `category = null` and `tags = []`.
   - No Quest Library category/tag display or filtering, NewQuestForm controls, Preview display, Play/Test changes, quest deletion, migration change, RLS/policy change, or index was included.
+- Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering.
+  - `/dashboard/quests` remains a Server Component and accepts Next.js 16 async `searchParams`.
+  - Supported URL parameters are `category` and `tag`.
+  - Owned quests are fetched once through `getOwnedQuests()`.
+  - Filter values are derived only from the authenticated teacher's owned quests.
+  - Filtering is performed in memory for the current MVP scale.
+  - Category and tag filters combine with AND semantics.
+  - Missing or empty parameters mean no filter; only the first query value is used when an array is supplied.
+  - Unknown filter values produce a safe filtered-empty state.
+  - Category and tag matching is whitespace-normalized and case-insensitive, while stored display casing is preserved.
+  - Filter options are deduplicated case-insensitively and sorted.
+  - Quest cards display category and tag chips only when populated.
+  - Native GET controls support shareable URLs, refresh persistence, and browser back/forward behavior.
+  - Clear filters returns to `/dashboard/quests`.
+  - Defensive handling prevents malformed legacy category/tags values from crashing the page.
+  - Manual authenticated browser verification passed for all-owned display, category-only filtering, tag-only filtering, combined filtering, clear filters, refresh persistence, browser back/forward, unknown-value empty state, chip wrapping, and existing card actions.
+  - No Preview category/tag display, NewQuestForm controls, Play/Test changes, quest deletion, public catalog/student discovery, migration, RLS/policy change, index, or normalized taxonomy was included.
 
 Next sprint:
 
-- Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering Planning.
+- Sprint 12.17.15 - Quest Category / Tags Preview Display Planning.
 
 ## Stack
 
@@ -343,7 +360,7 @@ Next sprint:
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, orphan cleanup tooling, image resizing/cropping, and legacy object migration.
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
-- Deferred quest metadata work includes category/tag UI and filtering, language during quest creation, catalog language filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
+- Deferred quest metadata work includes Preview category/tag display, language during quest creation, catalog filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

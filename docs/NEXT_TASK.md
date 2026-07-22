@@ -6,36 +6,37 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the smallest safe Teacher Library category/tag display and filtering slice.
+Plan the smallest safe Teacher Preview category/tag display slice.
 
 ## Next Task
 
-Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering Planning.
+Sprint 12.17.15 - Quest Category / Tags Preview Display Planning.
 
 Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.17.13 implemented category and tags in owner-safe Quest Settings.
-- Shared and teacher quest types include `category: string | null` and `tags: string[]`.
-- Owner-scoped quest reads include category and tags.
-- Settings PATCH supports category and tags with server-side normalization and validation.
-- Category max length is 40 characters.
-- Tags are comma-separated in Settings, normalized server-side, deduplicated case-insensitively, and preserve first-occurrence casing.
-- Maximum tag count is 10 and maximum normalized tag length is 24 characters.
-- Empty category clears to `null`; empty tags array clears all tags.
-- Manual authenticated browser verification passed and the test quest was restored to `category = null` and `tags = []`.
+- Sprint 12.17.14 implemented category and tag display/filtering in the Teacher Quest Library.
+- `/dashboard/quests` remains a Server Component and accepts Next.js 16 async `searchParams`.
+- Supported Library URL parameters are `category` and `tag`.
+- Owned quests are fetched once through `getOwnedQuests()`.
+- Filter values are derived only from the authenticated teacher's owned quests.
+- Filtering is performed in memory for the current MVP scale.
+- Category and tag filters combine with AND semantics.
+- Native GET controls provide shareable URLs, refresh persistence, and browser back/forward behavior.
+- Quest cards display category and tag chips only when populated.
+- No Preview category/tag display is implemented yet.
 
 Planning topics:
 
-- Category and tag chips in the Teacher Quest Library.
-- Category and tag filter controls.
-- Client-side versus server-query filtering.
-- URL search parameter behavior.
+- Whether category and tags should appear in Teacher Preview.
+- Placement relative to title, cover, subject, language, grade, and duration.
 - Empty metadata behavior.
-- Owner-scoped filter values.
-- Possible Preview display.
-- Whether indexes are justified at the current data volume.
+- Chip styling and consistency with the Teacher Library.
+- Whether Preview needs any additional data loading.
+- Responsive layout.
+- Accessibility.
+- Exact implementation scope.
 
 Out of scope:
 
@@ -43,10 +44,11 @@ Out of scope:
 - NewQuestForm changes.
 - Play/Test changes.
 - Quest deletion.
+- Public catalog or student discovery.
+- New migrations.
 - New RLS policies.
-- New indexes unless separately approved after planning.
+- New indexes.
 - Normalized taxonomy tables.
-- Public/student catalog filtering.
 
 Required validation for any later implementation:
 

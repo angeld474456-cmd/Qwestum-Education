@@ -267,12 +267,30 @@ Completed:
   - Defensive Settings form handling prevents stale null or undefined tags from crashing the form.
   - Manual authenticated browser verification passed, including save, refresh persistence, normalization, validation, clearing, and restoration to `category = null` and `tags = []`.
   - No Quest Library filtering/display, NewQuestForm controls, Preview display, Play/Test changes, migration changes, RLS/policy changes, indexes, or quest deletion were included.
+- Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering.
+  - Kept `/dashboard/quests` as a Server Component and added Next.js 16 async `searchParams`.
+  - Supported URL parameters are `category` and `tag`.
+  - Owned quests are fetched once through `getOwnedQuests()`.
+  - Filter values are derived only from the authenticated teacher's owned quests.
+  - Filtering is performed in memory for the current MVP scale.
+  - Category and tag filters combine with AND semantics.
+  - Missing or empty parameters mean no filter; only the first query value is used when an array is supplied.
+  - Unknown values produce a safe filtered-empty state.
+  - Category and tag matching is whitespace-normalized and case-insensitive, while stored display casing is preserved.
+  - Filter options are deduplicated case-insensitively and sorted.
+  - Quest cards display category and tag chips only when populated.
+  - Native GET controls support shareable URLs, refresh persistence, and browser back/forward behavior.
+  - Clear filters returns to `/dashboard/quests`.
+  - Defensive handling prevents malformed legacy category/tags values from crashing the page.
+  - Manual browser verification passed for full owned list display, category chips, tag chips/wrapping, category-only filtering, tag-only filtering, combined AND filtering, clear filters, refresh persistence, browser back/forward, unknown filter empty state, and existing card metadata/actions.
+  - No Preview category/tag display, NewQuestForm controls, Play/Test changes, quest deletion, public catalog/student discovery, migration, RLS/policy change, index, or normalized taxonomy was included.
 
 Next:
 
-- Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering Planning.
-  - Plan category and tag chips in the Teacher Quest Library.
-  - Plan category and tag filter controls, client-side versus server-query filtering, URL search parameter behavior, empty metadata behavior, owner-scoped filter values, possible Preview display, and whether indexes are justified at the current data volume.
+- Sprint 12.17.15 - Quest Category / Tags Preview Display Planning.
+  - Plan whether category and tags should appear in Teacher Preview.
+  - Plan placement relative to title, cover, subject, language, grade, and duration.
+  - Plan empty metadata behavior, chip styling, responsive layout, accessibility, and exact implementation scope.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones
