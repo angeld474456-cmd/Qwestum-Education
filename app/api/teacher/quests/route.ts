@@ -8,7 +8,6 @@ type QuestPayload = {
   title?: unknown;
   description?: unknown;
   difficulty?: unknown;
-  is_public?: unknown;
 };
 
 function parseQuestPayload(body: QuestPayload) {
@@ -29,18 +28,11 @@ function parseQuestPayload(body: QuestPayload) {
     };
   }
 
-  if (typeof body.is_public !== "boolean") {
-    return {
-      error: "Publication state must be true or false.",
-    };
-  }
-
   return {
     data: {
       title,
       description,
       difficulty,
-      is_public: body.is_public,
     },
   };
 }
@@ -80,6 +72,7 @@ export async function POST(request: Request) {
     .from("quests")
     .insert({
       ...parsed.data,
+      is_public: false,
       author_id: user.id,
     })
     .select("id")

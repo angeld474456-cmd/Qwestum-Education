@@ -296,12 +296,27 @@ Completed:
   - Manual browser verification passed for category chip display, tag chip display/wrapping, metadata order, empty metadata behavior, existing Preview content, read-only behavior, unchanged owner-safe route behavior, and duplicate legacy tag key safety.
   - No editing in Preview, filtering in Preview, NewQuestForm changes, Play/Test changes, quest deletion, public catalog/student discovery, migration, live Supabase write, RLS/policy change, index, or normalized taxonomy was included.
   - Metadata chip logic remains local to Library and Preview.
+- Sprint 12.18.2 - New Quest Draft Creation UX.
+  - Made quest creation the first step of a two-step workflow.
+  - `NewQuestForm` now creates a minimal draft shell and explains that metadata, cover image, tasks, and publication are completed after creation in Settings.
+  - The form submits only title, description, and difficulty.
+  - Publication state/control was removed from the creation form.
+  - The create API ignores client-provided `is_public` and always inserts `is_public: false`.
+  - `author_id` still comes only from the authenticated server session.
+  - Existing title, description, difficulty, validation, loading, error, response, and redirect behavior remain intact.
+  - Manual authenticated browser verification passed with test quest `DRAFT CREATION TEST 12.18.2` (`0a6d4d54-37ca-4274-aea4-3e127c3a593d`).
+  - Verified redirect to `/dashboard/quests/0a6d4d54-37ca-4274-aea4-3e127c3a593d/settings`, Settings load, Draft status, empty category/tags, no cover, no tasks, and Teacher Quest Library Draft display.
+  - Exactly one test quest was created and no other quest data was intentionally changed.
+  - No subject, language, grade, duration, category, tags, cover, Settings, Library, Preview, Play/Test, quest deletion, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included.
 
 Next:
 
-- Sprint 12.17.16 - Quest Metadata Display Consolidation Planning.
-  - Plan whether Library and Preview metadata chip logic should be extracted.
-  - Plan shared metadata normalization helpers, shared chip styling, component boundaries, prop design, owner-safe data flow, and whether consolidation is justified now or should be deferred.
+- Sprint 12.18.3 - New Quest Creation UX Polish Planning.
+  - Plan whether draft-workflow copy should be localized consistently.
+  - Plan whether the create form needs clearer step numbering.
+  - Re-evaluate whether difficulty and description should remain part of creation.
+  - Consider whether the route should later move from `/quests/new` to `/dashboard/quests/new`.
+  - Consider whether a progress indicator is justified and whether test quest cleanup should wait for quest deletion.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

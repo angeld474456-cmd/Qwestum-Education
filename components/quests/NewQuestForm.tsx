@@ -22,7 +22,6 @@ export default function NewQuestForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [difficulty, setDifficulty] = useState(1);
-  const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -50,7 +49,6 @@ export default function NewQuestForm() {
           title: normalizedTitle,
           description,
           difficulty,
-          is_public: isPublic,
         }),
       });
 
@@ -86,6 +84,11 @@ export default function NewQuestForm() {
 
         <p className="mt-3 text-slate-400">
           Заполните информацию о будущем квесте.
+        </p>
+
+        <p className="mt-3 rounded-xl border border-slate-800 bg-[#111827] px-4 py-3 text-sm text-slate-300">
+          This creates a draft quest. Metadata, cover image, tasks, and
+          publication are completed after creation in Settings.
         </p>
 
         <div className="mt-10 rounded-3xl bg-[#111827] p-8">
@@ -131,19 +134,6 @@ export default function NewQuestForm() {
               <option value={2}>2 — Средний</option>
               <option value={3}>3 — Сложный</option>
             </select>
-          </div>
-
-          <div className="mb-8 flex items-center gap-3">
-            <input
-              id="public"
-              type="checkbox"
-              checked={isPublic}
-              onChange={(event) => setIsPublic(event.target.checked)}
-            />
-
-            <label htmlFor="public">
-              Сделать квест публичным
-            </label>
           </div>
 
           {errorMessage ? (

@@ -287,7 +287,9 @@ Current limitations:
 - Login feedback uses a fixed allowlist for logout/callback/session-expired states and never displays raw query values or Supabase errors.
 - Current protected teacher client workflows use a client-only expired-session helper for API `401` responses. The helper uses the fixed message `Your session has expired. Please sign in again.`, redirects only to `/login?error=session_expired`, and deduplicates repeated redirects with a module-level guard.
 - Teacher dashboard reads are owner-scoped.
-- Quest creation sets `author_id` from the authenticated server session.
+- Quest creation sets `author_id` from the authenticated server session and always creates a draft by inserting `is_public: false` server-side.
+- `NewQuestForm` sends only title, description, and difficulty; it does not include publication state, and any client-provided `is_public` value is ignored by the create API.
+- Quest creation is a two-step workflow: create a draft shell first, then complete metadata, cover image, tasks, and publication in Quest Settings.
 - Quest settings save matches both quest `id` and `author_id`.
 - Task CRUD verifies ownership through the parent quest.
 - Task image uploads use an authenticated server route and verify quest/task ownership before uploading to Storage.
@@ -430,9 +432,12 @@ Decisions after audit:
 - Quest cover images are implemented for Quest Settings, Dashboard, and Teacher Preview. Cover selection during quest creation, image resizing/cropping, private media/signed URLs, and orphan cleanup tooling remain deferred.
 - The teacher-MVP category/tag model is approved as direct nullable/array columns on `quests`, with normalized taxonomy deferred.
 - `database/migrations/011_add_quest_category_tags.sql` was applied live and verified for category/tag schema only.
+- Sprint 12.18.2 verified draft-only quest creation through the authenticated UI with test quest `DRAFT CREATION TEST 12.18.2` (`0a6d4d54-37ca-4274-aea4-3e127c3a593d`).
+- The test quest redirected to Settings, loaded as Draft/not public, had empty category/tags, no cover image, and no tasks; it remains in place because quest deletion is not implemented.
+- No subject, language, grade, duration, category, tags, cover, Settings, Library, Preview, Play/Test, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included in Sprint 12.18.2.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning whether Teacher Library and Preview metadata chip logic should be consolidated.
+- Next safe step is planning New Quest Creation UX polish.
 
 Schema mismatch risks:
 

@@ -351,10 +351,24 @@ Completed Sprint 12 work:
   - Manual authenticated browser verification passed for category chip display, tag chip display/wrapping, metadata order, empty metadata behavior, existing Preview content, read-only behavior, unchanged owner-safe route behavior, and duplicate legacy tag key safety.
   - No editing in Preview, filtering in Preview, NewQuestForm changes, Play/Test changes, quest deletion, public catalog/student discovery, migration, live Supabase write, RLS/policy change, index, or normalized taxonomy was included.
   - Metadata chip logic remains local to Library and Preview.
+- Sprint 12.18.2 - New Quest Draft Creation UX.
+  - Quest creation is now an explicit two-step workflow.
+  - Step 1 creates a minimal draft quest shell; Step 2 redirects to Quest Settings for metadata, cover image, tasks, and publication.
+  - `NewQuestForm` sends only title, description, and difficulty.
+  - `NewQuestForm` no longer includes publication state or a publication control.
+  - The create API ignores any client-provided `is_public` value.
+  - The server always inserts `is_public: false`.
+  - `author_id` continues to come only from the authenticated server session.
+  - Existing title, description, difficulty, validation, loading, error, and redirect behavior remain intact.
+  - Manual authenticated browser verification passed with test quest `DRAFT CREATION TEST 12.18.2` (`0a6d4d54-37ca-4274-aea4-3e127c3a593d`).
+  - Verified the Settings redirect, Draft status, empty category/tags, no cover image, no tasks, and Teacher Quest Library appearance.
+  - Exactly one test quest was created, no other quest data was intentionally changed, and the test quest remains in place because quest deletion is not implemented.
+  - No subject, language, grade, duration, category, tags, or cover controls were added to `NewQuestForm`.
+  - No Settings, Library, Preview, Play/Test, quest deletion, migration, RLS/policy, index, public catalog, student-facing, direct SQL, or direct API shortcut change was included.
 
 Next sprint:
 
-- Sprint 12.17.16 - Quest Metadata Display Consolidation Planning.
+- Sprint 12.18.3 - New Quest Creation UX Polish Planning.
 
 ## Stack
 
@@ -373,6 +387,7 @@ Next sprint:
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
 - Deferred quest metadata work includes possible metadata chip consolidation, language during quest creation, catalog filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
+- Quest creation intentionally creates draft shells first; Settings remains the canonical place for metadata, cover image, tasks, and publication.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.
