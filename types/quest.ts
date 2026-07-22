@@ -11,6 +11,10 @@ export interface Quest {
 
   cover_image_path: string | null;
 
+  category: string | null;
+
+  tags: string[];
+
   author_id: string;
 
   difficulty: number;

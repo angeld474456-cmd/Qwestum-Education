@@ -177,8 +177,17 @@ Quest metadata:
 - `quests_category_length_check` enforces category values as null or 1-40 characters.
 - `quests_tags_count_check` enforces at most 10 tags.
 - All 7 existing quests remained compatible after migration; existing categories are null and existing tags are empty arrays.
-- Per-tag length up to 24 characters, empty-tag removal, display casing preservation, and case-insensitive duplicate removal are planned for server-side validation in the next app implementation sprint.
-- No category/tag indexes, RLS changes, policies, or app code changes are included in Sprint 12.17.12.
+- Quest Settings can edit optional category and comma-separated tags through the owner-safe settings API.
+- Shared and teacher quest types include `category: string | null` and `tags: string[]`.
+- Owner-scoped quest reads include category and tags.
+- Omitted category or tags preserve existing values in PATCH requests.
+- Empty category clears to `null`; an empty tags array clears all tags.
+- Category and tag whitespace is normalized, empty tags are removed, and tags are deduplicated case-insensitively while preserving first-occurrence casing.
+- Category maximum length is 40 characters, maximum tag count is 10, and maximum normalized tag length is 24 characters.
+- Control characters are rejected server-side, and invalid category or tags return safe `400` responses before updates.
+- Defensive Settings form handling prevents stale null or undefined tags from crashing the form.
+- Manual authenticated browser verification passed, and the test quest was restored to `category = null` and `tags = []`.
+- No Quest Library category/tag display or filtering, NewQuestForm controls, Preview display, Play/Test changes, category/tag indexes, RLS changes, policies, or quest deletion are included in Sprint 12.17.13.
 
 Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses owned quest and owned task summary data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
 
@@ -398,7 +407,7 @@ Decisions after audit:
 - `database/migrations/011_add_quest_category_tags.sql` was applied live and verified for category/tag schema only.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is integrating category/tag editing into owner-safe Quest Settings.
+- Next safe step is planning Teacher Library category/tag display and filtering.
 
 Schema mismatch risks:
 
@@ -409,7 +418,7 @@ Schema mismatch risks:
 - Upload-before-failed-PATCH races may still orphan unattached owner-scoped image objects.
 - Failed best-effort cover cleanup may leave orphaned cover objects.
 - Direct quest-column category/tags will need a future normalization path if marketplace taxonomy, multilingual category labels, platform-defined categories, or public catalog indexing become requirements.
-- Server-side tag normalization must remove empty tags and case-insensitive duplicates before the UI writes category/tag metadata.
+- Future category/tag filtering may need query/index planning, but indexes are deferred until filtering architecture and data volume justify them.
 - Expired-session API `401` responses redirect to `/login?error=session_expired` in current teacher client workflows; unsaved edits are not persisted across the login redirect.
 - Direct authenticated API edge-case verification for invalid subject UUID, missing subject UUID, and foreign quest PATCH was not executed in Sprint 12.17.5 because no safe controllable authenticated API session was available; those paths were verified by code review and browser save/clear covered the authenticated success path.
 - Local migrations are not a reliable source of truth for the live schema yet.

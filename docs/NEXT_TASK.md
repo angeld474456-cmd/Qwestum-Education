@@ -6,48 +6,49 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Integrate the live quest category/tags schema into owner-safe Quest Settings.
+Plan the smallest safe Teacher Library category/tag display and filtering slice.
 
 ## Next Task
 
-Sprint 12.17.13 - Quest Category / Tags Settings Integration.
+Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering Planning.
+
+Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.17.12 applied and verified `database/migrations/011_add_quest_category_tags.sql` in live Supabase.
-- `public.quests.category` exists as nullable `text` with default `null`.
-- `public.quests.tags` exists as `text[] not null` with default `'{}'::text[]`.
-- `quests_category_length_check` and `quests_tags_count_check` were verified.
-- All 7 existing quests remained compatible with null categories and empty tag arrays.
-- `public.quests` RLS and owner-scoped policies were unchanged.
-- No application code has been updated for category/tag editing yet.
+- Sprint 12.17.13 implemented category and tags in owner-safe Quest Settings.
+- Shared and teacher quest types include `category: string | null` and `tags: string[]`.
+- Owner-scoped quest reads include category and tags.
+- Settings PATCH supports category and tags with server-side normalization and validation.
+- Category max length is 40 characters.
+- Tags are comma-separated in Settings, normalized server-side, deduplicated case-insensitively, and preserve first-occurrence casing.
+- Maximum tag count is 10 and maximum normalized tag length is 24 characters.
+- Empty category clears to `null`; empty tags array clears all tags.
+- Manual authenticated browser verification passed and the test quest was restored to `category = null` and `tags = []`.
 
-Approved scope:
+Planning topics:
 
-- Add `category` and `tags` to TypeScript quest types.
-- Include `category` and `tags` in owner-scoped server selects.
-- Add owner-safe PATCH support.
-- Add category and tags controls to Quest Settings.
-- Implement server-side normalization and validation.
-- Preserve tag display casing.
-- Deduplicate tags case-insensitively.
-- Remove empty tags.
-- Enforce maximum category length of 40 characters.
-- Enforce maximum 10 tags.
-- Enforce maximum tag length of 24 characters.
+- Category and tag chips in the Teacher Quest Library.
+- Category and tag filter controls.
+- Client-side versus server-query filtering.
+- URL search parameter behavior.
+- Empty metadata behavior.
+- Owner-scoped filter values.
+- Possible Preview display.
+- Whether indexes are justified at the current data volume.
 
 Out of scope:
 
-- Quest Library filtering.
+- Implementation before architecture approval.
 - NewQuestForm changes.
 - Play/Test changes.
 - Quest deletion.
 - New RLS policies.
-- New indexes.
+- New indexes unless separately approved after planning.
 - Normalized taxonomy tables.
 - Public/student catalog filtering.
 
-Required validation:
+Required validation for any later implementation:
 
 ```powershell
 npm.cmd run lint

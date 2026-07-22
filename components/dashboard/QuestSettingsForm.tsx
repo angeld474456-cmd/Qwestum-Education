@@ -21,6 +21,8 @@ type QuestSettingsFormProps = {
     description: string | null;
     subject_id: string | null;
     language_code: QuestLanguageCode | null;
+    category: string | null;
+    tags: string[];
     difficulty: number;
     is_public: boolean;
     grade_min: number | null;
@@ -37,6 +39,8 @@ type QuestSettingsResponse = {
     description: string | null;
     subject_id: string | null;
     language_code: QuestLanguageCode | null;
+    category: string | null;
+    tags: string[];
     difficulty: number;
     is_public: boolean;
     grade_min: number | null;
@@ -56,6 +60,14 @@ function metadataValue(value: number | null) {
   return value === null ? "" : String(value);
 }
 
+function normalizeTextInput(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function formatTagsInput(tags: string[] | null | undefined): string {
+  return Array.isArray(tags) ? tags.join(", ") : "";
+}
+
 function formatSubjectOption(subject: SubjectOption) {
   if (subject.grade === null) {
     return `${subject.name} — all grades`;
@@ -72,6 +84,8 @@ export default function QuestSettingsForm({
   const [description, setDescription] = useState(quest.description ?? "");
   const [subjectId, setSubjectId] = useState(quest.subject_id ?? "");
   const [languageCode, setLanguageCode] = useState(quest.language_code ?? "");
+  const [category, setCategory] = useState(quest.category ?? "");
+  const [tagsInput, setTagsInput] = useState(formatTagsInput(quest.tags));
   const [difficulty, setDifficulty] = useState(Number(quest.difficulty) || 1);
   const [isPublic, setIsPublic] = useState(Boolean(quest.is_public));
   const [gradeMin, setGradeMin] = useState(metadataValue(quest.grade_min));
@@ -89,6 +103,11 @@ export default function QuestSettingsForm({
     if (saving) return;
 
     const normalizedTitle = title.trim();
+    const normalizedCategory = normalizeTextInput(category);
+    const normalizedTags = tagsInput
+      .split(",")
+      .map((tag) => normalizeTextInput(tag))
+      .filter(Boolean);
     const normalizedDifficulty = Number(difficulty);
     const normalizedGradeMin = gradeMin === "" ? null : Number(gradeMin);
     const normalizedGradeMax =
@@ -110,6 +129,21 @@ export default function QuestSettingsForm({
 
     if (Number.isNaN(normalizedDifficulty)) {
       setErrorMessage("Difficulty must be a number.");
+      return;
+    }
+
+    if (normalizedCategory.length > 40) {
+      setErrorMessage("Category must be 40 characters or fewer.");
+      return;
+    }
+
+    if (normalizedTags.length > 10) {
+      setErrorMessage("A maximum of 10 tags is allowed.");
+      return;
+    }
+
+    if (normalizedTags.some((tag) => tag.length > 24)) {
+      setErrorMessage("Each tag must be 24 characters or fewer.");
       return;
     }
 
@@ -170,6 +204,8 @@ export default function QuestSettingsForm({
           description,
           subject_id: subjectId || null,
           language_code: languageCode || null,
+          category,
+          tags: tagsInput.split(",").map((tag) => tag.trim()),
           difficulty: normalizedDifficulty,
           is_public: isPublic,
           grade_min: normalizedGradeMin,
@@ -195,6 +231,8 @@ export default function QuestSettingsForm({
       setDescription(result.quest.description ?? "");
       setSubjectId(result.quest.subject_id ?? "");
       setLanguageCode(result.quest.language_code ?? "");
+      setCategory(result.quest.category ?? "");
+      setTagsInput(formatTagsInput(result.quest.tags));
       setDifficulty(Number(result.quest.difficulty) || 1);
       setIsPublic(Boolean(result.quest.is_public));
       setGradeMin(metadataValue(result.quest.grade_min));
@@ -288,6 +326,44 @@ export default function QuestSettingsForm({
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="quest-category"
+            className="mb-2 block text-sm font-semibold text-slate-300"
+          >
+            Category
+          </label>
+          <input
+            id="quest-category"
+            type="text"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+            className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+          />
+          <p className="mt-2 text-sm text-slate-400">
+            Optional. Maximum 40 characters.
+          </p>
+        </div>
+
+        <div>
+          <label
+            htmlFor="quest-tags"
+            className="mb-2 block text-sm font-semibold text-slate-300"
+          >
+            Tags
+          </label>
+          <input
+            id="quest-tags"
+            type="text"
+            value={tagsInput}
+            onChange={(event) => setTagsInput(event.target.value)}
+            className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+          />
+          <p className="mt-2 text-sm text-slate-400">
+            Separate tags with commas. Maximum 10 tags, 24 characters each.
+          </p>
         </div>
 
         <div>

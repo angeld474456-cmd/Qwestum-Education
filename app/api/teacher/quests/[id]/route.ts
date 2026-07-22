@@ -14,6 +14,8 @@ type QuestPayload = {
   is_public?: unknown;
   subject_id?: unknown;
   language_code?: unknown;
+  category?: unknown;
+  tags?: unknown;
   grade_min?: unknown;
   grade_max?: unknown;
   estimated_duration_minutes?: unknown;
@@ -209,6 +211,162 @@ function parseLanguageCodeField(body: QuestPayload): LanguageCodeFieldResult {
   };
 }
 
+type OptionalStringFieldResult =
+  | {
+      provided: false;
+      value?: never;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value: string | null;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value?: never;
+      error: string;
+    };
+
+type TagsFieldResult =
+  | {
+      provided: false;
+      value?: never;
+      error?: never;
+    }
+  | {
+      provided: true;
+      value: string[];
+      error?: never;
+    }
+  | {
+      provided: true;
+      value?: never;
+      error: string;
+    };
+
+function normalizeWhitespace(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function hasControlCharacters(value: string) {
+  return /[\u0000-\u001F\u007F]/.test(value);
+}
+
+function parseCategoryField(body: QuestPayload): OptionalStringFieldResult {
+  if (!("category" in body)) {
+    return {
+      provided: false,
+    };
+  }
+
+  if (body.category === null) {
+    return {
+      provided: true,
+      value: null,
+    };
+  }
+
+  if (typeof body.category !== "string") {
+    return {
+      provided: true,
+      error: "Category must be a string or null.",
+    };
+  }
+
+  if (hasControlCharacters(body.category)) {
+    return {
+      provided: true,
+      error: "Category contains unsupported characters.",
+    };
+  }
+
+  const value = normalizeWhitespace(body.category);
+
+  if (!value) {
+    return {
+      provided: true,
+      value: null,
+    };
+  }
+
+  if (value.length > 40) {
+    return {
+      provided: true,
+      error: "Category must be 40 characters or fewer.",
+    };
+  }
+
+  return {
+    provided: true,
+    value,
+  };
+}
+
+function parseTagsField(body: QuestPayload): TagsFieldResult {
+  if (!("tags" in body)) {
+    return {
+      provided: false,
+    };
+  }
+
+  if (!Array.isArray(body.tags)) {
+    return {
+      provided: true,
+      error: "Tags must be an array of strings.",
+    };
+  }
+
+  const dedupeKeys = new Set<string>();
+  const tags: string[] = [];
+
+  for (const rawTag of body.tags) {
+    if (typeof rawTag !== "string") {
+      return {
+        provided: true,
+        error: "Tags must be an array of strings.",
+      };
+    }
+
+    if (hasControlCharacters(rawTag)) {
+      return {
+        provided: true,
+        error: "A tag contains unsupported characters.",
+      };
+    }
+
+    const tag = normalizeWhitespace(rawTag);
+
+    if (!tag) continue;
+
+    if (tag.length > 24) {
+      return {
+        provided: true,
+        error: "A tag must be 24 characters or fewer.",
+      };
+    }
+
+    const key = tag.toLowerCase();
+
+    if (dedupeKeys.has(key)) continue;
+
+    dedupeKeys.add(key);
+    tags.push(tag);
+  }
+
+  if (tags.length > 10) {
+    return {
+      provided: true,
+      error: "A maximum of 10 tags is allowed.",
+    };
+  }
+
+  return {
+    provided: true,
+    value: tags,
+  };
+}
+
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { id } = await params;
 
@@ -260,6 +418,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   );
   const subjectId = parseSubjectIdField(body);
   const languageCode = parseLanguageCodeField(body);
+  const category = parseCategoryField(body);
+  const tags = parseTagsField(body);
 
   if (gradeMin.error) {
     return NextResponse.json({ error: gradeMin.error }, { status: 400 });
@@ -282,6 +442,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (languageCode.error) {
     return NextResponse.json({ error: languageCode.error }, { status: 400 });
+  }
+
+  if (category.error) {
+    return NextResponse.json({ error: category.error }, { status: 400 });
+  }
+
+  if (tags.error) {
+    return NextResponse.json({ error: tags.error }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -366,6 +534,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     ...(languageCode.provided
       ? { language_code: languageCode.value }
       : {}),
+    ...(category.provided ? { category: category.value } : {}),
+    ...(tags.provided ? { tags: tags.value } : {}),
     ...(gradeMin.provided ? { grade_min: gradeMin.value } : {}),
     ...(gradeMax.provided ? { grade_max: gradeMax.value } : {}),
     ...(estimatedDuration.provided
@@ -379,7 +549,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .eq("id", id)
     .eq("author_id", user.id)
     .select(
-      "id, title, description, subject_id, language_code, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
+      "id, title, description, subject_id, language_code, category, tags, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
     )
     .maybeSingle();
 

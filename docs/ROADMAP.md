@@ -257,14 +257,23 @@ Completed:
   - Confirmed all 7 existing quests remained present and compatible, with null categories and empty tag arrays.
   - Confirmed `public.quests` RLS and owner-scoped policies were unchanged, and no DELETE policy exists.
   - No application code, index, RLS policy, or unrelated schema change was included.
+- Sprint 12.17.13 - Quest Category / Tags Settings Integration.
+  - Added `category: string | null` and `tags: string[]` to quest types.
+  - Owner-scoped quest reads include category and tags.
+  - Added owner-safe PATCH support and Quest Settings controls for category and comma-separated tags.
+  - Omitted fields preserve existing values; empty category clears to `null`; empty tags array clears all tags.
+  - Server-side normalization trims and collapses whitespace, removes empty tags, deduplicates tags case-insensitively, and preserves first-occurrence casing.
+  - Server-side validation enforces category max 40, max 10 tags, max 24 characters per tag, and rejects control characters with safe `400` responses before update.
+  - Defensive Settings form handling prevents stale null or undefined tags from crashing the form.
+  - Manual authenticated browser verification passed, including save, refresh persistence, normalization, validation, clearing, and restoration to `category = null` and `tags = []`.
+  - No Quest Library filtering/display, NewQuestForm controls, Preview display, Play/Test changes, migration changes, RLS/policy changes, indexes, or quest deletion were included.
 
 Next:
 
-- Sprint 12.17.13 - Quest Category / Tags Settings Integration.
-  - Add category and tags to TypeScript quest types and owner-scoped server selects.
-  - Add owner-safe PATCH support and Quest Settings controls.
-  - Implement server-side normalization and validation while preserving tag display casing.
-  - Do not add Quest Library filtering, NewQuestForm changes, Play/Test changes, RLS policies, indexes, or quest deletion.
+- Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering Planning.
+  - Plan category and tag chips in the Teacher Quest Library.
+  - Plan category and tag filter controls, client-side versus server-query filtering, URL search parameter behavior, empty metadata behavior, owner-scoped filter values, possible Preview display, and whether indexes are justified at the current data volume.
+  - Planning only until architecture approval.
 
 ## Suggested Future Milestones
 

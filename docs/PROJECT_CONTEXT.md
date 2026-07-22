@@ -306,10 +306,26 @@ Completed Sprint 12 work:
   - `public.quests` RLS remains enabled and owner-scoped SELECT, INSERT, and UPDATE policies remained unchanged.
   - No `quests` DELETE policy exists.
   - No application code, RLS policy, index, or unrelated schema change was included.
+- Sprint 12.17.13 - Quest Category / Tags Settings Integration.
+  - Added `category: string | null` and `tags: string[]` to shared and teacher quest types.
+  - Owner-scoped quest reads now include category and tags.
+  - The owner-safe Settings PATCH route supports category and tags.
+  - Omitted category or tags preserve existing values.
+  - Empty category clears to `null`; an empty tags array clears all tags.
+  - Category and tag whitespace is normalized.
+  - Empty tags are removed.
+  - Tags are deduplicated case-insensitively while preserving first-occurrence casing.
+  - Category maximum length is 40 characters, maximum tag count is 10, and maximum normalized tag length is 24 characters.
+  - The server rejects control characters and returns safe `400` responses for invalid category or tags before updating.
+  - Quest Settings now provides Category and comma-separated Tags controls.
+  - Defensive handling prevents stale null or undefined tags from crashing the Settings form.
+  - Manual authenticated browser verification passed for save, refresh persistence, normalization, validation, dedupe, clearing, and restoration.
+  - The test quest was restored to `category = null` and `tags = []`.
+  - No Quest Library category/tag display or filtering, NewQuestForm controls, Preview display, Play/Test changes, quest deletion, migration change, RLS/policy change, or index was included.
 
 Next sprint:
 
-- Sprint 12.17.13 - Quest Category / Tags Settings Integration.
+- Sprint 12.17.14 - Quest Category / Tags Library Display and Filtering Planning.
 
 ## Stack
 
