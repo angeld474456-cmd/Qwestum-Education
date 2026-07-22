@@ -320,6 +320,18 @@
   - Defensive handling prevents malformed legacy category/tags values from crashing the page.
   - Manual browser verification passed for full owned list display, category chips, tag chips/wrapping, category-only filtering, tag-only filtering, combined AND filtering, clear filters, refresh persistence, browser back/forward, unknown filter empty state, and existing card metadata/actions.
   - No Preview category/tag display, NewQuestForm controls, Play/Test changes, quest deletion, public catalog/student discovery, migration, RLS/policy change, index, or normalized taxonomy was included.
+- Sprint 12.17.15 - Quest Category / Tags Preview Display.
+  - Added category and tags to the existing Teacher Preview metadata chip row.
+  - Display order is subject, language, grade, duration, category, then tags.
+  - No additional service query, type, API, schema, or RLS work was required.
+  - Category is defensively normalized for display and omitted when invalid or empty.
+  - Tags are defensively handled at runtime, limited to valid string entries, whitespace-normalized, and empty entries are removed.
+  - Stored display casing is preserved and all valid tags are displayed.
+  - Tag keys are index-qualified to avoid duplicate React key collisions with malformed legacy arrays.
+  - Styling matches the Teacher Quest Library.
+  - Manual browser verification passed for category chip display, tag chip display/wrapping, metadata order, empty metadata behavior, existing Preview content, read-only behavior, unchanged owner-safe route behavior, and duplicate legacy tag key safety.
+  - No editing in Preview, filtering in Preview, NewQuestForm changes, Play/Test changes, quest deletion, public catalog/student discovery, migration, live Supabase write, RLS/policy change, index, or normalized taxonomy was included.
+  - Metadata chip logic remains local to Library and Preview.
 
 ## Current State On `feature/next-work`
 

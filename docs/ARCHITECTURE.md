@@ -202,6 +202,17 @@ Quest metadata:
 - Defensive Library handling prevents malformed legacy category/tags values from crashing the page.
 - Manual authenticated browser verification passed for all-owned display, chips, category-only filtering, tag-only filtering, combined filtering, clear filters, refresh persistence, browser back/forward, unknown-value empty state, and existing card metadata/actions.
 - No Preview category/tag display, NewQuestForm controls, Play/Test changes, public catalog/student discovery, migration, RLS/policy change, index, normalized taxonomy, or quest deletion are included in Sprint 12.17.14.
+- Sprint 12.17.15 added Teacher Preview category/tag display.
+- Teacher Preview displays category and tags in the existing metadata chip row after subject, language, grade, and duration.
+- No additional service query, type, API, schema, or RLS work was required because `getOwnedQuest()` already returns category and tags.
+- Category is defensively normalized for display and omitted when invalid or empty.
+- Tags are defensively handled at runtime, limited to valid string entries, whitespace-normalized, and empty entries are removed.
+- Stored display casing is preserved and all valid tags are displayed.
+- Tag keys are index-qualified to avoid duplicate React key collisions with malformed legacy arrays.
+- Preview category/tag styling matches the Teacher Quest Library.
+- Manual authenticated browser verification passed for category chip display, tag chip display/wrapping, metadata order, empty metadata behavior, existing title/description/task count/cover/metadata/task previews, read-only behavior, unchanged owner-safe route behavior, and duplicate legacy tag key safety.
+- No editing in Preview, filtering in Preview, NewQuestForm changes, Play/Test changes, quest deletion, public catalog/student discovery, migration, live Supabase write, RLS/policy change, index, or normalized taxonomy was included.
+- Metadata chip logic remains local to Library and Preview.
 
 Teacher Library analytics are content analytics only. The `/dashboard/quests` summary uses owned quest and owned task summary data to show Total quests, Public quests, Draft quests, Total tasks, and Total points. There are no persisted attempts/results yet, and no student learning analytics should be added before schema, auth, privacy, and runtime persistence are intentionally designed.
 
@@ -421,7 +432,7 @@ Decisions after audit:
 - `database/migrations/011_add_quest_category_tags.sql` was applied live and verified for category/tag schema only.
 - Do not add attempt persistence yet.
 - Do not touch runtime/editor/JSONB architecture without explicit approval.
-- Next safe step is planning Teacher Preview category/tag display.
+- Next safe step is planning whether Teacher Library and Preview metadata chip logic should be consolidated.
 
 Schema mismatch risks:
 

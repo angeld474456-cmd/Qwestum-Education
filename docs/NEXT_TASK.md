@@ -6,41 +6,40 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the smallest safe Teacher Preview category/tag display slice.
+Plan whether quest metadata chip display should be consolidated across Teacher Library and Teacher Preview.
 
 ## Next Task
 
-Sprint 12.17.15 - Quest Category / Tags Preview Display Planning.
+Sprint 12.17.16 - Quest Metadata Display Consolidation Planning.
 
 Planning only. Do not implement until architecture is approved.
 
 Current state:
 
 - Sprint 12.17.14 implemented category and tag display/filtering in the Teacher Quest Library.
-- `/dashboard/quests` remains a Server Component and accepts Next.js 16 async `searchParams`.
-- Supported Library URL parameters are `category` and `tag`.
-- Owned quests are fetched once through `getOwnedQuests()`.
-- Filter values are derived only from the authenticated teacher's owned quests.
-- Filtering is performed in memory for the current MVP scale.
-- Category and tag filters combine with AND semantics.
-- Native GET controls provide shareable URLs, refresh persistence, and browser back/forward behavior.
-- Quest cards display category and tag chips only when populated.
-- No Preview category/tag display is implemented yet.
+- Sprint 12.17.15 implemented category and tag display in Teacher Preview.
+- Teacher Library and Teacher Preview both display category and tag chips only when populated.
+- Teacher Preview remains read-only and has no editing or filtering controls.
+- Metadata chip logic remains local to Library and Preview.
+- No service query, type, API, schema, migration, RLS, policy, index, NewQuestForm, Play/Test, public catalog, student discovery, normalized taxonomy, or quest deletion change was included in Sprint 12.17.15.
 
 Planning topics:
 
-- Whether category and tags should appear in Teacher Preview.
-- Placement relative to title, cover, subject, language, grade, and duration.
-- Empty metadata behavior.
-- Chip styling and consistency with the Teacher Library.
-- Whether Preview needs any additional data loading.
-- Responsive layout.
-- Accessibility.
-- Exact implementation scope.
+- Whether Library and Preview metadata chip logic should be extracted.
+- Shared metadata normalization helpers.
+- Shared chip styling.
+- Component boundaries.
+- Prop design.
+- Owner-safe data flow.
+- Avoiding over-abstraction.
+- Whether consolidation is justified now or should be deferred.
+- Exact files that would change.
 
 Out of scope:
 
 - Implementation before architecture approval.
+- New metadata fields.
+- Quest Settings changes.
 - NewQuestForm changes.
 - Play/Test changes.
 - Quest deletion.

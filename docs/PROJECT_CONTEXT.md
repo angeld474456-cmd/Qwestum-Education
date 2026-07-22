@@ -339,10 +339,22 @@ Completed Sprint 12 work:
   - Defensive handling prevents malformed legacy category/tags values from crashing the page.
   - Manual authenticated browser verification passed for all-owned display, category-only filtering, tag-only filtering, combined filtering, clear filters, refresh persistence, browser back/forward, unknown-value empty state, chip wrapping, and existing card actions.
   - No Preview category/tag display, NewQuestForm controls, Play/Test changes, quest deletion, public catalog/student discovery, migration, RLS/policy change, index, or normalized taxonomy was included.
+- Sprint 12.17.15 - Quest Category / Tags Preview Display.
+  - Teacher Preview now displays category and tags in the existing metadata chip row.
+  - Display order is subject, language, grade, duration, category, then tags.
+  - No additional service query, type, API, schema, or RLS work was required.
+  - Category is defensively normalized for display and omitted when invalid or empty.
+  - Tags are defensively handled at runtime, limited to valid string entries, whitespace-normalized, and empty entries are removed.
+  - Stored display casing is preserved and all valid tags are displayed.
+  - Tag keys are index-qualified to avoid duplicate React key collisions with malformed legacy arrays.
+  - Styling matches the Teacher Quest Library: category uses fuchsia styling and tags use neutral styling.
+  - Manual authenticated browser verification passed for category chip display, tag chip display/wrapping, metadata order, empty metadata behavior, existing Preview content, read-only behavior, unchanged owner-safe route behavior, and duplicate legacy tag key safety.
+  - No editing in Preview, filtering in Preview, NewQuestForm changes, Play/Test changes, quest deletion, public catalog/student discovery, migration, live Supabase write, RLS/policy change, index, or normalized taxonomy was included.
+  - Metadata chip logic remains local to Library and Preview.
 
 Next sprint:
 
-- Sprint 12.17.15 - Quest Category / Tags Preview Display Planning.
+- Sprint 12.17.16 - Quest Metadata Display Consolidation Planning.
 
 ## Stack
 
@@ -360,7 +372,7 @@ Next sprint:
 - Deferred storage work includes private bucket/signed URLs, magic-byte MIME validation, orphan cleanup tooling, image resizing/cropping, and legacy object migration.
 - Expired-session API `401` responses now use a small shared client helper in current teacher workflows.
 - Deferred auth/session work includes cross-tab logout synchronization, return-to-current-page support, unsaved-edit persistence, mutation replay, and role-aware teacher/student guards.
-- Deferred quest metadata work includes Preview category/tag display, language during quest creation, catalog filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
+- Deferred quest metadata work includes possible metadata chip consolidation, language during quest creation, catalog filtering/indexes, multilingual quest variants, UI localization/i18n, language administration, cover selection during quest creation, attempt limits, and subject catalog filtering/administration.
 - Russian UI text exists throughout the app and must be preserved.
 - Some shell output may display Russian text as mojibake. Check actual source files before changing UI text.
 - Do not commit or push unless explicitly asked.

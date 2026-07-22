@@ -93,6 +93,25 @@ function formatSubject(subject: TeacherSubject | undefined) {
   return `${subject.name} · Grade ${subject.grade}`;
 }
 
+function normalizeMetadataValue(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function formatCategory(category: unknown) {
+  if (typeof category !== "string") return null;
+
+  return normalizeMetadataValue(category) || null;
+}
+
+function formatTags(tags: unknown) {
+  return Array.isArray(tags)
+    ? tags
+        .filter((tag): tag is string => typeof tag === "string")
+        .map(normalizeMetadataValue)
+        .filter(Boolean)
+    : [];
+}
+
 export default async function TeacherQuestPreviewPage({
   params,
 }: PreviewPageProps) {
@@ -119,6 +138,8 @@ export default async function TeacherQuestPreviewPage({
     ? formatSubject(subjects.find((subject) => subject.id === quest.subject_id))
     : null;
   const languageLabel = getQuestLanguageLabel(quest.language_code);
+  const categoryLabel = formatCategory(quest.category);
+  const tagLabels = formatTags(quest.tags);
   const coverImageUrl = getSafeQuestCoverImagePublicUrl(
     quest.cover_image_path,
     quest.author_id,
@@ -141,7 +162,12 @@ export default async function TeacherQuestPreviewPage({
           <p className="mt-4 text-sm text-slate-300">
             Tasks: {tasks.length}
           </p>
-          {subjectLabel || languageLabel || gradeLabel || durationLabel ? (
+          {subjectLabel ||
+          languageLabel ||
+          gradeLabel ||
+          durationLabel ||
+          categoryLabel ||
+          tagLabels.length > 0 ? (
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
               {subjectLabel ? (
                 <span className="rounded-full bg-violet-500/10 px-3 py-1 font-semibold text-violet-200">
@@ -163,6 +189,19 @@ export default async function TeacherQuestPreviewPage({
                   {durationLabel}
                 </span>
               ) : null}
+              {categoryLabel ? (
+                <span className="rounded-full bg-fuchsia-500/10 px-3 py-1 font-semibold text-fuchsia-200">
+                  {categoryLabel}
+                </span>
+              ) : null}
+              {tagLabels.map((tag, index) => (
+                <span
+                  key={`${tag}-${index}`}
+                  className="rounded-full bg-slate-800 px-3 py-1 font-semibold text-slate-200"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           ) : null}
         </div>
