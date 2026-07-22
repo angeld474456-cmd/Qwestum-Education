@@ -27,35 +27,35 @@ export default function QuestWorkspaceNav({
   return (
     <nav className="flex flex-wrap gap-3" aria-label="Quest workspace">
       <Link href="/dashboard/quests" className={inactiveLinkClass}>
-        Back to library
+        К библиотеке
       </Link>
 
       <Link
         href={`/dashboard/quests/${questId}/settings`}
         className={getLinkClass(active, "settings")}
       >
-        Settings
+        Настройки
       </Link>
 
       <Link
         href={`/dashboard/quests/${questId}/tasks`}
         className={getLinkClass(active, "tasks")}
       >
-        Edit tasks
+        Задания
       </Link>
 
       <Link
         href={`/dashboard/quests/${questId}/preview`}
         className={getLinkClass(active, "preview")}
       >
-        Preview
+        Предпросмотр
       </Link>
 
       <Link
         href={`/dashboard/quests/${questId}/play`}
         className={getLinkClass(active, "play")}
       >
-        Play/Test
+        Тестирование
       </Link>
     </nav>
   );

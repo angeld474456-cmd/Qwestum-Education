@@ -47,12 +47,11 @@ export default async function TeacherQuestSettingsPage({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">
-            Quest Settings
+            Настройки квеста
           </p>
           <h1 className="mt-2 text-4xl font-bold">{quest.title}</h1>
           <p className="mt-3 max-w-3xl text-slate-400">
-            Edit basic quest metadata and control whether this quest is public
-            or saved as a draft.
+            Настройте метаданные квеста и управляйте публикацией.
           </p>
         </div>
 

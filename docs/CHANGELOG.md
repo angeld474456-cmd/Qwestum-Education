@@ -423,6 +423,20 @@
   - Manual browser verification passed for both canonical routes, both legacy redirects, no redirect loops, visible task editor inside dashboard chrome, vertical scrolling, dashboard navigation not covering content, internal links staying within `/dashboard/quests`, and no data changes.
   - Remaining intentional legacy occurrences are redirect pages, historical documentation references, and `/api/teacher/quests` API routes.
   - No API, schema/migration, RLS/policy, index, task CRUD refactor, Preview or Play/Test behavior change, publication behavior change, public catalog/student-facing implementation, broad visual redesign, or broad localization change was included.
+- Sprint 12.18.16 - Teacher Workflow Primary Copy Localization.
+  - Implemented phase 1 of Russian-first teacher MVP localization.
+  - No i18n framework or shared copy constants were introduced.
+  - Navigation labels changed to `К библиотеке`, `Настройки`, `Задания`, `Предпросмотр`, and `Тестирование`.
+  - Status labels changed to `Черновик` and `Опубликован`.
+  - Library high-visibility copy is Russian for heading/supporting copy, create actions, summary cards, filters, clear-filter actions, empty/no-results states, status badges, task-count labels, cover and description fallbacks, and card actions.
+  - Settings route-level heading/supporting text is Russian, and Step 2 onboarding remains preserved.
+  - Preview high-visibility copy is Russian, including heading, task counts, zero-task state, task action, grade labels, and task labels.
+  - Play/Test is now labeled `Тестирование` with Russian supporting and zero-task copy.
+  - Generic teacher-facing task terminology uses `задание`/`задания`; `вопрос` is reserved for actual question prompt or single-choice semantics.
+  - Server API error contracts were not changed.
+  - Routes, canonical dashboard route map, navigation destinations/active state, filtering, sorting, category/tags, task counts, covers, card links, Settings owner-safe loading, `created=1`, Preview rendering, QuestRunner/runtime, task CRUD, and publication behavior remain unchanged.
+  - Manual browser verification passed for Library, Settings with and without `created=1`, Tasks without mojibake, Preview, and `Тестирование`; desktop layout/navigation remained usable and no data changed.
+  - Deferred localization scope includes `QuestSettingsForm`, `QuestCoverImageManager`, `QuestTasksClient`, `TaskForm`, `TaskCard`, `TaskEditor`, `components/tasks/editor/*`, `components/media/ImageUploader.tsx`, `components/tasks/runtime/*`, and client fallback/server API error consistency.
 
 ## Current State On `feature/next-work`
 

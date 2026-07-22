@@ -6,47 +6,46 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan teacher workflow copy consistency.
+Plan teacher forms and task editor copy localization.
 
 ## Next Task
 
-Sprint 12.18.15 - Teacher Workflow Copy Consistency Planning.
+Sprint 12.18.17 - Teacher Forms and Task Editor Copy Planning.
 
 Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.18.14 consolidated teacher Create and Tasks routes under `/dashboard/quests`.
-- Canonical teacher routes are Library `/dashboard/quests`, Create `/dashboard/quests/new`, Settings `/dashboard/quests/[id]/settings`, Tasks `/dashboard/quests/[id]/tasks`, Preview `/dashboard/quests/[id]/preview`, and Play/Test `/dashboard/quests/[id]/play`.
-- Legacy redirects remain for `/quests/new`, `/quests/[id]/tasks`, `/quests`, and `/quests/[id]`.
-- All internal teacher Create and Tasks links use canonical dashboard routes.
-- `QuestWorkspaceNav` ordering, labels, and active behavior remain unchanged.
-- The post-create Settings redirect remains `/dashboard/quests/[id]/settings?created=1`.
-- `NewQuestForm` and `QuestTasksClient` received only minimal dashboard-layout fit adjustments.
-- Task CRUD, validation, payloads, errors, loading, scrolling behavior, publication behavior, dashboard layout guard, and owner-safe route loading remain intact.
-- Manual browser verification passed for both canonical routes, both legacy redirects, no redirect loops, dashboard task-editor layout/scrolling, internal links staying within `/dashboard/quests`, and no data changes.
-- Remaining intentional legacy occurrences are redirect pages, historical documentation references, and `/api/teacher/quests` API routes.
-- No API, schema/migration, RLS/policy, index, task CRUD refactor, Preview or Play/Test behavior change, publication behavior change, public catalog/student-facing implementation, broad visual redesign, or broad localization change was included.
+- Sprint 12.18.16 completed phase 1 of Russian-first teacher MVP localization.
+- High-visibility Library, workspace navigation, Settings route-level, Preview route-level, and Play/Test route-level copy is now Russian.
+- Workspace navigation labels are `К библиотеке`, `Настройки`, `Задания`, `Предпросмотр`, and `Тестирование`.
+- Status labels are `Черновик` and `Опубликован`.
+- Generic teacher-facing task terminology uses `задание`/`задания`; `вопрос` is reserved for actual question prompt or single-choice semantics.
+- Server API error contracts were not changed.
+- Canonical dashboard routes, navigation destinations and active-state logic, filtering, sorting, category/tags, task counts, covers, card links, Settings owner-safe loading, `created=1`, Preview rendering, QuestRunner/runtime behavior, task CRUD, and publication behavior remain unchanged.
+- Manual browser verification passed for Library, Settings with and without `created=1`, Tasks without mojibake, Preview, and `Тестирование`; no data changed.
+- Deferred localization scope includes `QuestSettingsForm`, `QuestCoverImageManager`, `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, and client fallback/server API error consistency.
 
 Planning topics:
 
-- Audit Russian and English copy across Library, Create, Settings, Tasks, Preview, and Play/Test.
-- Review status labels `Draft` and `Public`.
-- Review navigation labels `Settings`, `Edit tasks`, `Preview`, and `Play/Test`.
-- Review headings and supporting text.
-- Assess task editor mojibake risk.
-- Define consistent terminology for quest, task, and question.
-- Decide whether localization should be Russian-only for the MVP.
-- Identify exact files likely to change.
-- Plan a phased low-risk copy update.
+- Localize `components/dashboard/QuestSettingsForm.tsx`.
+- Localize `components/dashboard/QuestCoverImageManager.tsx`.
+- Audit `components/tasks/QuestTasksClient.tsx` and task editor child components.
+- Standardize `задание` versus `вопрос`.
+- Localize field labels, buttons, helper text, empty states, prompts, and client fallback errors.
+- Identify strings that must remain stable because they are API contracts.
+- Inspect encoding and mojibake risks before changing Russian text.
+- Determine phased implementation files.
 
 Out of scope:
 
 - Implementation before architecture approval.
+- Route changes.
+- API behavior or error-contract changes unless explicitly approved.
 - Quest deletion.
 - New migrations unless explicitly approved after planning.
 - Live Supabase writes.
-- New RLS policies.
+- RLS policy changes.
 - New indexes.
 - Public catalog or student-facing changes.
 

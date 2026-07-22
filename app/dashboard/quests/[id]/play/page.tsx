@@ -37,12 +37,12 @@ export default async function TeacherQuestPlayPage({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">
-            Teacher Test Mode
+            Тестирование
           </p>
           <h1 className="mt-2 text-4xl font-bold">{quest.title}</h1>
           <p className="mt-3 max-w-3xl text-slate-400">
-            This is a teacher-only test run. Answers and results are not
-            persisted yet.
+            Это тестовый запуск для учителя. Ответы и результаты пока не
+            сохраняются.
           </p>
         </div>
 
@@ -51,15 +51,15 @@ export default async function TeacherQuestPlayPage({
 
       {tasks.length === 0 ? (
         <Card className="text-center">
-          <h2 className="text-2xl font-semibold">No tasks yet</h2>
+          <h2 className="text-2xl font-semibold">Заданий пока нет</h2>
           <p className="mt-3 text-slate-400">
-            Add tasks before starting a teacher test run.
+            Добавьте задания перед тестированием квеста.
           </p>
           <Link
             href={`/dashboard/quests/${id}/tasks`}
             className="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
           >
-            Edit tasks
+            Перейти к заданиям
           </Link>
         </Card>
       ) : (

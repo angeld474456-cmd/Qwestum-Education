@@ -382,13 +382,24 @@ Completed:
   - Manual browser verification passed for canonical route loading, legacy redirects, no redirect loops, dashboard task-editor layout/scrolling, internal links staying within `/dashboard/quests`, and no data changes.
   - Remaining intentional legacy occurrences are redirect pages, historical documentation references, and `/api/teacher/quests` API routes.
   - No API, schema/migration, RLS/policy, index, task CRUD refactor, Preview or Play/Test behavior change, publication behavior change, public catalog/student-facing implementation, broad visual redesign, or broad localization change was included.
+- Sprint 12.18.16 - Teacher Workflow Primary Copy Localization.
+  - Completed phase 1 of Russian-first teacher MVP localization without adding an i18n framework or shared copy constants.
+  - Navigation labels are `К библиотеке`, `Настройки`, `Задания`, `Предпросмотр`, and `Тестирование`.
+  - Status labels are `Черновик` and `Опубликован`.
+  - Library high-visibility copy is Russian across heading/supporting text, create actions, summaries, filters, clear filters, empty/no-results states, status badges, task-count labels, fallbacks, and card actions.
+  - Settings route-level copy uses `Настройки квеста`; Step 2 onboarding is preserved.
+  - Preview and Play/Test route-level copy is Russian; Play/Test is labeled `Тестирование`.
+  - Generic task terminology uses `задание`/`задания`, while `вопрос` remains reserved for question prompts or single-choice semantics.
+  - Routes, navigation destinations/active states, filtering, sorting, category/tags, task counts, covers, links, Settings owner-safe loading, `created=1`, Preview rendering, QuestRunner/runtime, task CRUD, publication behavior, and API error contracts remain unchanged.
+  - Manual browser verification passed for Library, Settings with and without `created=1`, Tasks without mojibake, Preview, and `Тестирование`; no data changed.
+  - Deferred localization scope includes Settings form internals, cover manager, task manager/editor children, media uploader, runtime copy, and client fallback/server API error consistency.
 
 Next:
 
-- Sprint 12.18.15 - Teacher Workflow Copy Consistency Planning.
-  - Audit Russian and English copy across Library, Create, Settings, Tasks, Preview, and Play/Test.
-  - Review `Draft`/`Public`, `Settings`, `Edit tasks`, `Preview`, `Play/Test`, headings, supporting text, task editor mojibake risk, and terminology for quest/task/question.
-  - Decide whether localization should be Russian-only for the MVP and plan a phased low-risk copy update.
+- Sprint 12.18.17 - Teacher Forms and Task Editor Copy Planning.
+  - Plan localization for `QuestSettingsForm`, `QuestCoverImageManager`, `QuestTasksClient`, task editor child components, media uploader, and runtime/client fallback copy.
+  - Identify strings that must remain stable because they are API contracts.
+  - Inspect encoding and mojibake risks before implementation.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

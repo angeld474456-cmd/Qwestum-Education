@@ -453,10 +453,23 @@ Completed Sprint 12 work:
   - Manual browser verification passed for both canonical routes, both legacy redirects, no redirect loops, visible task editor inside dashboard chrome, vertical scrolling, dashboard navigation not covering content, internal links staying within `/dashboard/quests`, and no data changes during verification.
   - Remaining intentional legacy occurrences are `app/quests/new/page.tsx`, `app/quests/[id]/tasks/page.tsx`, historical documentation references, and `/api/teacher/quests` API routes.
   - No API, schema/migration, RLS/policy, index, task CRUD refactor, Preview or Play/Test behavior change, publication behavior change, public catalog/student-facing implementation, broad visual redesign, or broad localization change was included.
+- Sprint 12.18.16 - Teacher Workflow Primary Copy Localization.
+  - Teacher-facing MVP copy is Russian-first, localization is phased, and Sprint 12.18.16 completed phase 1 only.
+  - No i18n framework or shared copy constants were introduced.
+  - Navigation terminology is now: `Back to library` -> `К библиотеке`, `Settings` -> `Настройки`, `Tasks`/`Edit tasks` -> `Задания`, `Preview` -> `Предпросмотр`, and `Play/Test` -> `Тестирование`.
+  - Status terminology is now `Draft` -> `Черновик` and `Public` -> `Опубликован`.
+  - Library high-visibility copy is Russian, including heading/supporting text, create actions, summary cards, filters and clear-filter actions, empty/no-results states, status badges, task-count labels, cover and description fallbacks, and card actions.
+  - Route-level localization was added for Settings (`Настройки квеста` and Russian supporting text), Preview (heading, task counts, zero-task state, task action, grade/task labels), and Play/Test (`Тестирование`, Russian supporting text, zero-task state, and task action).
+  - Generic teacher-facing task terminology uses `задание`/`задания`; `вопрос` is reserved for an actual question prompt or single-choice semantics.
+  - Server API error contracts were not changed.
+  - Preserved behavior: routes, canonical dashboard route map, navigation destinations and active-state logic, filtering, sorting, category/tags, task counts, covers, card links, Settings owner-safe loading, `created=1` behavior, Preview rendering, QuestRunner/runtime behavior, task CRUD, and publication behavior remain unchanged.
+  - Manual browser verification passed for Library, Settings with and without `created=1`, Tasks without mojibake, Preview, and `Тестирование`; desktop layout and navigation remained usable, and no data changed during verification.
+  - Deferred localization scope includes `QuestSettingsForm`, `QuestCoverImageManager`, `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, and client fallback/server API error consistency.
+  - No route, API behavior/error-contract, migration/schema, RLS/policy, index, task CRUD refactor, public catalog/student-facing implementation, or broad visual redesign change was included.
 
 Next sprint:
 
-- Sprint 12.18.15 - Teacher Workflow Copy Consistency Planning.
+- Sprint 12.18.17 - Teacher Forms and Task Editor Copy Planning.
 
 ## Stack
 

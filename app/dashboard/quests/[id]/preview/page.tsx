@@ -71,10 +71,10 @@ function formatGradeRange(gradeMin: number | null, gradeMax: number | null) {
   if (gradeMin === null || gradeMax === null) return null;
 
   if (gradeMin === gradeMax) {
-    return `Grade ${gradeMin}`;
+    return `${gradeMin} класс`;
   }
 
-  return `Grades ${gradeMin}-${gradeMax}`;
+  return `${gradeMin}-${gradeMax} классы`;
 }
 
 function formatDuration(minutes: number | null) {
@@ -90,7 +90,7 @@ function formatSubject(subject: TeacherSubject | undefined) {
     return subject.name;
   }
 
-  return `${subject.name} · Grade ${subject.grade}`;
+  return `${subject.name} · ${subject.grade} класс`;
 }
 
 function normalizeMetadataValue(value: string) {
@@ -151,7 +151,7 @@ export default async function TeacherQuestPreviewPage({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">
-            Teacher Preview
+            Предпросмотр
           </p>
           <h1 className="mt-2 text-4xl font-bold">{quest.title}</h1>
           {quest.description ? (
@@ -160,7 +160,7 @@ export default async function TeacherQuestPreviewPage({
             </p>
           ) : null}
           <p className="mt-4 text-sm text-slate-300">
-            Tasks: {tasks.length}
+            Заданий: {tasks.length}
           </p>
           {subjectLabel ||
           languageLabel ||
@@ -224,15 +224,15 @@ export default async function TeacherQuestPreviewPage({
 
       {tasks.length === 0 ? (
         <Card className="text-center">
-          <h2 className="text-2xl font-semibold">No tasks yet</h2>
+          <h2 className="text-2xl font-semibold">Заданий пока нет</h2>
           <p className="mt-3 text-slate-400">
-            Add tasks before previewing this quest.
+            Добавьте задания перед предпросмотром квеста.
           </p>
           <Link
             href={`/dashboard/quests/${id}/tasks`}
             className="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
           >
-            Edit tasks
+            Перейти к заданиям
           </Link>
         </Card>
       ) : (
@@ -243,7 +243,7 @@ export default async function TeacherQuestPreviewPage({
             return (
               <Card key={task.id}>
                 <div className="mb-4 text-sm font-semibold text-slate-400">
-                  Task {index + 1}
+                  Задание {index + 1}
                 </div>
                 <TaskRenderer
                   mode="preview"

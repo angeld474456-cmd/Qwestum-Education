@@ -22,12 +22,12 @@ type TeacherQuestLibraryPageProps = {
 };
 
 function formatCreatedAt(value?: string) {
-  if (!value) return "Not available";
+  if (!value) return "Нет данных";
 
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Not available";
+    return "Нет данных";
   }
 
   return new Intl.DateTimeFormat("en", {
@@ -41,10 +41,10 @@ function formatGradeRange(gradeMin: number | null, gradeMax: number | null) {
   if (gradeMin === null || gradeMax === null) return null;
 
   if (gradeMin === gradeMax) {
-    return `Grade ${gradeMin}`;
+    return `${gradeMin} класс`;
   }
 
-  return `Grades ${gradeMin}-${gradeMax}`;
+  return `${gradeMin}-${gradeMax} классы`;
 }
 
 function formatDuration(minutes: number | null) {
@@ -60,7 +60,7 @@ function formatSubject(subject: TeacherSubject | undefined) {
     return subject.name;
   }
 
-  return `${subject.name} · Grade ${subject.grade}`;
+  return `${subject.name} · ${subject.grade} класс`;
 }
 
 function normalizeFilterValue(value: string) {
@@ -194,12 +194,12 @@ export default async function TeacherQuestLibraryPage({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h1 className="text-4xl font-bold">
-            Teacher Quest Library
+            Библиотека квестов
           </h1>
 
           <p className="mt-3 max-w-2xl text-slate-400">
-            Manage your educational quests, open the editor, and prepare
-            upcoming preview and play flows.
+            Управляйте образовательными квестами, заданиями, предпросмотром и
+            тестированием.
           </p>
         </div>
 
@@ -207,60 +207,60 @@ export default async function TeacherQuestLibraryPage({
           href="/dashboard/quests/new"
           className="inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
         >
-          Create new quest
+          Создать квест
         </Link>
       </div>
 
       {quests.length === 0 ? (
         <Card className="text-center">
           <h2 className="text-2xl font-semibold">
-            No quests yet
+            Квестов пока нет
           </h2>
 
           <p className="mt-3 text-slate-400">
-            Create your first quest to start building the teacher library.
+            Создайте первый квест, чтобы начать наполнять библиотеку.
           </p>
 
           <Link
             href="/dashboard/quests/new"
             className="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
           >
-            Create new quest
+            Создать квест
           </Link>
         </Card>
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-5">
             <div className="rounded-xl border border-slate-800 bg-[#111827] p-5">
-              <p className="text-sm text-slate-400">Total quests</p>
+              <p className="text-sm text-slate-400">Всего квестов</p>
               <p className="mt-2 text-3xl font-bold">
                 {libraryAnalytics.totalQuests}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-[#111827] p-5">
-              <p className="text-sm text-slate-400">Public quests</p>
+              <p className="text-sm text-slate-400">Опубликовано</p>
               <p className="mt-2 text-3xl font-bold">
                 {libraryAnalytics.publicQuests}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-[#111827] p-5">
-              <p className="text-sm text-slate-400">Draft quests</p>
+              <p className="text-sm text-slate-400">Черновики</p>
               <p className="mt-2 text-3xl font-bold">
                 {libraryAnalytics.draftQuests}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-[#111827] p-5">
-              <p className="text-sm text-slate-400">Total tasks</p>
+              <p className="text-sm text-slate-400">Всего заданий</p>
               <p className="mt-2 text-3xl font-bold">
                 {libraryAnalytics.totalTasks}
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-800 bg-[#111827] p-5">
-              <p className="text-sm text-slate-400">Total points</p>
+              <p className="text-sm text-slate-400">Всего баллов</p>
               <p className="mt-2 text-3xl font-bold">
                 {libraryAnalytics.totalPoints}
               </p>
@@ -277,7 +277,7 @@ export default async function TeacherQuestLibraryPage({
                   htmlFor="quest-category-filter"
                   className="text-sm font-semibold text-slate-200"
                 >
-                  Category
+                  Категория
                 </label>
                 <select
                   id="quest-category-filter"
@@ -285,7 +285,7 @@ export default async function TeacherQuestLibraryPage({
                   defaultValue={activeCategory}
                   className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30"
                 >
-                  <option value="">All categories</option>
+                  <option value="">Все категории</option>
                   {categoryOptions.map((category) => (
                     <option key={getFilterKey(category)} value={category}>
                       {category}
@@ -299,7 +299,7 @@ export default async function TeacherQuestLibraryPage({
                   htmlFor="quest-tag-filter"
                   className="text-sm font-semibold text-slate-200"
                 >
-                  Tag
+                  Тег
                 </label>
                 <select
                   id="quest-tag-filter"
@@ -307,7 +307,7 @@ export default async function TeacherQuestLibraryPage({
                   defaultValue={activeTag}
                   className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30"
                 >
-                  <option value="">All tags</option>
+                  <option value="">Все теги</option>
                   {tagOptions.map((tag) => (
                     <option key={getFilterKey(tag)} value={tag}>
                       {tag}
@@ -320,7 +320,7 @@ export default async function TeacherQuestLibraryPage({
                 type="submit"
                 className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
               >
-                Apply filters
+                Применить фильтры
               </button>
 
               {hasActiveFilters ? (
@@ -328,7 +328,7 @@ export default async function TeacherQuestLibraryPage({
                   href="/dashboard/quests"
                   className="rounded-lg border border-slate-700 px-4 py-2 text-center text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
                 >
-                  Clear filters
+                  Сбросить фильтры
                 </Link>
               ) : null}
             </div>
@@ -337,18 +337,18 @@ export default async function TeacherQuestLibraryPage({
           {filteredQuests.length === 0 ? (
             <Card className="text-center">
               <h2 className="text-2xl font-semibold">
-                No quests match the selected filters.
+                По выбранным фильтрам квесты не найдены.
               </h2>
 
               <p className="mt-3 text-slate-400">
-                Clear filters to return to your full quest library.
+                Сбросьте фильтры, чтобы вернуться ко всей библиотеке.
               </p>
 
               <Link
                 href="/dashboard/quests"
                 className="mt-6 inline-flex rounded-xl bg-violet-600 px-6 py-3 font-semibold text-white transition hover:bg-violet-700"
               >
-                Clear filters
+                Сбросить фильтры
               </Link>
             </Card>
           ) : null}
@@ -395,7 +395,7 @@ export default async function TeacherQuestLibraryPage({
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center px-4 text-center text-xs font-semibold text-slate-500">
-                              No cover
+                              Нет обложки
                             </div>
                           )}
                         </div>
@@ -413,18 +413,18 @@ export default async function TeacherQuestLibraryPage({
                                   : "bg-amber-500/15 text-amber-300"
                               }`}
                             >
-                              {quest.is_public ? "Public" : "Draft"}
+                              {quest.is_public ? "Опубликован" : "Черновик"}
                             </span>
                           </div>
 
                           <p className="mt-3 max-w-3xl text-slate-400">
-                            {quest.description || "No description provided."}
+                            {quest.description || "Описание не добавлено."}
                           </p>
 
                           <div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-300">
-                            <span>Difficulty: {quest.difficulty ?? "Not available"}</span>
-                            <span>Created: {formatCreatedAt(quest.created_at)}</span>
-                            <span>Tasks: {taskCount}</span>
+                            <span>Сложность: {quest.difficulty ?? "Нет данных"}</span>
+                            <span>Создан: {formatCreatedAt(quest.created_at)}</span>
+                            <span>Заданий: {taskCount}</span>
                           </div>
 
                           {subjectLabel ||
@@ -478,28 +478,28 @@ export default async function TeacherQuestLibraryPage({
                         href={`/dashboard/quests/${quest.id}/settings`}
                         className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
                       >
-                        Open / Edit quest
+                        Открыть настройки
                       </Link>
 
                       <Link
                         href={`/dashboard/quests/${quest.id}/tasks`}
                         className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
                       >
-                        Edit tasks
+                        Задания
                       </Link>
 
                       <Link
                         href={`/dashboard/quests/${quest.id}/preview`}
                         className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
                       >
-                        Preview
+                        Предпросмотр
                       </Link>
 
                       <Link
                         href={`/dashboard/quests/${quest.id}/play`}
                         className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
                       >
-                        Play/Test
+                        Тестирование
                       </Link>
                     </div>
                   </div>
