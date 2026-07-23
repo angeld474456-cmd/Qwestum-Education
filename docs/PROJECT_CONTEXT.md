@@ -579,9 +579,17 @@ Completed Sprint 12 work:
   - Follow-up UX mismatch: TextTaskEditor and SingleChoiceTaskEditor use raw string state and block empty, zero, negative, and decimal values, but still use `Number.isInteger`. Unsafe integers can reach PATCH and are safely rejected by the finite safe-integer API contract; server integrity remains protected. No unsafe-integer browser write test was performed.
   - TaskForm safe-integer validation, strict POST/PATCH contracts, `Promise<boolean>`, failure preservation, successful reset, ownership/authentication, selection, optional fields, types, image controls, Preview, publication guards, and deletion guards remain unchanged.
 
+- Sprint 12.18.36 - Shared Editor Points Validation.
+  - Added `lib/task-points.ts` with `parsePositiveSafeInteger(value: string): number | null` and the shared message `Баллы должны быть целым числом не меньше 1.`. The helper accepts digit-only positive safe integers, including leading zeroes and `Number.MAX_SAFE_INTEGER`, and rejects empty, whitespace, signs, decimals, exponent notation, zero, unsafe integers, and overflowing values.
+  - TaskForm, TextTaskEditor, and SingleChoiceTaskEditor now share the same digit-only, positive-safe-integer contract while preserving raw string state and temporary empty editing. TaskForm retains submit-triggered validation, `Promise<boolean>`, failed-create preservation, and successful reset to `"1"`.
+  - Both editors retain their existing visible validation summary and disable Save while points are invalid. Their points inputs now use conditional `aria-invalid` and `aria-describedby` with one associated visible points error.
+  - Browser verification checked invalid values first: empty, `0`, decimal, and `9007199254740992` stayed invalid with the exact message and disabled Save where applicable. The unsafe integer was not stored. A valid `12` then cleared the error, was saved through one successful PATCH, and remained `12` after refresh; no unrelated task fields changed and no cleanup was required for the existing test task.
+  - Task type is chosen only during creation; an existing task's stored type selects TextTaskEditor or SingleChoiceTaskEditor and cannot be changed in the editor. To use another type, the teacher must create a new task with the desired type and may manually delete the old task if no longer needed. No automatic conversion exists; future conversion requires explicit field-mapping and data-loss rules.
+  - POST/PATCH contracts, editor fields, Single Choice options and correct-answer behavior, image controls, selected-task behavior, responsive layout, Preview, publication guards, and deletion guards remain unchanged.
+
 Next sprint:
 
-- Sprint 12.18.35 - Editor Points Safe-Integer Validation Planning.
+- Sprint 12.18.37 - Task Type Conversion and Editor UX Review Planning.
 
 ## Stack
 

@@ -1,19 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import {
+  POINTS_VALIDATION_MESSAGE,
+  parsePositiveSafeInteger,
+} from "@/lib/task-points";
 
 type TaskType = "text" | "single_choice";
-
-const POINTS_VALIDATION_MESSAGE =
-  "Баллы должны быть целым числом не меньше 1.";
-
-function parsePositiveIntegerPoints(value: string): number | null {
-  if (!/^\d+$/.test(value)) return null;
-
-  const points = Number(value);
-
-  return Number.isSafeInteger(points) && points >= 1 ? points : null;
-}
 
 interface TaskFormProps {
   onSave: (task: {
@@ -41,7 +34,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
       return;
     }
 
-    const parsedPoints = parsePositiveIntegerPoints(points);
+    const parsedPoints = parsePositiveSafeInteger(points);
 
     if (parsedPoints === null) {
       setPointsError(true);
@@ -170,7 +163,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
 
               if (
                 pointsError &&
-                parsePositiveIntegerPoints(nextPoints) !== null
+                parsePositiveSafeInteger(nextPoints) !== null
               ) {
                 setPointsError(false);
               }

@@ -3,6 +3,10 @@
 import { useState } from "react";
 import ImageUploader from "@/components/media/ImageUploader";
 import TaskPreview from "@/components/tasks/preview/TaskPreview";
+import {
+  POINTS_VALIDATION_MESSAGE,
+  parsePositiveSafeInteger,
+} from "@/lib/task-points";
 import { QuestTask, TaskContent } from "@/services/quest.service";
 
 export interface TextTaskEditorProps {
@@ -36,19 +40,12 @@ export default function TextTaskEditor({
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
   const [points, setPoints] = useState(String(task.points));
-  const normalizedPoints = points.trim();
-  const parsedPoints = Number(normalizedPoints);
-  const isPointsValid =
-    normalizedPoints !== "" &&
-    Number.isFinite(parsedPoints) &&
-    Number.isInteger(parsedPoints) &&
-    parsedPoints >= 1;
+  const parsedPoints = parsePositiveSafeInteger(points);
+  const isPointsValid = parsedPoints !== null;
   const validationMessages = [
     !title.trim() ? "Введите название задания." : null,
     !description.trim() ? "Введите описание задания." : null,
-    !isPointsValid
-      ? "Баллы должны быть целым числом не меньше 1."
-      : null,
+    !isPointsValid ? POINTS_VALIDATION_MESSAGE : null,
   ].filter((message): message is string => Boolean(message));
   const isValid = validationMessages.length === 0;
 
@@ -95,11 +92,15 @@ export default function TextTaskEditor({
         </div>
 
         <div>
-          <label className="mb-2 block text-slate-300">
+          <label
+            htmlFor="text-task-points"
+            className="mb-2 block text-slate-300"
+          >
             Баллы
           </label>
 
           <input
+            id="text-task-points"
             type="number"
             min={1}
             step={1}
@@ -107,6 +108,10 @@ export default function TextTaskEditor({
             onChange={(e) => setPoints(e.target.value)}
             className="w-full rounded-xl bg-[#1B2435] p-4"
             aria-label="Баллы"
+            aria-invalid={!isPointsValid || undefined}
+            aria-describedby={
+              !isPointsValid ? "text-task-points-error" : undefined
+            }
           />
         </div>
 
@@ -133,7 +138,16 @@ export default function TextTaskEditor({
       {validationMessages.length > 0 && (
         <div className="rounded-xl bg-red-950/40 p-4 text-sm text-red-200">
           {validationMessages.map((message) => (
-            <p key={message}>{message}</p>
+            <p
+              key={message}
+              id={
+                message === POINTS_VALIDATION_MESSAGE
+                  ? "text-task-points-error"
+                  : undefined
+              }
+            >
+              {message}
+            </p>
           ))}
         </div>
       )}
@@ -141,7 +155,11 @@ export default function TextTaskEditor({
       <div className="pt-4">
         <button
           disabled={!isValid}
-          onClick={() => onSave(task.id, title, description, parsedPoints)}
+          onClick={() => {
+            if (parsedPoints !== null) {
+              onSave(task.id, title, description, parsedPoints);
+            }
+          }}
           className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50 transition"
         >
           💾 Сохранить

@@ -531,6 +531,22 @@ Next:
   - Identify the smallest safe file scope and avoid duplicated validation where practical.
   - No implementation or live write without explicit approval.
 
+Next:
+
+- Sprint 12.18.36 - Shared Editor Points Validation.
+  - Added `lib/task-points.ts` with `parsePositiveSafeInteger(value: string): number | null` and the shared message `Баллы должны быть целым числом не меньше 1.`. Digit-only positive safe integers are accepted; empty, whitespace, signs, decimals, exponent notation, zero, unsafe integers, and overflow are rejected.
+  - TaskForm, TextTaskEditor, and SingleChoiceTaskEditor now use the same parser/message while retaining raw string state, temporary empty editing, existing create/save behavior, and numeric payload points.
+  - Both editors retain their existing validation summaries, disable Save while invalid, and now expose conditional `aria-invalid`/`aria-describedby` linked to one visible points error.
+  - Browser verification checked empty, `0`, decimal, and `9007199254740992` first; they remained invalid, and the unsafe integer was not stored. A valid `12` cleared the error, was saved through a successful PATCH, and remained `12` after refresh with no unrelated field changes. No cleanup was required for the existing test task.
+  - Task type is chosen only at creation; the stored type selects the editor and cannot be changed there. To use another type, the teacher must create a new task with the desired type and may manually delete the old task if no longer needed. No automatic conversion exists; future conversion requires explicit field-mapping and data-loss rules.
+  - POST/PATCH contracts, `Promise<boolean>`, failure preservation/reset, editor fields, options, correct-answer behavior, images, selection, responsive layout, Preview, publication guards, and deletion guards remain unchanged.
+
+Next:
+
+- Sprint 12.18.37 - Task Type Conversion and Editor UX Review Planning.
+  - Planning only. Review whether existing task type changes should be supported; compare delete-and-recreate with controlled conversion; identify compatible/incompatible fields, data-loss warnings, task ownership and ordering, API/database implications, and whether conversion belongs in MVP.
+  - No implementation or live write without explicit approval.
+
 ## Suggested Future Milestones
 
 - Add more task types through the existing registry pattern.

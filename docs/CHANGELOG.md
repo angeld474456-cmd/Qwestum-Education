@@ -549,6 +549,14 @@
   - Follow-up client/server UX mismatch: both task editors use `Number.isInteger`, so unsafe integers can reach PATCH; PATCH safely rejects them because its strict contract requires a finite safe integer at least `1`. No unsafe-integer browser write test occurred.
   - TaskForm, strict API contracts, creation/failure/reset behavior, ownership, selection, optional fields/types, images, Preview, publication, and deletion guards remain unchanged.
 
+- Sprint 12.18.36 - Shared Editor Points Validation.
+  - Added `lib/task-points.ts` with the shared `parsePositiveSafeInteger(value: string): number | null` parser and exact message `Баллы должны быть целым числом не меньше 1.`. The parser accepts digit-only positive safe integers and rejects empty, whitespace, signs, decimals, exponent notation, zero, unsafe integers, and overflow.
+  - TaskForm, TextTaskEditor, and SingleChoiceTaskEditor now use the shared contract without changing raw-state editing, temporary empty input, payload types, create/save behavior, or existing validation flow.
+  - Both editors now expose conditional `aria-invalid` and `aria-describedby` linked to one visible points error while retaining their existing validation summary and disabled Save behavior.
+  - Browser verification checked invalid empty, zero, decimal, and unsafe-integer values first; the unsafe integer was not stored. A valid `12` cleared the points error, succeeded through PATCH, and remained `12` after refresh with no unrelated field changes. No cleanup was required for the existing test task.
+  - Task type is chosen only during creation; an existing task's stored type selects the editor and cannot be changed there. To use another type, the teacher must create a new task with the desired type and may manually delete the old task if no longer needed. No automatic conversion exists; future conversion requires explicit field-mapping and data-loss rules.
+  - POST/PATCH contracts, `Promise<boolean>`, failure preservation/reset, editor fields, Single Choice options/correct-answer behavior, image controls, selection, responsive layout, Preview, publication guards, and deletion guards remain unchanged.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

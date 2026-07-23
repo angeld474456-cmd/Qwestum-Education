@@ -3,6 +3,10 @@
 import { useState } from "react";
 import ImageUploader from "@/components/media/ImageUploader";
 import TaskPreview from "@/components/tasks/preview/TaskPreview";
+import {
+  POINTS_VALIDATION_MESSAGE,
+  parsePositiveSafeInteger,
+} from "@/lib/task-points";
 import { QuestTask } from "@/services/quest.service";
 import { getTaskTypeLabel, TextTaskEditorProps } from "./TextTaskEditor";
 
@@ -79,22 +83,15 @@ export default function SingleChoiceTaskEditor({
   const hasCorrectOption = options.some(
     (option) => option.id === correctOptionId
   );
-  const normalizedPoints = points.trim();
-  const parsedPoints = Number(normalizedPoints);
-  const isPointsValid =
-    normalizedPoints !== "" &&
-    Number.isFinite(parsedPoints) &&
-    Number.isInteger(parsedPoints) &&
-    parsedPoints >= 1;
+  const parsedPoints = parsePositiveSafeInteger(points);
+  const isPointsValid = parsedPoints !== null;
   const validationMessages = [
     options.length < 2 ? "Добавьте минимум два варианта ответа." : null,
     !hasCorrectOption ? "Выберите один правильный ответ." : null,
     options.some((option) => !option.text.trim())
       ? "Заполните текст каждого варианта ответа."
       : null,
-    !isPointsValid
-      ? "Баллы должны быть целым числом не меньше 1."
-      : null,
+    !isPointsValid ? POINTS_VALIDATION_MESSAGE : null,
   ].filter((message): message is string => Boolean(message));
   const isValid = validationMessages.length === 0;
 
@@ -219,11 +216,15 @@ export default function SingleChoiceTaskEditor({
         </div>
 
         <div>
-          <label className="mb-2 block text-slate-300">
+          <label
+            htmlFor="single-choice-task-points"
+            className="mb-2 block text-slate-300"
+          >
             Баллы
           </label>
 
           <input
+            id="single-choice-task-points"
             type="number"
             min={1}
             step={1}
@@ -231,6 +232,10 @@ export default function SingleChoiceTaskEditor({
             onChange={(e) => setPoints(e.target.value)}
             className="w-full rounded-xl bg-[#1B2435] p-4"
             aria-label="Баллы"
+            aria-invalid={!isPointsValid || undefined}
+            aria-describedby={
+              !isPointsValid ? "single-choice-task-points-error" : undefined
+            }
           />
         </div>
 
@@ -259,7 +264,16 @@ export default function SingleChoiceTaskEditor({
       {validationMessages.length > 0 && (
         <div className="rounded-xl bg-red-950/40 p-4 text-sm text-red-200">
           {validationMessages.map((message) => (
-            <p key={message}>{message}</p>
+            <p
+              key={message}
+              id={
+                message === POINTS_VALIDATION_MESSAGE
+                  ? "single-choice-task-points-error"
+                  : undefined
+              }
+            >
+              {message}
+            </p>
           ))}
         </div>
       )}
@@ -267,12 +281,14 @@ export default function SingleChoiceTaskEditor({
       <div className="pt-4">
         <button
           disabled={!isValid}
-          onClick={() =>
-            onSave(task.id, title, description, parsedPoints, {
-              options,
-              correctOptionId,
-            })
-          }
+          onClick={() => {
+            if (parsedPoints !== null) {
+              onSave(task.id, title, description, parsedPoints, {
+                options,
+                correctOptionId,
+              });
+            }
+          }}
           className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50 transition"
         >
           💾 Сохранить
