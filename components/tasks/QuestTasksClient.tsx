@@ -39,6 +39,7 @@ export default function QuestTasksClient({
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   function syncSelectedTask(loadedTasks: QuestTask[]) {
     setSelectedTask((currentTask) => {
@@ -55,6 +56,7 @@ export default function QuestTasksClient({
   async function loadTasks() {
     setLoading(true);
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       const response = await fetch(`/api/teacher/quests/${questId}/tasks`);
@@ -94,6 +96,7 @@ export default function QuestTasksClient({
 
     setBusy(true);
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       const response = await fetch(`/api/teacher/quests/${questId}/tasks`, {
@@ -127,6 +130,7 @@ export default function QuestTasksClient({
       const nextTasks = [...tasks, result.task];
       setTasks(nextTasks);
       setSelectedTask(result.task);
+      setStatusMessage("Задание создано.");
       return true;
     } catch (error) {
       console.error(error);
@@ -148,6 +152,7 @@ export default function QuestTasksClient({
 
     setBusy(true);
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       const response = await fetch(
@@ -184,8 +189,7 @@ export default function QuestTasksClient({
       );
       setTasks(nextTasks);
       setSelectedTask(result.task);
-
-      alert("✅ Изменения сохранены");
+      setStatusMessage("Изменения сохранены.");
     } catch (error) {
       console.error(error);
       setErrorMessage("Не удалось сохранить задание.");
@@ -199,6 +203,7 @@ export default function QuestTasksClient({
 
     setBusy(true);
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       const { imageUrl, error } = await uploadQuestImage(
@@ -243,8 +248,7 @@ export default function QuestTasksClient({
       );
       setTasks(nextTasks);
       setSelectedTask(result.task);
-
-      alert("🖼 Изображение загружено");
+      setStatusMessage("Изображение загружено.");
     } catch (error) {
       if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
         setErrorMessage(SESSION_EXPIRED_MESSAGE);
@@ -264,6 +268,7 @@ export default function QuestTasksClient({
 
     setBusy(true);
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       const { error } = await removeQuestImage(questId, taskId);
@@ -282,6 +287,7 @@ export default function QuestTasksClient({
           ? { ...currentTask, image_url: null }
           : currentTask
       );
+      setStatusMessage("Изображение удалено.");
     } catch (error) {
       if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
         setErrorMessage(SESSION_EXPIRED_MESSAGE);
@@ -301,6 +307,7 @@ export default function QuestTasksClient({
 
     setBusy(true);
     setErrorMessage("");
+    setStatusMessage("");
 
     try {
       const response = await fetch(
@@ -326,6 +333,7 @@ export default function QuestTasksClient({
       const nextTasks = tasks.filter((task) => task.id !== id);
       setTasks(nextTasks);
       syncSelectedTask(nextTasks);
+      setStatusMessage("Задание удалено.");
     } catch (error) {
       console.error(error);
       setErrorMessage("Не удалось удалить задание.");
@@ -350,8 +358,22 @@ export default function QuestTasksClient({
         </div>
 
         {errorMessage ? (
-          <div className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mt-6 rounded-xl border border-red-500/40 bg-red-500/10 p-4 text-sm text-red-200"
+          >
             {errorMessage}
+          </div>
+        ) : null}
+
+        {statusMessage ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mt-6 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-200"
+          >
+            {statusMessage}
           </div>
         ) : null}
 

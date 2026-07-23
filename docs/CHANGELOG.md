@@ -564,6 +564,13 @@
   - Stored `task_type` still selects the editor; another type requires a new task and optional manual deletion of the old one. Automatic conversion remains deferred pending explicit field mapping, data-loss rules, API design, and regression coverage.
   - Points validation, editor fields/options/correct answers, images, save/loading/errors, selection, TaskForm, registry, API/schema/RLS/Storage, Preview, publication, and deletion guards remain unchanged.
 
+- Sprint 12.18.40 - Workspace Status Messaging.
+  - Updated only `QuestTasksClient`: existing visible workspace errors now use `role="alert"` and `aria-live="assertive"`; one conditional visible `statusMessage` region uses `role="status"` and `aria-live="polite"`. No focus movement or timeout was added.
+  - Added `Задание создано.`, `Изменения сохранены.`, `Задание удалено.`, `Изображение загружено.`, and `Изображение удалено.` Status clears at relevant action start and is set only after success; native success alerts were removed for task save and image upload.
+  - The read-only technical route check used only GET and returned the expected protected-route HTTP `307` redirect to `/login` without an authenticated browser session. It made no POST, PATCH, DELETE, image upload, or image-removal request and caused no live-data change; static checks, lint, build, and diff checks passed. Manual no-write browser verification confirmed no initial status, no empty status space, stable layout, usable controls, immutable-type guidance, and local points validation.
+  - Controlled owned-Draft verification created, saved, and deleted one temporary Text task. Exact create/save/delete messages appeared, each replaced the previous one, no native success alert or workspace error appeared, cleanup restored the original task count, the quest remained Draft, and no existing task was intentionally modified.
+  - Image upload/removal success paths were statically reviewed but not live-write verified; no image upload, removal, or Storage write occurred. Task cards and keyboard limitations, selected-state behavior, TaskForm, editors, APIs, schema/RLS/Storage policies, Preview, publication, and deletion guards remain unchanged.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

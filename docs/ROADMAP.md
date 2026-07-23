@@ -562,6 +562,21 @@ Next:
   - Planning only. Review task-editor success and error feedback, workspace error association and focus behavior, disabled-button explanations, keyboard navigation through task cards/editor actions, selected-card accessibility beyond color, and the smallest safe improvement.
   - No implementation or live write without explicit approval.
 
+Next:
+
+- Sprint 12.18.40 - Workspace Status Messaging.
+  - Updated only `QuestTasksClient`: visible errors use `role="alert"` with `aria-live="assertive"`; one conditional visible `statusMessage` region uses `role="status"` with `aria-live="polite"`, without timeout or focus movement.
+  - Exact success messages: `Задание создано.`, `Изменения сохранены.`, `Задание удалено.`, `Изображение загружено.`, and `Изображение удалено.` Stale status clears at create/save/delete/upload/removal/refresh start, and success is assigned only after local state updates succeed. Save/upload native success alerts were removed.
+  - The read-only technical route check used only GET and returned the expected protected-route HTTP `307` redirect to `/login` without an authenticated browser session. It made no POST, PATCH, DELETE, image upload, or image-removal request and caused no live-data change; static roles/lifecycle plus lint, build, and diff checks passed. Manual no-write browser verification confirmed no initial or empty status area, stable narrow layout, usable controls, immutable-type guidance, and local points validation.
+  - Controlled owned-Draft verification created, saved, and deleted exactly one temporary Text task; exact create/save/delete messages appeared and replaced each other, no native success alert or workspace error appeared, selection remained correct, cleanup restored the original task count, and the quest remained Draft. No existing task was intentionally modified.
+  - Image messages are implemented and statically reviewed but not live-write verified; no image upload, removal, or Storage write occurred. Task cards/keyboard limits, selected state, TaskForm, editors, points validation, immutable-type guidance, APIs, schema/RLS/Storage policies, Preview, publication, and deletion guards remain unchanged.
+
+Next:
+
+- Sprint 12.18.41 - Task Card Keyboard Accessibility Planning.
+  - Planning only. Make task selection keyboard accessible; avoid nested interactive controls; compare dedicated select/open control with listbox-style semantics; preserve pencil/delete behavior and delete isolation; expose selected state beyond color; review `aria-current`, `aria-selected`, visible selected text, icons, focus order, narrow layout, and the smallest safe implementation.
+  - No implementation or live write without explicit approval.
+
 ## Suggested Future Milestones
 
 - Add more task types through the existing registry pattern.

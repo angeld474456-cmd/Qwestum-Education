@@ -594,9 +594,17 @@ Completed Sprint 12 work:
   - Current MVP behavior remains: stored `task_type` chooses the editor; another type requires creating a new task and optionally manually deleting the old one. Automatic conversion is deferred pending explicit field mapping, data-loss rules, API design, and regression coverage.
   - Points validation, editor fields, options, correct-answer behavior, images, Save/loading/errors, selected-task behavior, TaskForm, TaskEditor registry, API/schema/RLS/Storage, Preview, publication, and deletion guards remain unchanged.
 
+- Sprint 12.18.40 - Workspace Status Messaging.
+  - `QuestTasksClient` now keeps existing visible workspace errors while adding `role="alert"` and `aria-live="assertive"`; one `statusMessage` string renders a visible `role="status"` / `aria-live="polite"` success region only when non-empty. Neither region moves focus or expires automatically.
+  - Exact messages are `Задание создано.`, `Изменения сохранены.`, `Задание удалено.`, `Изображение загружено.`, and `Изображение удалено.` Stale status clears at create, save, delete, upload, removal, and refresh start; success is assigned only after successful local state updates, and save/upload native success alerts were removed.
+  - The read-only technical route check used only GET and returned the expected protected task-workspace HTTP `307` redirect to `/login` without an authenticated browser session. It made no POST, PATCH, DELETE, image upload, or image-removal request and caused no live-data change; static accessibility/lifecycle checks plus lint, build, and diff checks passed. Manual no-write browser verification confirmed no initial status, no empty status space, stable layout, usable controls, visible immutable-type guidance, and intact local points validation.
+  - Controlled verification in an owned Draft quest created, saved, and deleted exactly one temporary Text task. Create/save/delete messages appeared exactly, each replaced the last, no native success alert or workspace error appeared, selection remained correct, cleanup restored the original task count, the task was gone, and the quest remained Draft. No existing task was intentionally modified.
+  - Image upload/removal success paths are implemented and statically reviewed, but were not live-write verified; no image upload, removal, or Storage write occurred in this sprint.
+  - Task-card interaction and keyboard limitations, primarily visual selected state, TaskForm, editors, points validation, immutable-type helper, APIs/request-response shapes, schema/migrations/RLS/Storage policies, Preview, publication, and deletion guards remain unchanged.
+
 Next sprint:
 
-- Sprint 12.18.39 - Task Workspace Accessibility and Status Messaging Planning.
+- Sprint 12.18.41 - Task Card Keyboard Accessibility Planning.
 
 ## Stack
 
