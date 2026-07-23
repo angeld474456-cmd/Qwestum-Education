@@ -60,7 +60,11 @@ export default function TaskCard({
           </button>
 
           <button
-            onClick={() => onDelete(task.id)}
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete(task.id);
+            }}
             className="rounded-lg bg-red-600 px-4 py-2 hover:bg-red-700 transition"
             aria-label="Удалить задание"
           >

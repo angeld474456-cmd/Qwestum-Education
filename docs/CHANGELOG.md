@@ -489,7 +489,17 @@
   - `TaskList` now passes `onSelectTask(task)` into `TaskCard`; card click remains unchanged, and pencil click opens the same task without duplicate bubbling.
   - Manual authenticated browser verification passed: visible `Баллы` label appeared, pencil button opened the task editor, card click continued to open/select the task, delete confirmation and deletion worked, and no console or layout issue was reported.
   - One test task was accidentally deleted during verification. All current quest/task data is test data, no production data was affected, no restoration is required, and continued development is unaffected.
-  - Remaining non-blocking considerations: static `task-points` is safe with the current single `TaskForm` instance but would need unique ids if multiple forms render simultaneously; delete-button bubbling into the card wrapper remains pre-existing and unchanged.
+  - Historical non-blocking considerations at the end of Sprint 12.18.24: static `task-points` was safe with the current single `TaskForm` instance but would need unique ids if multiple forms render simultaneously; delete-button bubbling into the card wrapper was pre-existing then and was superseded by Sprint 12.18.26.
+  - Unchanged scope: no route/API, schema/migration/RLS/policy/index, task content/type, save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
+
+- Sprint 12.18.26 - Task Action Event Isolation Implementation.
+  - Updated only `components/tasks/TaskCard.tsx`.
+  - The delete button now has `type="button"` and its click handler receives the event, calls `event.stopPropagation()` before `onDelete(task.id)`, and invokes the existing delete flow exactly once.
+  - Delete click no longer bubbles to the parent card selection handler; existing icon, styling, Russian aria-label, confirmation flow, deletion behavior, and keyboard accessibility remain unchanged.
+  - No `TaskList` or `QuestTasksClient` change was needed.
+  - Owner-safe DELETE API behavior, confirmation text, last-Public-task deletion guard, error handling, list refresh, and `syncSelectedTask` fallback remain unchanged.
+  - Manual browser verification passed without confirming deletion: delete on an unselected task showed confirmation, Cancel left the previous selection unchanged, the unselected task did not open or become selected, pencil click and card click remained unchanged, and no console or UI issue was reported.
+  - Static `task-points` remains acceptable because only one `TaskForm` renders; future unique-id work remains deferred until multiple simultaneous forms exist.
   - Unchanged scope: no route/API, schema/migration/RLS/policy/index, task content/type, save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
 
 ## Current State On `feature/next-work`

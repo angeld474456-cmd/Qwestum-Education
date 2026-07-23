@@ -559,8 +559,15 @@ Decisions after audit:
 - `TaskList` passes `onSelectTask(task)` into `TaskCard`; card click remains unchanged, and pencil click opens the same task without duplicate bubbling.
 - Manual authenticated browser verification passed for the visible `Баллы` label, pencil edit action, card click selection, delete confirmation/deletion flow, and layout/console sanity.
 - One test task was accidentally deleted during verification. All current quest/task data is test data, no production data was affected, no recovery is needed, and continued development is unaffected.
-- Remaining non-blocking considerations: the static `task-points` id is safe with the current single `TaskForm` instance but should be revisited if multiple forms render simultaneously; delete-button bubbling into the card wrapper is pre-existing and unchanged.
+- Historical non-blocking considerations at the end of Sprint 12.18.24: the static `task-points` id was safe with the current single `TaskForm` instance but should be revisited if multiple forms render simultaneously; delete-button bubbling into the card wrapper was pre-existing then and was superseded by Sprint 12.18.26.
 - Next safe step is planning Task Action Event Isolation.
+- Sprint 12.18.26 implemented delete-action event isolation in `TaskCard` only.
+- The delete button now has `type="button"` and its click handler calls `event.stopPropagation()` before invoking `onDelete(task.id)` exactly once.
+- Delete clicks no longer bubble to the parent card selection handler; existing icon, styling, Russian aria-label, confirmation flow, deletion behavior, and keyboard accessibility remain unchanged.
+- `TaskList`, `QuestTasksClient`, owner-safe DELETE API behavior, confirmation text, last-Public-task deletion guard, error handling, list refresh, and `syncSelectedTask` fallback remain unchanged.
+- Manual browser verification passed without confirming deletion: delete on an unselected task showed confirmation, Cancel preserved the previous selection, the unselected task did not open or become selected, pencil and card clicks remained unchanged, and no console or UI issue was reported.
+- Static `task-points` remains acceptable with the current single `TaskForm`; unique-id work remains deferred until multiple simultaneous forms exist.
+- Next safe step is planning a Teacher Task Workspace UX Review.
 
 Schema mismatch risks:
 
