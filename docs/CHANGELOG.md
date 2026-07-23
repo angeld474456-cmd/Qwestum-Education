@@ -530,7 +530,15 @@
   - Expected Single Choice validation appeared because no options were added: `Добавьте минимум два варианта ответа.` and `Выберите один правильный ответ.` No editor save occurred.
   - Cleanup confirmed the exact temporary task's type and points, confirmed the native dialog once, restored the baseline empty list, produced no unexpected error, and left no residue.
   - Endpoint/payload, `Promise<boolean>` failure preservation, workspace layout, labels, card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task protection remain unchanged.
-  - Deferred task-creation UX finding for Sprint 12.18.32: clearing the Points numeric input produces `0`, preventing a temporary empty state and requiring current-value selection or the numeric stepper for replacement. This is non-blocking and does not affect persistence; temporary empty handling, `0` rejection, positive-integer validation, default behavior, and keyboard editing remain planning work.
+  - Sprint 12.18.32 planning recorded the task-creation UX finding that clearing the Points numeric input produced `0`, preventing a temporary empty state and requiring current-value selection or the numeric stepper for replacement. Sprint 12.18.33 implemented the resulting validation work.
+
+- Sprint 12.18.33 - TaskForm Points Validation.
+  - Fixed the numeric-state root cause where `Number(e.target.value)` converted cleared Points input to `0` and blocked normal keyboard replacement.
+  - TaskForm now stores raw string points, initially and after successful reset as `"1"`; temporary empty input is allowed, validation accepts digit-only safe integers at least `1`, and numeric conversion occurs only for the unchanged `points: number` payload.
+  - Invalid submit displays `Баллы должны быть целым числом не меньше 1.`, does not call `onSave`, and preserves values after failed creation; `aria-invalid` and `aria-describedby="task-points-error"` support the inline error.
+  - POST and PATCH use the same strict contract: JSON number only, finite safe integer, minimum `1`; numeric strings, zero, negatives, decimals, unsafe integers, null, arrays, objects, and booleans are rejected. Omitted PATCH points remain unchanged.
+  - No-write browser verification passed: clearing `1` remained empty without `0`, replacement typing worked without Ctrl+A, empty/zero submit displayed the error without a create request or reset, entering `7` cleared the error, and normal keyboard editing changed `7` to `12`.
+  - No successful create request, task creation, Supabase data change, or cleanup occurred. Existing creation, failure/reset, UI, editor, image, Preview, publication, and deletion-guard behavior remains unchanged.
 
 ## Current State On `feature/next-work`
 

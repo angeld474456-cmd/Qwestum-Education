@@ -91,9 +91,14 @@ function parseUpdateTaskPayload(body: UpdateTaskPayload) {
   }
 
   if ("points" in body) {
-    const points = Number(body.points);
+    const points = body.points;
 
-    if (!Number.isFinite(points) || !Number.isInteger(points) || points < 1) {
+    if (
+      typeof points !== "number" ||
+      !Number.isFinite(points) ||
+      !Number.isSafeInteger(points) ||
+      points < 1
+    ) {
       return {
         error: "Points must be a positive integer.",
       };

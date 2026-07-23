@@ -499,9 +499,25 @@ Next:
 
 - Sprint 12.18.32 - Task Creation Validation and UX Review Planning.
   - Planning only. Review task-creation client validation beyond title, points number/range handling, task-type-specific creation requirements, accessibility and error-message clarity, and the smallest safe improvement.
-  - Browser-observed task-creation Points finding: clearing the numeric input causes `0` to appear, so the field cannot remain temporarily empty and keyboard replacement requires selecting the current value or using the stepper. This does not block creation or editing and is not a persistence failure.
+  - Browser-observed task-creation Points finding at the time: clearing the numeric input caused `0` to appear, so the field could not remain temporarily empty and keyboard replacement required selecting the current value or using the stepper. This was implemented in Sprint 12.18.33.
   - Determine temporary empty-state handling, whether `0` is rejected, positive-integer validation, default-value policy, and the smallest safe keyboard-editing improvement before implementation.
   - No implementation or live write without explicit approval.
+
+Next:
+
+- Sprint 12.18.33 - TaskForm Points Validation.
+  - Fixed the task-creation Points root cause where numeric state and `Number(e.target.value)` turned empty input into `0`.
+  - TaskForm now uses raw string state with initial/success-reset `"1"`, allows temporary empty input, validates digit-only safe integers at least `1`, and converts to a number only for the existing payload.
+  - Exact inline error: `Баллы должны быть целым числом не меньше 1.` Invalid submit does not call `onSave`; failed API creation preserves the raw value.
+  - POST and PATCH now both require a JSON finite safe integer at least `1`; numeric strings and invalid JSON values are rejected, while omitted PATCH points remain unchanged.
+  - No-write browser verification passed: clearing did not create `0`, replacement typing worked without Ctrl+A, empty/zero submit displayed the error without a create request or reset, `7` cleared the error, and `7` could be replaced with `12` by normal typing. No successful create, task creation, data change, or cleanup occurred.
+  - Existing create callback behavior, reset/failure preservation, title alert, optional fields, task types, layout, selection, editor, images, Preview, publication, and deletion guards remain unchanged.
+
+Next:
+
+- Sprint 12.18.34 - Points Validation Controlled Write Verification Planning.
+  - Planning only. Choose an owned disposable Draft quest, create one temporary task with valid points, verify points persistence and successful reset to `1`, verify PATCH with a valid safe integer, verify invalid values are blocked without stored-data changes, and plan exact deletion cleanup.
+  - No live write without explicit approval.
 
 ## Suggested Future Milestones
 

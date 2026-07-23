@@ -6,36 +6,32 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Review task-creation validation and UX after successful-create regression verification.
+Plan controlled write verification for TaskForm points validation.
 
 ## Next Task
 
-Sprint 12.18.32 - Task Creation Validation and UX Review Planning.
+Sprint 12.18.34 - Points Validation Controlled Write Verification Planning.
 
 Planning only. Do not implement or perform a live write until architecture approval and explicit write authorization.
 
 Current state:
 
-- Sprint 12.18.31 completed successful-create regression verification in owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`), which remained Draft.
-- The temporary `TEMP - Sprint 12.18.31 Create Success DELETE ME` task used description `Disposable verification of successful task creation and form reset.`, correct answer `S31-CORRECT`, hint `S31-HINT`, `single_choice`, and points `7`.
-- Add task was clicked once with no error; the task appeared once, became selected, opened its editor, and preserved `single_choice` / `Выбор одного ответа` and points `7`.
-- TaskForm reset only after success: title, description, correct answer, and hint cleared; type returned to `text`; points returned to `1`; button/loading returned to normal.
-- Expected Single Choice validation appeared because no options were added: `Добавьте минимум два варианта ответа.` and `Выберите один правильный ответ.` No editor save was performed.
-- Cleanup confirmed the exact task's type and points, confirmed the native dialog once, deleted only the temporary task, restored the baseline empty list, produced no unexpected error, left no residue, and preserved Draft status.
-- The create endpoint/payload, `Promise<boolean>` failure preservation, responsive layout, visible labels, card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task guard remain unchanged.
-- Browser-observed deferred finding: the TaskForm Points input converts a cleared value to `0`, so it cannot remain temporarily empty; replacing its value requires selecting the current value first or using the numeric stepper. This does not block creation or editing and is a UX/validation concern, not a persistence failure.
+- Sprint 12.18.33 completed TaskForm Points validation with raw string state, initial/success-reset `"1"`, temporary empty editing, digit-only safe-integer validation, minimum `1`, and numeric conversion only for the unchanged payload.
+- The former root cause was numeric state with `Number(e.target.value)`, which converted empty input to `0` and blocked normal clear-and-retype editing.
+- The exact inline error is `Баллы должны быть целым числом не меньше 1.` It appears after invalid submit, uses `aria-invalid` and `aria-describedby="task-points-error"`, clears after valid input, and invalid submit does not call `onSave`.
+- POST and PATCH now both require points as a finite safe JSON integer at least `1`; numeric strings and other invalid JSON values are rejected, while omitted PATCH points leave the stored value unchanged.
+- No-write browser verification passed: Backspace cleared `1` without producing `0`; replacement typing worked without Ctrl+A; empty and `0` submit showed the exact error without a create request or reset; `7` cleared the error; and normal typing changed `7` to `12`.
+- No successful create request or task creation occurred, no Supabase data changed, and no cleanup was required. The `Promise<boolean>` contract, failed-create preservation, success reset, title alert, optional fields, types, labels, layout, selection, editor behavior, images, Preview, and publication/deletion guards remain unchanged.
 
 Planning topics:
 
-- Review current client-side validation for task creation.
-- Identify missing validation beyond title.
-- Review number and range handling for points.
-- Review temporary empty-state handling for the task-creation Points input.
-- Decide whether `0` must be rejected and how positive-integer validation should work.
-- Review default points behavior and keyboard editing without requiring Ctrl+A.
-- Review task-type-specific creation requirements.
-- Review accessibility and error-message clarity.
-- Identify the smallest safe improvement.
+- Choose an existing owned disposable Draft quest.
+- Create one temporary task with valid points.
+- Verify numeric points persistence after reload.
+- Verify successful reset returns points to `1`.
+- Verify PATCH with a valid safe integer.
+- Verify invalid values are blocked without modifying stored data.
+- Plan exact deletion cleanup.
 - No implementation or live write without explicit approval.
 - No implementation until architecture approval.
 

@@ -4,6 +4,17 @@ import { useState } from "react";
 
 type TaskType = "text" | "single_choice";
 
+const POINTS_VALIDATION_MESSAGE =
+  "Баллы должны быть целым числом не меньше 1.";
+
+function parsePositiveIntegerPoints(value: string): number | null {
+  if (!/^\d+$/.test(value)) return null;
+
+  const points = Number(value);
+
+  return Number.isSafeInteger(points) && points >= 1 ? points : null;
+}
+
 interface TaskFormProps {
   onSave: (task: {
     title: string;
@@ -20,7 +31,8 @@ export default function TaskForm({ onSave }: TaskFormProps) {
   const [description, setDescription] = useState("");
   const [answer, setAnswer] = useState("");
   const [hint, setHint] = useState("");
-  const [points, setPoints] = useState(1);
+  const [points, setPoints] = useState("1");
+  const [pointsError, setPointsError] = useState(false);
   const [taskType, setTaskType] = useState<TaskType>("text");
 
   async function handleSubmit() {
@@ -29,12 +41,21 @@ export default function TaskForm({ onSave }: TaskFormProps) {
       return;
     }
 
+    const parsedPoints = parsePositiveIntegerPoints(points);
+
+    if (parsedPoints === null) {
+      setPointsError(true);
+      return;
+    }
+
+    setPointsError(false);
+
     const created = await onSave({
       title,
       description,
       answer,
       hint,
-      points,
+      points: parsedPoints,
       taskType,
     });
 
@@ -44,7 +65,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
     setDescription("");
     setAnswer("");
     setHint("");
-    setPoints(1);
+    setPoints("1");
     setTaskType("text");
   }
 
@@ -142,10 +163,29 @@ export default function TaskForm({ onSave }: TaskFormProps) {
             type="number"
             value={points}
             min={1}
-            onChange={(e)=>setPoints(Number(e.target.value))}
+            step={1}
+            onChange={(e) => {
+              const nextPoints = e.target.value;
+              setPoints(nextPoints);
+
+              if (
+                pointsError &&
+                parsePositiveIntegerPoints(nextPoints) !== null
+              ) {
+                setPointsError(false);
+              }
+            }}
             className="w-full rounded-xl bg-[#1B2435] p-4"
             aria-label="Баллы"
+            aria-invalid={pointsError || undefined}
+            aria-describedby={pointsError ? "task-points-error" : undefined}
           />
+
+          {pointsError ? (
+            <p id="task-points-error" className="mt-2 text-sm text-red-300">
+              {POINTS_VALIDATION_MESSAGE}
+            </p>
+          ) : null}
         </div>
 
       </div>

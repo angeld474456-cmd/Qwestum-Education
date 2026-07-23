@@ -560,11 +560,19 @@ Completed Sprint 12 work:
   - The Single Choice editor's `Добавьте минимум два варианта ответа.` and `Выберите один правильный ответ.` validation was expected because no options were added. No editor save was performed.
   - Cleanup verified the exact temporary task's type and points, confirmed its native delete dialog once, removed only that task, restored the baseline empty list, left no residue or unexpected error, and left the quest Draft.
   - The create endpoint/payload, `Promise<boolean>` failure preservation, responsive workspace, labels, card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task guard remain unchanged.
-  - Deferred Sprint 12.18.32 UX finding: clearing the task-creation Points input causes `0` to appear, preventing a temporary empty editing state and requiring selection of the current value or the numeric stepper to replace it. Creation/editing remain unblocked; this is not a persistence failure. Future behavior should allow temporary empty input and validate or normalize before save, while the precise positive-integer minimum/default policy remains for planning.
+  - At Sprint 12.18.32 planning, clearing the task-creation Points input caused `0` to appear, preventing a temporary empty editing state and requiring selection of the current value or the numeric stepper to replace it. This non-blocking UX/validation finding was implemented in Sprint 12.18.33.
+
+- Sprint 12.18.33 - TaskForm Points Validation.
+  - Fixed the Points editing root cause: numeric React state combined with `Number(e.target.value)` converted an empty value to `0`, blocking normal clear-and-retype input.
+  - TaskForm now keeps raw string points state, initially and after successful reset as `"1"`; temporary empty input is allowed, digit-only input is parsed only after validation, and the existing payload still sends numeric `points`.
+  - Client validation requires a safe integer at least `1` via `Number.isSafeInteger`; invalid submit shows `Баллы должны быть целым числом не меньше 1.`, does not call `onSave`, and preserves every field after API failure.
+  - POST and PATCH now share the strict points contract: JSON number only, finite safe integer, and at least `1`. Numeric strings, zero, negatives, decimals, unsafe integers, null, arrays, objects, and booleans are rejected; omitted PATCH points remain unchanged.
+  - No-write browser verification passed: Backspace left `1` empty without producing `0`, replacement typing worked without Ctrl+A, empty and `0` submit showed the exact error without creating a task or resetting the form, entering `7` cleared the error, and normal keyboard replacement from `7` to `12` worked. No successful create request, task creation, Supabase data change, or cleanup occurred.
+  - `Promise<boolean>`, failure preservation, successful reset, title alert, optional text fields, task types, labels, layout, selection, editor behavior, images, Preview, and publication/deletion guards remain unchanged.
 
 Next sprint:
 
-- Sprint 12.18.32 - Task Creation Validation and UX Review Planning.
+- Sprint 12.18.34 - Points Validation Controlled Write Verification Planning.
 
 ## Stack
 

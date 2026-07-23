@@ -63,7 +63,7 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
     typeof body.description === "string" ? body.description.trim() : "";
   const answer = typeof body.answer === "string" ? body.answer.trim() : "";
   const hint = typeof body.hint === "string" ? body.hint.trim() : "";
-  const points = Number(body.points);
+  const points = body.points;
 
   if (!title) {
     return {
@@ -71,9 +71,14 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
     };
   }
 
-  if (!Number.isFinite(points) || points < 0) {
+  if (
+    typeof points !== "number" ||
+    !Number.isFinite(points) ||
+    !Number.isSafeInteger(points) ||
+    points < 1
+  ) {
     return {
-      error: "Points must be a non-negative number.",
+      error: "Points must be a positive integer.",
     };
   }
 
