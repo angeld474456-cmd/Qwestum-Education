@@ -12,7 +12,7 @@ interface TaskFormProps {
     hint: string;
     points: number;
     taskType: TaskType;
-  }) => Promise<void>;
+  }) => Promise<boolean>;
 }
 
 export default function TaskForm({ onSave }: TaskFormProps) {
@@ -29,7 +29,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
       return;
     }
 
-    await onSave({
+    const created = await onSave({
       title,
       description,
       answer,
@@ -37,6 +37,8 @@ export default function TaskForm({ onSave }: TaskFormProps) {
       points,
       taskType,
     });
+
+    if (!created) return;
 
     setTitle("");
     setDescription("");

@@ -577,6 +577,13 @@ Decisions after audit:
 - Recent fixes remained unchanged: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
 - No route/API, schema/migration/RLS/policy/index, task content/type, create/save/autosave, Storage, runtime/student, publication safety, or deletion-guard change was included in Sprint 12.18.28.
 - Next safe step is planning Teacher Task Workspace remaining UX prioritization.
+- Sprint 12.18.30 preserves task-creation form state after a handled creation failure.
+- The previous defect was that `TaskForm` reset after `onSave` resolved while `QuestTasksClient` handled create errors internally and resolved normally, which could erase a teacher's unsaved task draft.
+- The create callback contract is now `Promise<boolean>`: `false` is returned for busy, session-expired, non-OK, malformed-response, and caught network/error paths; `true` is returned only after a valid created task is added to state and selected.
+- `TaskForm` resets only after `true` and preserves title, description, correct answer, hint, task type, and points after `false`; endpoint, payload, error display, loading behavior, and successful reset behavior remain unchanged.
+- Manual Offline browser verification passed: all TaskForm fields were filled with test values, Chrome DevTools Network mode was set to Offline, and Add task was clicked. The request failed before reaching the server, `Не удалось создать задание.` displayed, no task or Supabase write occurred, every entered field remained, Network mode returned to No throttling, and create was not retried.
+- The responsive workspace, visible labels, pencil/delete/card behavior, points and correct-answer persistence, image controls, Preview, and last-Public-task guard remain unchanged.
+- Next safe step is planning a disposable successful-create regression verification; no live write is approved until explicitly authorized.
 
 Schema mismatch risks:
 

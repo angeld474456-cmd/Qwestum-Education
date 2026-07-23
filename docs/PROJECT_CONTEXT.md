@@ -543,9 +543,18 @@ Completed Sprint 12 work:
   - Recent fixes remained intact: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
   - Unchanged scope: no route/API changes, schema/migration/RLS/policy/index changes, task content/type changes, create/save/autosave changes, Storage changes, runtime/student changes, publication safety changes, or deletion-guard changes.
 
+- Sprint 12.18.30 - Task Creation Failure State Preservation.
+  - Fixed a task-creation data-loss defect: `TaskForm` reset after `onSave` resolved even when `QuestTasksClient` had handled a failed create internally.
+  - `TaskForm.onSave` and `handleCreateTask` now use `Promise<boolean>` without changing the create endpoint or payload.
+  - `handleCreateTask` returns `false` when busy, on session expiry, non-OK or malformed responses, and caught network/error paths; it returns `true` only after a valid created task is added to state and selected.
+  - `TaskForm` resets only on `true`; on failure it preserves title, description, correct answer, hint, task type, and points.
+  - Manual Offline browser verification passed: all TaskForm fields were filled with test values, Chrome DevTools Network mode was set to Offline, and Add task was clicked. The request did not reach the server, `Не удалось создать задание.` appeared, no task was created and no Supabase write occurred, every entered field remained, Network mode returned to No throttling, and create was not retried.
+  - Successful reset behavior, error display, loading behavior, responsive workspace, visible labels, pencil/delete/card behavior, points and correct-answer persistence, image controls, Preview, and the last-Public-task guard remain unchanged.
+  - No route/API, schema/migration/RLS/policy/index, task content/type, editor save/autosave, Storage, runtime/student, publication safety, or deletion-guard change was included.
+
 Next sprint:
 
-- Sprint 12.18.29 - Teacher Task Workspace Remaining UX Prioritization.
+- Sprint 12.18.31 - Task Creation Success Regression Verification Planning.
 
 ## Stack
 

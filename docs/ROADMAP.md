@@ -470,6 +470,22 @@ Next:
   - Prioritize only launch-relevant improvements and avoid redesigning stable workspace behavior.
   - Planning only until architecture approval.
 
+- Sprint 12.18.30 - Task Creation Failure State Preservation.
+  - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.
+  - The callback contract is now `Promise<boolean>` with the existing create endpoint and payload unchanged.
+  - `handleCreateTask` returns `false` for busy, session-expired, non-OK, malformed-response, and caught network/error paths, and returns `true` only after a valid created task is added to state and selected.
+  - `TaskForm` resets only on `true`; failed creation preserves title, description, correct answer, hint, task type, and points.
+  - Manual Offline browser verification passed: all TaskForm fields were filled with test values, Chrome DevTools Network mode was set to Offline, and Add task was clicked. The request did not reach the server, `Не удалось создать задание.` displayed, no task or live write occurred, all entered fields remained, Network mode was restored, and creation was not retried.
+  - Successful reset, error display, loading, responsive layout, labels, task-card actions, points/correct-answer persistence, image controls, Preview, and the last-Public-task guard remain unchanged.
+  - No route/API, schema/migration/RLS/policy/index, task content/type, editor save/autosave, Storage, runtime/student, publication safety, or deletion-guard change was included.
+
+Next:
+
+- Sprint 12.18.31 - Task Creation Success Regression Verification Planning.
+  - Planning only until explicit architecture approval and live-write authorization.
+  - Determine the safest existing owned disposable Draft target, verify successful creation resets all form fields, verify the new task appears and becomes selected, verify type and points persist, and plan exact cleanup.
+  - Do not use a Public quest or perform a live write until explicitly approved.
+
 ## Suggested Future Milestones
 
 - Add more task types through the existing registry pattern.

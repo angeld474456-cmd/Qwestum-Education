@@ -6,40 +6,38 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan remaining teacher task workspace UX prioritization after responsive layout and label fixes.
+Plan the safest successful task-creation regression verification after failure-state preservation.
 
 ## Next Task
 
-Sprint 12.18.29 - Teacher Task Workspace Remaining UX Prioritization.
+Sprint 12.18.31 - Task Creation Success Regression Verification Planning.
 
-Planning only. Do not implement until architecture is approved.
+Planning only. Do not implement or perform a live write until architecture approval and explicit write authorization.
 
 Current state:
 
-- Sprint 12.18.28 implemented the approved responsive layout and TaskForm label fixes in `QuestTasksClient` and `TaskForm` only.
-- The task workspace now uses `grid-cols-1 xl:grid-cols-12`; the task list uses `xl:col-span-4`, the editor uses `xl:col-span-8`, narrow screens stack list above editor, and large screens retain the two-column layout.
-- `TaskForm` now has visible semantic labels for `Название задания`, `Описание`, `Правильный ответ`, `Подсказка`, `Тип задания`, and `Баллы`.
-- Labels use matching `htmlFor`/`id` associations for `task-title`, `task-description`, `task-answer`, `task-hint`, `task-type`, and `task-points`.
-- Placeholders, values, handlers, validation, alert behavior, loading behavior, payload, default points, create/save behavior, task data shapes, and task types remain unchanged.
-- Manual responsive browser verification passed without creating or saving a task: wide screens retained two columns, narrow screens stacked list above editor, no horizontal scrolling or clipped controls appeared, all six labels appeared, and label associations worked.
-- Recent fixes remain unchanged: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
-- Static ids remain acceptable because only one `TaskForm` renders; future unique-id work remains deferred until multiple simultaneous forms exist.
+- Sprint 12.18.30 fixed the create-form failure data-loss path in `QuestTasksClient` and `TaskForm` only.
+- `TaskForm.onSave` now returns `Promise<boolean>` without changing the create payload.
+- `handleCreateTask` returns `false` when busy, on session expiry, non-OK or malformed responses, and caught network/error paths; it returns `true` only after a valid created task is added and selected.
+- `TaskForm` resets only on `true` and preserves title, description, correct answer, hint, task type, and points on `false`.
+- Manual Offline verification passed: the request did not reach the server, `Не удалось создать задание.` displayed, no task or Supabase write occurred, all entered values remained, Network mode was restored, and the create action was not retried.
+- Existing successful reset, error display, loading behavior, responsive layout, visible labels, pencil/delete/card behavior, points/correct-answer persistence, image controls, Preview, and last-Public-task guard remain unchanged.
 
 Planning topics:
 
-- Reassess remaining P2 findings.
-- Review clickable task-card semantic keyboard behavior.
-- Review selected-card state beyond color alone.
-- Review unsaved-change indication.
-- Review required-field clarity and inline validation.
-- Prioritize only launch-relevant improvements.
-- Avoid redesigning stable workspace behavior.
-- Identify exact files likely to change if follow-up implementation is approved.
+- Determine the safest disposable successful-create verification.
+- Verify successful creation still resets all TaskForm fields.
+- Verify the new task appears and becomes selected.
+- Verify submitted type and points persist.
+- Plan exact cleanup.
+- Use only existing owned disposable Draft test data.
+- Avoid Public quests.
+- No live write until explicit approval.
 - No implementation until architecture approval.
 
 Out of scope:
 
-- Implementation before architecture approval.
+- Implementation before architecture approval or explicit live-write authorization.
 - Route changes.
 - API changes.
 - Schema or migration changes.

@@ -513,6 +513,15 @@
   - Recent fixes remained unchanged: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
   - Unchanged scope: no route/API, schema/migration/RLS/policy/index, task content/type, create/save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
 
+- Sprint 12.18.30 - Task Creation Failure State Preservation.
+  - Fixed the data-loss path where `TaskForm` reset after `onSave` resolved despite `QuestTasksClient` handling a failed creation internally.
+  - The create callback now returns `Promise<boolean>` while retaining the existing endpoint and payload.
+  - `false` covers busy, session-expired, non-OK, malformed-response, and caught network/error paths; `true` is returned only after valid task state insertion and selection.
+  - The form resets only on success and preserves title, description, correct answer, hint, task type, and points after failure.
+  - Offline browser verification passed: all TaskForm fields were filled with test values, Chrome DevTools Network mode was set to Offline, and Add task was clicked. The request never reached the server, `Не удалось создать задание.` appeared, no task or live write occurred, all entered values remained, Network mode was restored, and creation was not retried.
+  - Successful reset, error display, loading behavior, workspace responsiveness, labels, task-card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task protection remain unchanged.
+  - No route/API, schema/migration/RLS/policy/index, task content/type, editor save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

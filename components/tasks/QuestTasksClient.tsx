@@ -89,8 +89,8 @@ export default function QuestTasksClient({
     hint: string;
     points: number;
     taskType: string;
-  }) {
-    if (busy) return;
+  }): Promise<boolean> {
+    if (busy) return false;
 
     setBusy(true);
     setErrorMessage("");
@@ -114,22 +114,24 @@ export default function QuestTasksClient({
       if (isSessionExpiredResponse(response)) {
         setErrorMessage(SESSION_EXPIRED_MESSAGE);
         redirectToSessionExpiredLogin();
-        return;
+        return false;
       }
 
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.task) {
         setErrorMessage(result.error ?? "Не удалось создать задание.");
-        return;
+        return false;
       }
 
       const nextTasks = [...tasks, result.task];
       setTasks(nextTasks);
       setSelectedTask(result.task);
+      return true;
     } catch (error) {
       console.error(error);
       setErrorMessage("Не удалось создать задание.");
+      return false;
     } finally {
       setBusy(false);
     }
