@@ -38,7 +38,7 @@ export default function ImageUploader({
       {imageUrl ? (
         <Image
           src={imageUrl}
-          alt="Task"
+          alt="Изображение задания"
           width={1200}
           height={675}
           unoptimized
@@ -56,6 +56,7 @@ export default function ImageUploader({
         onChange={handleChange}
         disabled={disabled}
         className="mt-6 block w-full text-sm"
+        aria-label="Загрузить изображение задания"
       />
 
       {imageUrl && onRemove ? (
@@ -64,8 +65,9 @@ export default function ImageUploader({
           onClick={onRemove}
           disabled={disabled}
           className="mt-4 rounded-xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Удалить изображение"
         >
-          Remove image
+          Удалить изображение
         </button>
       ) : null}
 

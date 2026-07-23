@@ -12,6 +12,7 @@ interface TaskEditorProps {
     id: string,
     title: string,
     description: string,
+    points: number,
     content?: TaskContent | null
   ) => Promise<void>;
 

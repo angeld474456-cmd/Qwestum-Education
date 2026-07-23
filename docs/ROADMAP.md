@@ -406,13 +406,34 @@ Completed:
   - No save or cover write was performed during verification, and no live data changed.
   - Deferred localization scope includes `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, broader client/server error consistency, and student/runtime copy outside the teacher-only workflow.
 
+- Sprint 12.18.20 - Task Editor Copy Localization.
+  - Localized teacher task-editor copy in `QuestTasksClient`, `TaskForm`, `TaskCard`, `TextTaskEditor`, `SingleChoiceTaskEditor`, and `ImageUploader`.
+  - Task type display mapping is `text` -> `Текстовое задание` and `single_choice` -> `Выбор одного ответа`; unknown future task types fall back to the raw identifier.
+  - Stored task type values, TypeScript unions, registry keys, payloads, API contracts, routes, endpoints, CRUD behavior, autosave, `TaskTypeRegistry` behavior, owner safety, publication safety, last-public-task deletion protection, image behavior, runtime/student copy, schema, migrations, RLS, policies, and indexes remain unchanged.
+  - `QuestTasksClient` localized shell actions, refresh action, client-only fallback errors, success alerts, browser confirms, and image fallback messages while preserving server API JSON error contracts, HTTP status handling, `SESSION_EXPIRED_MESSAGE`, Supabase/internal technical errors, Storage passthrough errors, and returned `result.error` behavior.
+  - `TaskForm` now has a visible `Тип задания` label; submitted task type values remain `text` and `single_choice`.
+  - `TaskCard`, `TextTaskEditor`, `SingleChoiceTaskEditor`, and `ImageUploader` now use Russian teacher-visible copy and accessibility labels while preserving handlers, layout, option structure, payloads, validation, and upload/remove mechanics.
+  - Correct-answer radio selection now preserves the existing checked/onChange logic and adds `value={option.id}` plus `onClick={() => setCorrectOptionId(option.id)}`; both handlers set the same option id, no double-toggle risk was found, and existing saved tasks using `{ options: { id: string; text: string }[], correctOptionId: string }` remain compatible.
+  - Browser verification confirmed correct-answer selection works, validation disappears, Save becomes enabled, and Preview reflects the selected answer; Save was not clicked and no live write occurred.
+  - Points bug diagnosis: `TextTaskEditor` and `SingleChoiceTaskEditor` previously rendered Points as `value={task.points}` with `readOnly`, had no local editable points state, and the update callback/PATCH flow did not persist points. The bug existed before Sprint 12.18.20 and was not caused by localization.
+  - Editable Points support now uses local string state initialized from `String(task.points)`, editable number inputs with `type="number"`, `min={1}`, and `step={1}`, temporary empty values while typing, and no forced fallback to `1`.
+  - Points validation requires a non-empty finite integer at least `1`; decimals are rejected with `Баллы должны быть целым числом не меньше 1.`
+  - Editor saves now pass numeric `points`; `TaskEditor` callback typing was minimally extended; `QuestTasksClient` includes `points` in the existing PATCH body while preserving title, description, and content behavior.
+  - The task PATCH route supports optional `points`; validation runs only when supplied, invalid values return HTTP 400 in the existing route style, `points` is added to the update object only when supplied, and older requests omitting `points` remain compatible.
+  - No migration or live-data repair was required.
+  - `TaskList.tsx` was inspected and required no code changes.
+  - Manual browser verification passed on the canonical dashboard task route for Text and Single Choice localization, visible task type label, hidden raw identifiers for known task types, correct-answer radio selection, validation disappearance, Save enablement, Preview synchronization, and editable Points no-write behavior.
+  - Text and Single Choice Points can be changed locally, empty intermediate values remain empty, decimals and zero are rejected, valid positive integers are accepted, Save state updates correctly, and changing Single Choice Points does not reset the selected correct answer.
+  - Save was not clicked; no PATCH write occurred; no live write occurred; no task, image, or live data was created, edited, deleted, uploaded, removed, or saved.
+  - Deferred scope includes runtime/student-facing localization, broader client/server error consistency, i18n/shared constants, and task CRUD/autosave refactors.
+
 Next:
 
-- Sprint 12.18.19 - Task Editor Copy Localization Planning.
-  - Plan localization for `QuestTasksClient`, task editor child components, media uploader, and related task-editor client fallback copy.
-  - Identify strings that must remain stable because they are API contracts.
-  - Inspect encoding and mojibake risks before implementation.
-  - Planning only until architecture approval.
+- Sprint 12.18.21 - Task Editor Write Verification Planning.
+  - Plan one disposable owned draft quest/task write-test scenario.
+  - Plan temporary Text and Single Choice task creation, Text task points persistence, Single Choice points and correct-answer persistence, save/refresh checks, optional image upload/remove only with explicit approval, deletion cleanup, and exact final cleanup/rollback sequence.
+  - Avoid testing last Public task deletion.
+  - No live writes until explicit approval.
 
 ## Suggested Future Milestones
 

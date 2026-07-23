@@ -4,7 +4,7 @@ import { useState } from "react";
 import ImageUploader from "@/components/media/ImageUploader";
 import TaskPreview from "@/components/tasks/preview/TaskPreview";
 import { QuestTask } from "@/services/quest.service";
-import { TextTaskEditorProps } from "./TextTaskEditor";
+import { getTaskTypeLabel, TextTaskEditorProps } from "./TextTaskEditor";
 
 interface SingleChoiceOption {
   id: string;
@@ -69,6 +69,7 @@ export default function SingleChoiceTaskEditor({
 
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
+  const [points, setPoints] = useState(String(task.points));
   const [options, setOptions] = useState<SingleChoiceOption[]>(
     initialContent.options
   );
@@ -78,11 +79,21 @@ export default function SingleChoiceTaskEditor({
   const hasCorrectOption = options.some(
     (option) => option.id === correctOptionId
   );
+  const normalizedPoints = points.trim();
+  const parsedPoints = Number(normalizedPoints);
+  const isPointsValid =
+    normalizedPoints !== "" &&
+    Number.isFinite(parsedPoints) &&
+    Number.isInteger(parsedPoints) &&
+    parsedPoints >= 1;
   const validationMessages = [
     options.length < 2 ? "Добавьте минимум два варианта ответа." : null,
     !hasCorrectOption ? "Выберите один правильный ответ." : null,
     options.some((option) => !option.text.trim())
       ? "Заполните текст каждого варианта ответа."
+      : null,
+    !isPointsValid
+      ? "Баллы должны быть целым числом не меньше 1."
       : null,
   ].filter((message): message is string => Boolean(message));
   const isValid = validationMessages.length === 0;
@@ -119,7 +130,7 @@ export default function SingleChoiceTaskEditor({
 
       <div>
         <label className="mb-2 block text-slate-300">
-          Название
+          Вопрос
         </label>
 
         <input
@@ -156,8 +167,11 @@ export default function SingleChoiceTaskEditor({
               <input
                 type="radio"
                 name={`correct-option-${task.id}`}
+                value={option.id}
                 checked={correctOptionId === option.id}
                 onChange={() => setCorrectOptionId(option.id)}
+                onClick={() => setCorrectOptionId(option.id)}
+                aria-label="Правильный ответ"
               />
 
               <input
@@ -166,14 +180,16 @@ export default function SingleChoiceTaskEditor({
                   handleOptionTextChange(option.id, e.target.value)
                 }
                 className="w-full rounded-xl bg-[#1B2435] p-4"
+                aria-label="Вариант ответа"
               />
 
               <button
                 type="button"
                 onClick={() => handleRemoveOption(option.id)}
                 className="rounded-lg bg-red-600 px-4 py-3 hover:bg-red-700 transition"
+                aria-label="Удалить вариант"
               >
-                Удалить
+                Удалить вариант
               </button>
             </div>
           ))}
@@ -196,7 +212,7 @@ export default function SingleChoiceTaskEditor({
           </label>
 
           <input
-            value={task.task_type}
+            value={getTaskTypeLabel(task.task_type)}
             readOnly
             className="w-full rounded-xl bg-[#1B2435] p-4"
           />
@@ -208,9 +224,13 @@ export default function SingleChoiceTaskEditor({
           </label>
 
           <input
-            value={task.points}
-            readOnly
+            type="number"
+            min={1}
+            step={1}
+            value={points}
+            onChange={(e) => setPoints(e.target.value)}
             className="w-full rounded-xl bg-[#1B2435] p-4"
+            aria-label="Баллы"
           />
         </div>
 
@@ -248,7 +268,7 @@ export default function SingleChoiceTaskEditor({
         <button
           disabled={!isValid}
           onClick={() =>
-            onSave(task.id, title, description, {
+            onSave(task.id, title, description, parsedPoints, {
               options,
               correctOptionId,
             })

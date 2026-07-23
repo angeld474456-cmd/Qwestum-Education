@@ -68,7 +68,7 @@ export default function QuestTasksClient({
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.tasks) {
-        setErrorMessage(result.error ?? "Unable to load tasks.");
+        setErrorMessage(result.error ?? "Не удалось загрузить задания.");
         return;
       }
 
@@ -76,7 +76,7 @@ export default function QuestTasksClient({
       syncSelectedTask(result.tasks);
     } catch (error) {
       console.error(error);
-      setErrorMessage("Unable to load tasks.");
+      setErrorMessage("Не удалось загрузить задания.");
     } finally {
       setLoading(false);
     }
@@ -120,7 +120,7 @@ export default function QuestTasksClient({
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.task) {
-        setErrorMessage(result.error ?? "Unable to create task.");
+        setErrorMessage(result.error ?? "Не удалось создать задание.");
         return;
       }
 
@@ -129,7 +129,7 @@ export default function QuestTasksClient({
       setSelectedTask(result.task);
     } catch (error) {
       console.error(error);
-      setErrorMessage("Unable to create task.");
+      setErrorMessage("Не удалось создать задание.");
     } finally {
       setBusy(false);
     }
@@ -139,6 +139,7 @@ export default function QuestTasksClient({
     id: string,
     title: string,
     description: string,
+    points: number,
     content?: TaskContent | null
   ) {
     if (busy) return;
@@ -157,6 +158,7 @@ export default function QuestTasksClient({
           body: JSON.stringify({
             title,
             description,
+            points,
             ...(content !== undefined ? { content } : {}),
           }),
         }
@@ -171,7 +173,7 @@ export default function QuestTasksClient({
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.task) {
-        setErrorMessage(result.error ?? "Unable to save task.");
+        setErrorMessage(result.error ?? "Не удалось сохранить задание.");
         return;
       }
 
@@ -184,7 +186,7 @@ export default function QuestTasksClient({
       alert("✅ Изменения сохранены");
     } catch (error) {
       console.error(error);
-      setErrorMessage("Unable to save task.");
+      setErrorMessage("Не удалось сохранить задание.");
     } finally {
       setBusy(false);
     }
@@ -204,7 +206,7 @@ export default function QuestTasksClient({
       );
 
       if (error || !imageUrl) {
-        setErrorMessage(error ?? "Unable to upload image.");
+        setErrorMessage(error ?? "Не удалось загрузить изображение.");
         return;
       }
 
@@ -230,7 +232,7 @@ export default function QuestTasksClient({
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok || !result.task) {
-        setErrorMessage(result.error ?? "Unable to save image.");
+        setErrorMessage(result.error ?? "Не удалось сохранить изображение.");
         return;
       }
 
@@ -248,7 +250,7 @@ export default function QuestTasksClient({
       }
 
       console.error(error);
-      setErrorMessage("Unable to upload image.");
+      setErrorMessage("Не удалось загрузить изображение.");
     } finally {
       setBusy(false);
     }
@@ -256,7 +258,7 @@ export default function QuestTasksClient({
 
   async function handleRemoveImage(taskId: string) {
     if (busy) return;
-    if (!confirm("Remove image from this task?")) return;
+    if (!confirm("Удалить изображение задания?")) return;
 
     setBusy(true);
     setErrorMessage("");
@@ -285,7 +287,7 @@ export default function QuestTasksClient({
       }
 
       console.error(error);
-      setErrorMessage("Unable to remove image.");
+      setErrorMessage("Не удалось удалить изображение.");
     } finally {
       setBusy(false);
     }
@@ -315,7 +317,7 @@ export default function QuestTasksClient({
       const result = (await response.json()) as TasksResponse;
 
       if (!response.ok) {
-        setErrorMessage(result.error ?? "Unable to delete task.");
+        setErrorMessage(result.error ?? "Не удалось удалить задание.");
         return;
       }
 
@@ -324,7 +326,7 @@ export default function QuestTasksClient({
       syncSelectedTask(nextTasks);
     } catch (error) {
       console.error(error);
-      setErrorMessage("Unable to delete task.");
+      setErrorMessage("Не удалось удалить задание.");
     } finally {
       setBusy(false);
     }
@@ -380,7 +382,7 @@ export default function QuestTasksClient({
               disabled={loading || busy}
               className="mt-4 rounded-xl bg-slate-700 px-5 py-3 text-sm font-semibold hover:bg-slate-600 disabled:opacity-50"
             >
-              Refresh tasks
+              Обновить список
             </button>
           </div>
 

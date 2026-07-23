@@ -85,14 +85,22 @@ export default function TaskForm({ onSave }: TaskFormProps) {
 
       <div className="grid grid-cols-2 gap-4 mt-4">
 
-        <select
-          value={taskType}
-          onChange={(e)=>setTaskType(e.target.value as TaskType)}
-          className="rounded-xl bg-[#1B2435] p-4"
-        >
-          <option value="text">Text</option>
-          <option value="single_choice">Single choice</option>
-        </select>
+        <div>
+          <label htmlFor="task-type" className="mb-2 block text-slate-300">
+            Тип задания
+          </label>
+
+          <select
+            id="task-type"
+            value={taskType}
+            onChange={(e)=>setTaskType(e.target.value as TaskType)}
+            className="w-full rounded-xl bg-[#1B2435] p-4"
+            aria-label="Тип задания"
+          >
+            <option value="text">Текстовое задание</option>
+            <option value="single_choice">Выбор одного ответа</option>
+          </select>
+        </div>
 
         <input
           type="number"
@@ -100,6 +108,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
           min={1}
           onChange={(e)=>setPoints(Number(e.target.value))}
           className="rounded-xl bg-[#1B2435] p-4"
+          aria-label="Баллы"
         />
 
       </div>

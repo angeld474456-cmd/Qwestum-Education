@@ -450,6 +450,30 @@
   - No save, cover upload, cover replace, cover removal, or other live data write occurred during verification.
   - Deferred localization scope includes `QuestTasksClient`, task form/card/editor children, `ImageUploader`, runtime components, broader client/server error consistency, and student/runtime copy outside the teacher-only workflow.
 
+- Sprint 12.18.20 - Task Editor Copy Localization.
+  - Localized teacher task-editor copy in `QuestTasksClient`, `TaskForm`, `TaskCard`, `TextTaskEditor`, `SingleChoiceTaskEditor`, and `ImageUploader`.
+  - Task type display mapping is `text` -> `Текстовое задание` and `single_choice` -> `Выбор одного ответа`; unknown future task types fall back to the raw identifier.
+  - Stored values, TypeScript unions, registry keys, payloads, API contracts, routes, endpoints, CRUD behavior, autosave, `TaskTypeRegistry` behavior, owner safety, publication safety, last-public-task deletion protection, image behavior, runtime/student copy, schema, migrations, RLS, policies, and indexes remain unchanged.
+  - `QuestTasksClient` localized shell actions, refresh action, client-only fallback errors, success alerts, browser confirms, and image fallback messages while preserving returned `result.error`, `SESSION_EXPIRED_MESSAGE`, server API JSON error contracts, HTTP status handling, Supabase/internal technical errors, and Storage passthrough errors.
+  - `TaskForm` now has a visible `Тип задания` label, Russian task type display names, `Баллы`, and Russian create/validation copy; submitted values remain `text` and `single_choice`.
+  - `TaskCard` uses Russian task type labels plus Russian edit/delete aria-labels with unchanged handlers and layout.
+  - `TextTaskEditor` now uses `Текстовое задание`, `Текст задания`, `Баллы`, `Сохранить`, and Russian local validation/fallback/success copy.
+  - `SingleChoiceTaskEditor` now uses `Выбор одного ответа`, `Вопрос`, `Вариант ответа`, `Добавить вариант`, `Удалить вариант`, `Правильный ответ`, `Баллы`, and `Сохранить` while preserving option structure, payload, validation, and correct-answer logic.
+  - `ImageUploader` now uses `Изображение задания`, `Удалить изображение`, and Russian teacher-visible upload/remove/empty/accessibility copy while preserving upload/remove mechanics and Storage passthrough behavior.
+  - Correct-answer radio selection now preserves `checked={correctOptionId === option.id}` and `onChange={() => setCorrectOptionId(option.id)}` while adding `value={option.id}` and defensive `onClick={() => setCorrectOptionId(option.id)}`. Both handlers set the same `option.id`; no double-toggle risk was found.
+  - The radio issue was browser-observed as visible radios that did not reliably update `correctOptionId`; browser verification confirmed selection works, validation disappears, Save becomes enabled, and Preview reflects the selected answer.
+  - Points bug diagnosis: `TextTaskEditor` and `SingleChoiceTaskEditor` previously rendered Points as `value={task.points}` with `readOnly`, had no local editable points state, and the task update callback/PATCH flow did not persist points. The bug existed before Sprint 12.18.20 and was not caused by localization.
+  - Editable Points support now uses local string state initialized from `String(task.points)`, editable number inputs with `type="number"`, `min={1}`, and `step={1}`, temporary empty values while typing, and no forced fallback to `1`.
+  - Points validation requires a non-empty finite integer at least `1`; decimal values are rejected with `Баллы должны быть целым числом не меньше 1.`
+  - Editor saves now pass numeric `points`; `TaskEditor` callback typing was minimally extended; `QuestTasksClient` includes `points` in the existing PATCH body while preserving title, description, and content behavior.
+  - The task PATCH route supports optional `points`; validation runs only when supplied, invalid values return HTTP 400 in the existing route style, `points` is added to the Supabase update object only when supplied, and older requests omitting `points` remain compatible. Authentication, ownership, task-parent scoping, safe 404, response shape, and error handling remain unchanged.
+  - Existing saved single-choice tasks using `{ options: { id: string; text: string }[], correctOptionId: string }` remain compatible; no data migration or live-data repair was required.
+  - `TaskList.tsx` was inspected and required no code changes.
+  - Manual browser verification passed on the canonical dashboard task route for Text task localization, Single Choice localization, visible task type label, hidden raw identifiers for known task types, correct-answer radio selection, validation disappearance, Save enablement, Preview synchronization, and editable Points no-write behavior.
+  - Text and Single Choice Points can be changed locally, empty intermediate values remain empty, decimals and zero are rejected, valid positive integers are accepted, Save state updates correctly, and changing Single Choice Points does not reset the selected correct answer.
+  - Save was not clicked, no PATCH write occurred, no live write occurred, and no task, image, or live data was created, edited, deleted, uploaded, removed, or saved.
+  - Deferred scope includes runtime/student-facing localization, broader client/server error consistency, i18n/shared constants, and task CRUD/autosave refactors.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

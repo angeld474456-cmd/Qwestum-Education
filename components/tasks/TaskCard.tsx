@@ -1,6 +1,7 @@
 "use client";
 
 import { QuestTask } from "@/services/quest.service";
+import { getTaskTypeLabel } from "@/components/tasks/editor/TextTaskEditor";
 
 interface TaskCardProps {
   index: number;
@@ -31,7 +32,7 @@ export default function TaskCard({
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-300">
 
             <span>
-              📝 Тип: {task.task_type}
+              Тип: {getTaskTypeLabel(task.task_type)}
             </span>
 
             <span>
@@ -47,6 +48,7 @@ export default function TaskCard({
           <button
             className="rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700 transition"
             disabled
+            aria-label="Редактировать задание"
           >
             ✏️
           </button>
@@ -54,6 +56,7 @@ export default function TaskCard({
           <button
             onClick={() => onDelete(task.id)}
             className="rounded-lg bg-red-600 px-4 py-2 hover:bg-red-700 transition"
+            aria-label="Удалить задание"
           >
             🗑
           </button>

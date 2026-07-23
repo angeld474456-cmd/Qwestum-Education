@@ -19,6 +19,7 @@ type RouteContext = {
 type UpdateTaskPayload = {
   title?: unknown;
   description?: unknown;
+  points?: unknown;
   content?: unknown;
   image_url?: unknown;
 };
@@ -87,6 +88,18 @@ function parseUpdateTaskPayload(body: UpdateTaskPayload) {
     }
 
     updates.description = body.description.trim();
+  }
+
+  if ("points" in body) {
+    const points = Number(body.points);
+
+    if (!Number.isFinite(points) || !Number.isInteger(points) || points < 1) {
+      return {
+        error: "Points must be a positive integer.",
+      };
+    }
+
+    updates.points = points;
   }
 
   if ("content" in body) {

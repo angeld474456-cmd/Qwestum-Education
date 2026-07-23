@@ -11,6 +11,7 @@ export interface TextTaskEditorProps {
     id: string,
     title: string,
     description: string,
+    points: number,
     content?: TaskContent | null
   ) => Promise<void>;
   onUploadImage: (
@@ -18,6 +19,12 @@ export interface TextTaskEditorProps {
     file: File
   ) => Promise<void>;
   onRemoveImage: (taskId: string) => Promise<void>;
+}
+
+export function getTaskTypeLabel(taskType: string) {
+  if (taskType === "text") return "Текстовое задание";
+  if (taskType === "single_choice") return "Выбор одного ответа";
+  return taskType;
 }
 
 export default function TextTaskEditor({
@@ -28,9 +35,20 @@ export default function TextTaskEditor({
 }: TextTaskEditorProps) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
+  const [points, setPoints] = useState(String(task.points));
+  const normalizedPoints = points.trim();
+  const parsedPoints = Number(normalizedPoints);
+  const isPointsValid =
+    normalizedPoints !== "" &&
+    Number.isFinite(parsedPoints) &&
+    Number.isInteger(parsedPoints) &&
+    parsedPoints >= 1;
   const validationMessages = [
     !title.trim() ? "Введите название задания." : null,
     !description.trim() ? "Введите описание задания." : null,
+    !isPointsValid
+      ? "Баллы должны быть целым числом не меньше 1."
+      : null,
   ].filter((message): message is string => Boolean(message));
   const isValid = validationMessages.length === 0;
 
@@ -51,7 +69,7 @@ export default function TextTaskEditor({
 
       <div>
         <label className="mb-2 block text-slate-300">
-          Описание
+          Текст задания
         </label>
 
         <textarea
@@ -70,7 +88,7 @@ export default function TextTaskEditor({
           </label>
 
           <input
-            value={task.task_type}
+            value={getTaskTypeLabel(task.task_type)}
             readOnly
             className="w-full rounded-xl bg-[#1B2435] p-4"
           />
@@ -82,9 +100,13 @@ export default function TextTaskEditor({
           </label>
 
           <input
-            value={task.points}
-            readOnly
+            type="number"
+            min={1}
+            step={1}
+            value={points}
+            onChange={(e) => setPoints(e.target.value)}
             className="w-full rounded-xl bg-[#1B2435] p-4"
+            aria-label="Баллы"
           />
         </div>
 
@@ -119,7 +141,7 @@ export default function TextTaskEditor({
       <div className="pt-4">
         <button
           disabled={!isValid}
-          onClick={() => onSave(task.id, title, description)}
+          onClick={() => onSave(task.id, title, description, parsedPoints)}
           className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50 transition"
         >
           💾 Сохранить
