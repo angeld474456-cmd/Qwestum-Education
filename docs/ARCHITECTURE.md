@@ -567,7 +567,16 @@ Decisions after audit:
 - `TaskList`, `QuestTasksClient`, owner-safe DELETE API behavior, confirmation text, last-Public-task deletion guard, error handling, list refresh, and `syncSelectedTask` fallback remain unchanged.
 - Manual browser verification passed without confirming deletion: delete on an unselected task showed confirmation, Cancel preserved the previous selection, the unselected task did not open or become selected, pencil and card clicks remained unchanged, and no console or UI issue was reported.
 - Static `task-points` remains acceptable with the current single `TaskForm`; unique-id work remains deferred until multiple simultaneous forms exist.
-- Next safe step is planning a Teacher Task Workspace UX Review.
+- Sprint 12.18.28 implemented the approved Teacher Task Workspace responsive layout and label fixes in `QuestTasksClient` and `TaskForm` only.
+- `QuestTasksClient` now uses `grid-cols-1 xl:grid-cols-12`; the task list uses `xl:col-span-4`, the editor uses `xl:col-span-8`, narrower screens stack list above editor, and large screens retain the two-column layout.
+- No sticky/fixed positioning or state-flow changes were introduced; selection, deletion, task loading, editor rendering, and existing workspace behavior remain unchanged.
+- `TaskForm` now has visible semantic labels for `Название задания`, `Описание`, `Правильный ответ`, and `Подсказка`, while preserving the existing `Тип задания` and `Баллы` labels.
+- Labels use matching `htmlFor`/`id` associations for `task-title`, `task-description`, `task-answer`, `task-hint`, `task-type`, and `task-points`; placeholders, values, handlers, validation, alert behavior, loading behavior, payload, and default points remain unchanged.
+- Accessibility verification passed: labels remain visible while typing, labels focus their associated controls, the current single `TaskForm` has no duplicate ids, and static ids remain acceptable until multiple simultaneous forms exist.
+- Manual responsive browser verification passed with no task creation or save: wide screens retained two columns, narrow screens stacked list above editor, no horizontal scrolling or clipped controls appeared, all six labels appeared, and label associations worked.
+- Recent fixes remained unchanged: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
+- No route/API, schema/migration/RLS/policy/index, task content/type, create/save/autosave, Storage, runtime/student, publication safety, or deletion-guard change was included in Sprint 12.18.28.
+- Next safe step is planning Teacher Task Workspace remaining UX prioritization.
 
 Schema mismatch risks:
 

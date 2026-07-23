@@ -357,8 +357,8 @@ export default function QuestTasksClient({
           <TaskForm onSave={handleCreateTask} />
         </div>
 
-        <div className="mt-10 grid grid-cols-12 gap-6">
-          <div className="col-span-4">
+        <div className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-12">
+          <div className="xl:col-span-4">
             <h2 className="mb-4 text-2xl font-bold">
               Задания
             </h2>
@@ -386,7 +386,7 @@ export default function QuestTasksClient({
             </button>
           </div>
 
-          <div className="col-span-8">
+          <div className="xl:col-span-8">
             <TaskEditor
               task={selectedTask}
               onSave={handleSaveTask}

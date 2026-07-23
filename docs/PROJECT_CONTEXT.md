@@ -532,9 +532,20 @@ Completed Sprint 12 work:
   - No actual deletion was confirmed during verification, and no live data was changed.
   - Static `task-points` remains acceptable because only one `TaskForm` renders; future unique-id work remains deferred until multiple simultaneous forms exist.
 
+- Sprint 12.18.28 - Teacher Task Workspace Responsive Layout and Labels.
+  - Implemented the approved P1 UX fixes in `components/tasks/QuestTasksClient.tsx` and `components/tasks/TaskForm.tsx` only.
+  - `QuestTasksClient` now uses `grid-cols-1 xl:grid-cols-12`; the task list uses `xl:col-span-4`, the editor uses `xl:col-span-8`, narrow screens stack list above editor, and large screens retain the two-column layout.
+  - No sticky/fixed positioning or state-flow change was introduced; task selection, deletion, loading, editor rendering, and existing behavior remain unchanged.
+  - `TaskForm` now has visible semantic labels for `Название задания`, `Описание`, `Правильный ответ`, and `Подсказка`, while preserving the existing visible `Тип задания` and `Баллы` labels.
+  - Labels are associated with `task-title`, `task-description`, `task-answer`, `task-hint`, `task-type`, and `task-points`; placeholders, values, handlers, validation, alert behavior, loading behavior, payload, and default points remain unchanged.
+  - Accessibility verification passed: labels remain visible while typing, labels focus their associated controls, and the current single `TaskForm` has no duplicate ids. Static ids remain acceptable for the current single-form rendering.
+  - Manual responsive browser verification passed: wide screens kept list/editor side by side, narrow screens stacked list above editor, no horizontal scrolling or clipped controls appeared, all six visible labels appeared, label associations worked, and no task was created or saved.
+  - Recent fixes remained intact: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
+  - Unchanged scope: no route/API changes, schema/migration/RLS/policy/index changes, task content/type changes, create/save/autosave changes, Storage changes, runtime/student changes, publication safety changes, or deletion-guard changes.
+
 Next sprint:
 
-- Sprint 12.18.27 - Teacher Task Workspace UX Review Planning.
+- Sprint 12.18.29 - Teacher Task Workspace Remaining UX Prioritization.
 
 ## Stack
 

@@ -502,6 +502,17 @@
   - Static `task-points` remains acceptable because only one `TaskForm` renders; future unique-id work remains deferred until multiple simultaneous forms exist.
   - Unchanged scope: no route/API, schema/migration/RLS/policy/index, task content/type, save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
 
+- Sprint 12.18.28 - Teacher Task Workspace Responsive Layout and Labels.
+  - Updated only `components/tasks/QuestTasksClient.tsx` and `components/tasks/TaskForm.tsx`.
+  - `QuestTasksClient` now uses `grid-cols-1 xl:grid-cols-12`; the task list uses `xl:col-span-4`, the editor uses `xl:col-span-8`, narrow screens stack list above editor, and large screens retain the two-column layout.
+  - No sticky/fixed positioning or state-flow changes were introduced; task selection, deletion, loading, editor rendering, and existing workspace behavior remain unchanged.
+  - `TaskForm` now has visible semantic labels for `Название задания`, `Описание`, `Правильный ответ`, and `Подсказка`, while preserving the existing `Тип задания` and `Баллы` labels.
+  - Labels use matching `htmlFor`/`id` associations for `task-title`, `task-description`, `task-answer`, `task-hint`, `task-type`, and `task-points`; placeholders, values, handlers, validation, alert behavior, loading behavior, payload, and default points remain unchanged.
+  - Accessibility verification passed: labels remain visible while typing, labels focus their associated controls, the current single `TaskForm` has no duplicate ids, and static ids remain acceptable for current rendering.
+  - Manual responsive browser verification passed without creating or saving a task: wide screens kept list/editor side by side, narrow screens stacked list above editor, no horizontal scrolling or clipped controls appeared, all six visible labels appeared, label associations worked, and recent fixes remained functional.
+  - Recent fixes remained unchanged: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
+  - Unchanged scope: no route/API, schema/migration/RLS/policy/index, task content/type, create/save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

@@ -53,35 +53,63 @@ export default function TaskForm({ onSave }: TaskFormProps) {
         Новое задание
       </h2>
 
-      <input
-        className="mt-6 w-full rounded-xl bg-[#1B2435] p-4"
-        placeholder="Название задания"
-        value={title}
-        onChange={(e)=>setTitle(e.target.value)}
-      />
+      <div className="mt-6">
+        <label htmlFor="task-title" className="mb-2 block text-slate-300">
+          Название задания
+        </label>
 
-      <textarea
-        rows={4}
-        className="mt-4 w-full rounded-xl bg-[#1B2435] p-4"
-        placeholder="Описание"
-        value={description}
-        onChange={(e)=>setDescription(e.target.value)}
-      />
+        <input
+          id="task-title"
+          className="w-full rounded-xl bg-[#1B2435] p-4"
+          placeholder="Название задания"
+          value={title}
+          onChange={(e)=>setTitle(e.target.value)}
+        />
+      </div>
 
-      <input
-        className="mt-4 w-full rounded-xl bg-[#1B2435] p-4"
-        placeholder="Правильный ответ"
-        value={answer}
-        onChange={(e)=>setAnswer(e.target.value)}
-      />
+      <div className="mt-4">
+        <label htmlFor="task-description" className="mb-2 block text-slate-300">
+          Описание
+        </label>
 
-      <textarea
-        rows={2}
-        className="mt-4 w-full rounded-xl bg-[#1B2435] p-4"
-        placeholder="Подсказка"
-        value={hint}
-        onChange={(e)=>setHint(e.target.value)}
-      />
+        <textarea
+          id="task-description"
+          rows={4}
+          className="w-full rounded-xl bg-[#1B2435] p-4"
+          placeholder="Описание"
+          value={description}
+          onChange={(e)=>setDescription(e.target.value)}
+        />
+      </div>
+
+      <div className="mt-4">
+        <label htmlFor="task-answer" className="mb-2 block text-slate-300">
+          Правильный ответ
+        </label>
+
+        <input
+          id="task-answer"
+          className="w-full rounded-xl bg-[#1B2435] p-4"
+          placeholder="Правильный ответ"
+          value={answer}
+          onChange={(e)=>setAnswer(e.target.value)}
+        />
+      </div>
+
+      <div className="mt-4">
+        <label htmlFor="task-hint" className="mb-2 block text-slate-300">
+          Подсказка
+        </label>
+
+        <textarea
+          id="task-hint"
+          rows={2}
+          className="w-full rounded-xl bg-[#1B2435] p-4"
+          placeholder="Подсказка"
+          value={hint}
+          onChange={(e)=>setHint(e.target.value)}
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4 mt-4">
 
