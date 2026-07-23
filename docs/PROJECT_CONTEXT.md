@@ -552,9 +552,19 @@ Completed Sprint 12 work:
   - Successful reset behavior, error display, loading behavior, responsive workspace, visible labels, pencil/delete/card behavior, points and correct-answer persistence, image controls, Preview, and the last-Public-task guard remain unchanged.
   - No route/API, schema/migration/RLS/policy/index, task content/type, editor save/autosave, Storage, runtime/student, publication safety, or deletion-guard change was included.
 
+- Sprint 12.18.31 - Task Creation Success Regression Verification.
+  - Successful controlled verification used the owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`); it remained Draft.
+  - Created one disposable `TEMP - Sprint 12.18.31 Create Success DELETE ME` task with description `Disposable verification of successful task creation and form reset.`, correct answer `S31-CORRECT`, hint `S31-HINT`, `single_choice` type, and `7` points.
+  - Add task was clicked once with no create error. The task appeared exactly once, became selected, and opened its editor; stored type remained `single_choice` / `Выбор одного ответа` and points remained `7`.
+  - TaskForm reset only after success: title, description, correct answer, and hint became empty; type reset to `text`; points reset to `1`; button/loading returned to normal.
+  - The Single Choice editor's `Добавьте минимум два варианта ответа.` and `Выберите один правильный ответ.` validation was expected because no options were added. No editor save was performed.
+  - Cleanup verified the exact temporary task's type and points, confirmed its native delete dialog once, removed only that task, restored the baseline empty list, left no residue or unexpected error, and left the quest Draft.
+  - The create endpoint/payload, `Promise<boolean>` failure preservation, responsive workspace, labels, card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task guard remain unchanged.
+  - Deferred Sprint 12.18.32 UX finding: clearing the task-creation Points input causes `0` to appear, preventing a temporary empty editing state and requiring selection of the current value or the numeric stepper to replace it. Creation/editing remain unblocked; this is not a persistence failure. Future behavior should allow temporary empty input and validate or normalize before save, while the precise positive-integer minimum/default policy remains for planning.
+
 Next sprint:
 
-- Sprint 12.18.31 - Task Creation Success Regression Verification Planning.
+- Sprint 12.18.32 - Task Creation Validation and UX Review Planning.
 
 ## Stack
 

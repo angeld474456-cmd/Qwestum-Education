@@ -584,6 +584,14 @@ Decisions after audit:
 - Manual Offline browser verification passed: all TaskForm fields were filled with test values, Chrome DevTools Network mode was set to Offline, and Add task was clicked. The request failed before reaching the server, `Не удалось создать задание.` displayed, no task or Supabase write occurred, every entered field remained, Network mode returned to No throttling, and create was not retried.
 - The responsive workspace, visible labels, pencil/delete/card behavior, points and correct-answer persistence, image controls, Preview, and last-Public-task guard remain unchanged.
 - Next safe step is planning a disposable successful-create regression verification; no live write is approved until explicitly authorized.
+- Sprint 12.18.31 completed controlled successful-create verification in owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`), which remained Draft.
+- The unique temporary task `TEMP - Sprint 12.18.31 Create Success DELETE ME` used description `Disposable verification of successful task creation and form reset.`, correct answer `S31-CORRECT`, hint `S31-HINT`, `single_choice`, and points `7`.
+- One Add task action produced no error, inserted the task once, selected it, and opened its editor. The stored type remained `single_choice` / `Выбор одного ответа` and points remained `7`.
+- TaskForm reset only after success: title, description, correct answer, and hint were empty; type returned to `text`; points returned to `1`; button/loading returned to normal.
+- The Single Choice validation `Добавьте минимум два варианта ответа.` and `Выберите один правильный ответ.` was expected because no options were added; no editor save occurred.
+- Cleanup confirmed the exact temporary task's type and points, confirmed the native delete dialog once, removed only that task, restored the baseline empty list, left no residue or unexpected error, and preserved Draft status.
+- Endpoint/payload, failure preservation, responsive layout, labels, card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task protection remain unchanged. Next safe step is planning task-creation validation and UX review.
+- Separate from editor Points string-state behavior, the task-creation `TaskForm` Points input currently converts a cleared value to `0`; it cannot remain temporarily empty, and keyboard replacement requires selecting the current value or using the numeric stepper. This is a non-blocking UX/validation finding, not a persistence failure. Sprint 12.18.32 should plan temporary empty-state support, `0` rejection, positive-integer validation, default-value policy, and keyboard editing before any implementation.
 
 Schema mismatch risks:
 

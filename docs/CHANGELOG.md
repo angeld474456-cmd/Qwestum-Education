@@ -522,6 +522,16 @@
   - Successful reset, error display, loading behavior, workspace responsiveness, labels, task-card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task protection remain unchanged.
   - No route/API, schema/migration/RLS/policy/index, task content/type, editor save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
 
+- Sprint 12.18.31 - Task Creation Success Regression Verification.
+  - Completed controlled successful-create verification in owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`); the quest remained Draft.
+  - Created and then removed only `TEMP - Sprint 12.18.31 Create Success DELETE ME`, using description `Disposable verification of successful task creation and form reset.`, correct answer `S31-CORRECT`, hint `S31-HINT`, `single_choice`, and `7` points.
+  - The single Add task action had no error; the task appeared once, became selected, opened its editor, and preserved `single_choice` / `Выбор одного ответа` plus points `7`.
+  - TaskForm reset only after success: title, description, correct answer, and hint cleared; type returned to `text`; points returned to `1`; button/loading returned to normal.
+  - Expected Single Choice validation appeared because no options were added: `Добавьте минимум два варианта ответа.` and `Выберите один правильный ответ.` No editor save occurred.
+  - Cleanup confirmed the exact temporary task's type and points, confirmed the native dialog once, restored the baseline empty list, produced no unexpected error, and left no residue.
+  - Endpoint/payload, `Promise<boolean>` failure preservation, workspace layout, labels, card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task protection remain unchanged.
+  - Deferred task-creation UX finding for Sprint 12.18.32: clearing the Points numeric input produces `0`, preventing a temporary empty state and requiring current-value selection or the numeric stepper for replacement. This is non-blocking and does not affect persistence; temporary empty handling, `0` rejection, positive-integer validation, default behavior, and keyboard editing remain planning work.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

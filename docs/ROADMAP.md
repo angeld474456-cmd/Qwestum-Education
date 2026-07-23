@@ -481,10 +481,27 @@ Next:
 
 Next:
 
-- Sprint 12.18.31 - Task Creation Success Regression Verification Planning.
-  - Planning only until explicit architecture approval and live-write authorization.
-  - Determine the safest existing owned disposable Draft target, verify successful creation resets all form fields, verify the new task appears and becomes selected, verify type and points persist, and plan exact cleanup.
-  - Do not use a Public quest or perform a live write until explicitly approved.
+- Sprint 12.18.31 - Task Creation Success Regression Verification.
+  - Planning phase:
+    - Required explicit architecture approval and live-write authorization.
+    - Defined an owned disposable Draft target, successful form-reset and selection checks, type/points persistence checks, and exact cleanup.
+    - Excluded Public quests and live writes before approval.
+  - Verification completed:
+    - Controlled verification used owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`), which remained Draft.
+    - One `TEMP - Sprint 12.18.31 Create Success DELETE ME` task was created with description `Disposable verification of successful task creation and form reset.`, correct answer `S31-CORRECT`, hint `S31-HINT`, `single_choice`, and points `7`.
+    - Add task was clicked once without an error; the task appeared once, became selected, opened in the editor, retained `single_choice` / `Выбор одного ответа`, and retained points `7`.
+    - TaskForm reset after success: title, description, correct answer, and hint cleared; type returned to `text`; points returned to `1`; button/loading returned to normal.
+    - The Single Choice editor showed expected `Добавьте минимум два варианта ответа.` and `Выберите один правильный ответ.` validation because no options were added; no editor save was performed.
+    - Cleanup rechecked the unique task's type and points, confirmed the native dialog once, deleted only the temporary task, restored the baseline empty list, produced no unexpected error, left no residue, and preserved Draft status.
+    - Create endpoint/payload, `Promise<boolean>` failure preservation, workspace layout, labels, card actions, points/correct-answer persistence, image controls, Preview, and last-Public-task guard remain unchanged.
+
+Next:
+
+- Sprint 12.18.32 - Task Creation Validation and UX Review Planning.
+  - Planning only. Review task-creation client validation beyond title, points number/range handling, task-type-specific creation requirements, accessibility and error-message clarity, and the smallest safe improvement.
+  - Browser-observed task-creation Points finding: clearing the numeric input causes `0` to appear, so the field cannot remain temporarily empty and keyboard replacement requires selecting the current value or using the stepper. This does not block creation or editing and is not a persistence failure.
+  - Determine temporary empty-state handling, whether `0` is rejected, positive-integer validation, default-value policy, and the smallest safe keyboard-editing improvement before implementation.
+  - No implementation or live write without explicit approval.
 
 ## Suggested Future Milestones
 
