@@ -600,11 +600,18 @@ Completed Sprint 12 work:
   - The read-only technical route check used only GET and returned the expected protected task-workspace HTTP `307` redirect to `/login` without an authenticated browser session. It made no POST, PATCH, DELETE, image upload, or image-removal request and caused no live-data change; static accessibility/lifecycle checks plus lint, build, and diff checks passed. Manual no-write browser verification confirmed no initial status, no empty status space, stable layout, usable controls, visible immutable-type guidance, and intact local points validation.
   - Controlled verification in an owned Draft quest created, saved, and deleted exactly one temporary Text task. Create/save/delete messages appeared exactly, each replaced the last, no native success alert or workspace error appeared, selection remained correct, cleanup restored the original task count, the task was gone, and the quest remained Draft. No existing task was intentionally modified.
   - Image upload/removal success paths are implemented and statically reviewed, but were not live-write verified; no image upload, removal, or Storage write occurred in this sprint.
-  - Task-card interaction and keyboard limitations, primarily visual selected state, TaskForm, editors, points validation, immutable-type helper, APIs/request-response shapes, schema/migrations/RLS/Storage policies, Preview, publication, and deletion guards remain unchanged.
+  - At Sprint 12.18.40 completion, task-card interaction and keyboard limitations, primarily visual selected state, TaskForm, editors, points validation, immutable-type helper, APIs/request-response shapes, schema/migrations/RLS/Storage policies, Preview, publication, and deletion guards were otherwise unchanged; Sprint 12.18.42 supersedes the task-card selected-state portion.
+
+- Sprint 12.18.42 - Task Card Selected-State Accessibility.
+  - `TaskList` derives `isSelected` from its existing `selectedTaskId` and passes the boolean to `TaskCard`; selection ownership, task ordering, and callbacks remain unchanged.
+  - `TaskCard` now renders visible secondary `Выбрано` only for the selected task while retaining the violet ring and naturally wrapping metadata. The existing non-focusable mouse-selection wrapper remains a plain `div` with no role, `tabIndex`, or keyboard handler.
+  - The native pencil button retains `stopPropagation()` and `onSelect`, and now has the accessible name `Открыть задание «{title}»`. Only the active pencil has `aria-current="true"`; no `aria-selected`, `aria-pressed`, listbox, option, tab, or composite-widget semantics were added.
+  - Manual authenticated no-write verification confirmed keyboard Tab access, Enter and Space pencil activation, unchanged mouse selection, selected ring/text movement, readable narrow layout, wrapping metadata, and reachable actions. No Save, Create, Delete, upload, removal, POST, PATCH, DELETE, or live-data change occurred.
+  - No automatic focus, refs, or deletion-focus recovery were added. Delete confirmation/isolation, status messaging, selection synchronization, task display, TaskForm, editors, validation, immutable-type guidance, APIs, Preview, and guards remain unchanged.
 
 Next sprint:
 
-- Sprint 12.18.41 - Task Card Keyboard Accessibility Planning.
+- Sprint 12.18.43 - Deleted Task Focus Recovery Planning.
 
 ## Stack
 

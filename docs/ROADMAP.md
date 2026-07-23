@@ -573,9 +573,17 @@ Next:
 
 Next:
 
-- Sprint 12.18.41 - Task Card Keyboard Accessibility Planning.
-  - Planning only. Make task selection keyboard accessible; avoid nested interactive controls; compare dedicated select/open control with listbox-style semantics; preserve pencil/delete behavior and delete isolation; expose selected state beyond color; review `aria-current`, `aria-selected`, visible selected text, icons, focus order, narrow layout, and the smallest safe implementation.
-  - No implementation or live write without explicit approval.
+- Sprint 12.18.42 - Task Card Selected-State Accessibility.
+  - Updated only `TaskList` and `TaskCard`: `isSelected` is derived from the existing `selectedTaskId` and passed to `TaskCard`; selection ownership, callbacks, task order, and the mouse-selection wrapper remain unchanged.
+  - The selected task keeps its violet ring and shows visible secondary `Выбрано`. The native pencil still stops propagation and calls the existing `onSelect`; its accessible name is `Открыть задание «{title}»`, and only the selected pencil has `aria-current="true"`. No wrapper role/tabIndex/keyboard handler, `aria-selected`, `aria-pressed`, or composite-widget semantics were added.
+  - Manual authenticated no-write verification confirmed Tab access, Enter/Space pencil activation, unchanged mouse selection, selected-state movement, wrapping metadata, reachable actions, and usable narrow layout. No Save, Create, Delete, upload, removal, POST, PATCH, DELETE, or live-data action occurred.
+  - No focus management or deletion-focus recovery was added. Delete confirmation/isolation, status messaging, synchronization, task display, TaskForm, editors, validation, immutable-type guidance, APIs, Preview, and guards remain unchanged.
+
+Next:
+
+- Sprint 12.18.43 - Deleted Task Focus Recovery Planning.
+  - Planning only. Review focus after deletion of selected and unselected tasks; prevent focus loss when a card disappears; evaluate moving focus to next task, previous task, task-list heading, or create control; preserve selection synchronization, confirmation, and event isolation; avoid automatic editor focus; verify keyboard and screen-reader behavior; identify the smallest safe implementation.
+  - Controlled temporary-task deletion requires separate approval. No implementation or live write without explicit approval.
 
 ## Suggested Future Milestones
 

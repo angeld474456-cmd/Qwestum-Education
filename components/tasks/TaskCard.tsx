@@ -6,6 +6,7 @@ import { getTaskTypeLabel } from "@/components/tasks/editor/TextTaskEditor";
 interface TaskCardProps {
   index: number;
   task: QuestTask;
+  isSelected: boolean;
   onSelect: () => void;
   onDelete: (id: string) => void;
 }
@@ -13,6 +14,7 @@ interface TaskCardProps {
 export default function TaskCard({
   index,
   task,
+  isSelected,
   onSelect,
   onDelete,
 }: TaskCardProps) {
@@ -41,6 +43,8 @@ export default function TaskCard({
               🏆 Баллы: {task.points}
             </span>
 
+            {isSelected ? <span className="text-violet-300">Выбрано</span> : null}
+
           </div>
 
         </div>
@@ -54,7 +58,8 @@ export default function TaskCard({
               onSelect();
             }}
             className="rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700 transition"
-            aria-label="Редактировать задание"
+            aria-label={`Открыть задание «${task.title}»`}
+            aria-current={isSelected ? "true" : undefined}
           >
             ✏️
           </button>

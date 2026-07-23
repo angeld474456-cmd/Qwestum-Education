@@ -48,6 +48,7 @@ export default function TaskList({
           <TaskCard
             index={index}
             task={task}
+            isSelected={selectedTaskId === task.id}
             onSelect={() => onSelectTask(task)}
             onDelete={onDelete}
           />
