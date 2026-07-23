@@ -546,6 +546,13 @@ Decisions after audit:
 - Manual browser verification passed on the canonical dashboard task route for Text and Single Choice localization, visible task type label, hidden raw known identifiers, correct-answer radio selection, validation disappearance, Save enablement, Preview synchronization, and editable Points no-write behavior. Text and Single Choice Points can be changed locally, empty intermediate values remain empty, decimals and zero are rejected, valid positive integers are accepted, Save state updates correctly, and Single Choice Points changes do not reset the selected correct answer. Save was not clicked, no PATCH write was performed, and no live data changed.
 - Deferred localization/work includes runtime/student-facing localization, broader client/server error consistency, i18n/shared constants, and task CRUD/autosave refactors.
 - Next safe step is planning Task Editor write verification.
+- Sprint 12.18.21 completed controlled authenticated write verification for the teacher task editor using normal owner-safe UI/API flows.
+- Text task verification created `TEMP - Points persistence text`, changed points to `7`, saved, reloaded, and confirmed points, text/content, internal `text` type, and visible `Текстовое задание` display persisted. The temporary Text task was deleted successfully.
+- Single Choice verification created `TEMP - Points persistence single choice`, configured `Alpha` and `Beta`, selected `Beta` as correct, changed points to `9`, saved, reloaded, and confirmed points, options, `correctOptionId`, visible `Выбор одного ответа` display, and Preview state persisted. The temporary Single Choice task was deleted successfully.
+- Cleanup passed: both temporary tasks were removed, no temporary task rows remain, no image was uploaded, no orphaned Storage object exists, no new quest was created, no Public quest was modified, no last-public-task deletion test occurred, and original quest/tasks remained otherwise unchanged.
+- Optional task `points` PATCH support is now browser-write verified.
+- Non-blocking UX issues remain: `TaskForm` has a Points input with an aria-label but no visible `Баллы` label; `TaskCard` has a visible pencil button that does not independently open the editor even though card click selection works.
+- Next safe step is planning Task Creation and Card Action UX polish.
 
 Schema mismatch risks:
 

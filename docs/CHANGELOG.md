@@ -474,6 +474,15 @@
   - Save was not clicked, no PATCH write occurred, no live write occurred, and no task, image, or live data was created, edited, deleted, uploaded, removed, or saved.
   - Deferred scope includes runtime/student-facing localization, broader client/server error consistency, i18n/shared constants, and task CRUD/autosave refactors.
 
+- Sprint 12.18.21 - Controlled Task Editor Write Verification.
+  - Manual authenticated browser write verification passed through normal owner-safe teacher UI/API flows.
+  - Text task flow: temporary task `TEMP - Points persistence text` was created, points were changed to `7`, the task was saved, the page was refreshed/reloaded, points `7` persisted, text/content persisted, internal type remained `text`, visible type remained `Текстовое задание`, and the temporary Text task was deleted successfully.
+  - Single Choice flow: temporary task `TEMP - Points persistence single choice` was created, options `Alpha` and `Beta` were saved, `Beta` remained the correct answer, `correctOptionId` persistence was confirmed, points `9` persisted after save/reload, visible type remained `Выбор одного ответа`, Preview reflected the persisted correct answer, and the temporary Single Choice task was deleted successfully.
+  - Cleanup passed: both temporary tasks were deleted, no temporary rows remain, no image was uploaded, no orphaned Storage object exists, no new quest was created, no Public quest was modified, no last-public-task deletion test occurred, and original quest/tasks were otherwise unchanged.
+  - Optional `points` PATCH support is now browser-write verified.
+  - Non-blocking UX issues recorded for future planning: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor even though card click selection works.
+  - Unchanged scope: no route changes, API changes beyond already-implemented optional points support, schema/migration/RLS/policy/index changes, task content schema changes, task type changes, Storage writes, or runtime/student changes.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

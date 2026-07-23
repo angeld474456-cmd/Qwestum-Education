@@ -427,13 +427,21 @@ Completed:
   - Save was not clicked; no PATCH write occurred; no live write occurred; no task, image, or live data was created, edited, deleted, uploaded, removed, or saved.
   - Deferred scope includes runtime/student-facing localization, broader client/server error consistency, i18n/shared constants, and task CRUD/autosave refactors.
 
+- Sprint 12.18.21 - Controlled Task Editor Write Verification.
+  - Manual authenticated browser write verification passed through normal owner-safe teacher UI/API flows.
+  - Text task `TEMP - Points persistence text` was created, edited to points `7`, saved, refreshed/reloaded, and verified: points `7` persisted, text/content persisted, internal type remained `text`, and visible type remained `Текстовое задание`.
+  - Single Choice task `TEMP - Points persistence single choice` was created with options `Alpha` and `Beta`, `Beta` was selected as the correct answer, points were set to `9`, saved, refreshed/reloaded, and verified: points `9` persisted, options persisted, `correctOptionId` persisted, and Preview reflected the persisted correct answer.
+  - Cleanup passed: both temporary tasks were deleted, no temporary task rows remain, no image was uploaded, no orphaned Storage object exists, no new quest was created, no Public quest was modified, no last-public-task deletion test occurred, and original quest/tasks were otherwise unchanged.
+  - Optional `points` PATCH support is now browser-write verified.
+  - Non-blocking UX issues recorded: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor.
+
 Next:
 
-- Sprint 12.18.21 - Task Editor Write Verification Planning.
-  - Plan one disposable owned draft quest/task write-test scenario.
-  - Plan temporary Text and Single Choice task creation, Text task points persistence, Single Choice points and correct-answer persistence, save/refresh checks, optional image upload/remove only with explicit approval, deletion cleanup, and exact final cleanup/rollback sequence.
-  - Avoid testing last Public task deletion.
-  - No live writes until explicit approval.
+- Sprint 12.18.23 - Task Creation and Card Action UX Planning.
+  - Plan adding a visible semantic `Баллы` label to `TaskForm` while preserving the existing aria-label and submitted points behavior.
+  - Plan `TaskCard` pencil button wiring so it invokes the existing task selection/edit handler without breaking card click selection or delete behavior.
+  - Include keyboard accessibility and bubbling/duplicate-click behavior in the plan.
+  - Planning only until architecture approval.
 
 ## Suggested Future Milestones
 

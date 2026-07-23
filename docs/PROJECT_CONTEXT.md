@@ -504,9 +504,18 @@ Completed Sprint 12 work:
   - Save was not clicked, no PATCH write occurred, no live write occurred, and no task, image, or live data was created, edited, deleted, uploaded, removed, or saved.
   - Deferred scope includes runtime/student-facing localization, broader client/server error consistency, i18n/shared constants, and task CRUD/autosave refactors.
 
+- Sprint 12.18.21 - Controlled Task Editor Write Verification.
+  - Manual authenticated browser write verification passed through normal owner-safe teacher UI/API flows.
+  - Text task verification used temporary task `TEMP - Points persistence text`: points were changed to `7`, saved, refreshed/reloaded, and verified as persisted; text/content persisted; internal type remained `text`; visible type remained `Текстовое задание`; the temporary Text task was deleted successfully.
+  - Single Choice verification used temporary task `TEMP - Points persistence single choice`: options `Alpha` and `Beta` persisted; `Beta` remained the correct answer; `correctOptionId` persistence was confirmed; points `9` persisted after save/reload; visible type remained `Выбор одного ответа`; Preview reflected the persisted correct answer; the temporary Single Choice task was deleted successfully.
+  - Cleanup verification passed: both temporary tasks were deleted, no temporary task rows remain, no image was uploaded, no orphaned Storage object exists, no new quest was created, no Public quest was modified, no last-public-task deletion test occurred, and original quest/tasks were otherwise unchanged.
+  - Optional `points` PATCH support is now browser-write verified for Text and Single Choice tasks.
+  - Non-blocking UX issues found: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor, while clicking the card itself still opens the editor.
+  - Deferred follow-up: plan a small UX sprint to add the visible `Баллы` label and make the pencil edit button functional while preserving card selection and delete behavior.
+
 Next sprint:
 
-- Sprint 12.18.21 - Task Editor Write Verification Planning.
+- Sprint 12.18.23 - Task Creation and Card Action UX Planning.
 
 ## Stack
 

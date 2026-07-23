@@ -6,52 +6,48 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan live-write verification for the localized teacher task editor.
+Plan small UX corrections for task creation and task card edit actions.
 
 ## Next Task
 
-Sprint 12.18.21 - Task Editor Write Verification Planning.
+Sprint 12.18.23 - Task Creation and Card Action UX Planning.
 
-Planning only. Do not perform live writes until explicit product-owner approval.
+Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.18.20 localized teacher task-editor copy for `QuestTasksClient`, `TaskForm`, `TaskCard`, `TextTaskEditor`, `SingleChoiceTaskEditor`, and `ImageUploader`.
-- Task type display names are `Текстовое задание` for `text` and `Выбор одного ответа` for `single_choice`; stored identifiers, unions, registry keys, payloads, and API contracts remain unchanged.
-- Unknown future task types fall back to the raw identifier.
-- Correct-answer radio selection now has `value={option.id}` plus defensive `onClick={() => setCorrectOptionId(option.id)}` while preserving `checked` and `onChange`; browser verification confirmed selection, validation disappearance, Save enablement, and Preview synchronization.
-- Editable Points support now uses local string state in Text and Single Choice editors, validates non-empty finite integers at least `1`, rejects decimals and zero, and sends numeric `points` through the existing PATCH flow.
-- The task PATCH route supports optional `points`; requests omitting `points` remain compatible.
-- No-write browser verification confirmed Text and Single Choice Points can be edited locally, empty intermediate values remain empty, invalid values block Save, valid positive integers enable Save, and changing Single Choice Points does not reset the selected correct answer.
-- Save was not clicked and no live data was created, edited, uploaded, removed, deleted, saved, or PATCHed during verification.
-- Protected API/storage/session boundaries remain unchanged.
+- Sprint 12.18.21 controlled write verification passed through normal authenticated owner-safe teacher UI/API flows.
+- Text task `TEMP - Points persistence text` verified points `7` persistence after save/reload, text/content persistence, internal `text` type, and visible `Текстовое задание` display.
+- Single Choice task `TEMP - Points persistence single choice` verified points `9` persistence, `Alpha`/`Beta` option persistence, `Beta` correct answer persistence through `correctOptionId`, visible `Выбор одного ответа` display, and Preview reflecting the persisted correct answer.
+- Cleanup passed: both temporary tasks were deleted, no temporary rows remain, no image was uploaded, no orphaned Storage object exists, no new quest was created, no Public quest was modified, no last-public-task deletion test occurred, and original quest/tasks were otherwise unchanged.
+- Optional `points` PATCH support is browser-write verified.
+- Two non-blocking UX issues remain: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor.
 
 Planning topics:
 
-- Define one disposable owned draft quest/task write-test scenario.
-- Create one temporary text task.
-- Create one temporary single-choice task.
-- Verify save and refresh persistence.
-- Verify Text task points persistence after save and refresh.
-- Verify Single Choice points and correct-answer persistence after save and refresh.
-- Verify image upload/remove only with explicit product-owner approval.
-- Verify deletion cleanup and final test-data state.
-- Avoid testing last Public task deletion.
-- Document the exact cleanup and rollback sequence before any write test.
-- Confirm the manual verification path uses canonical `/dashboard/quests/[id]/tasks`.
-- No live writes until explicit approval.
+- Add a visible semantic `Баллы` label to `TaskForm`.
+- Preserve the existing Points aria-label and submitted points behavior.
+- Inspect `TaskCard` pencil button wiring.
+- Make the pencil button invoke the existing task selection/edit handler.
+- Prevent duplicate click behavior from card bubbling.
+- Preserve delete button behavior.
+- Preserve card selection behavior.
+- Verify keyboard accessibility.
+- Confirm exact files likely to change.
+- No implementation until architecture approval.
 
 Out of scope:
 
-- Implementation changes before planning approval.
-- Live writes without explicit approval.
+- Implementation before architecture approval.
 - Route changes.
-- API behavior or error-contract changes.
-- Task CRUD or autosave refactors.
-- Runtime/student-facing localization.
-- New migrations.
+- API changes.
+- Schema or migration changes.
 - RLS policy changes.
 - New indexes.
+- Task content schema changes.
+- Task type changes.
+- Storage writes.
+- Runtime/student changes.
 - Public catalog or student-facing changes.
 
 Required validation for any later implementation:
