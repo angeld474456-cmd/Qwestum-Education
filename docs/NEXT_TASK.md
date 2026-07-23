@@ -6,32 +6,33 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan controlled write verification for TaskForm points validation.
+Plan safe-integer validation alignment for task editor points inputs.
 
 ## Next Task
 
-Sprint 12.18.34 - Points Validation Controlled Write Verification Planning.
+Sprint 12.18.35 - Editor Points Safe-Integer Validation Planning.
 
 Planning only. Do not implement or perform a live write until architecture approval and explicit write authorization.
 
 Current state:
 
-- Sprint 12.18.33 completed TaskForm Points validation with raw string state, initial/success-reset `"1"`, temporary empty editing, digit-only safe-integer validation, minimum `1`, and numeric conversion only for the unchanged payload.
-- The former root cause was numeric state with `Number(e.target.value)`, which converted empty input to `0` and blocked normal clear-and-retype editing.
-- The exact inline error is `Баллы должны быть целым числом не меньше 1.` It appears after invalid submit, uses `aria-invalid` and `aria-describedby="task-points-error"`, clears after valid input, and invalid submit does not call `onSave`.
-- POST and PATCH now both require points as a finite safe JSON integer at least `1`; numeric strings and other invalid JSON values are rejected, while omitted PATCH points leave the stored value unchanged.
-- No-write browser verification passed: Backspace cleared `1` without producing `0`; replacement typing worked without Ctrl+A; empty and `0` submit showed the exact error without a create request or reset; `7` cleared the error; and normal typing changed `7` to `12`.
-- No successful create request or task creation occurred, no Supabase data changed, and no cleanup was required. The `Promise<boolean>` contract, failed-create preservation, success reset, title alert, optional fields, types, labels, layout, selection, editor behavior, images, Preview, and publication/deletion guards remain unchanged.
+- Sprint 12.18.34 completed controlled live verification in owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`) with an empty baseline.
+- The unique temporary `TEMP - Sprint 12.18.34 Points Verification DELETE ME` task used description `Disposable create and PATCH verification for safe integer points.`, correct answer `S34-CORRECT`, hint `S34-HINT`, type `text`, create points `7`, and PATCH points `12`.
+- With No throttling and request blocking disabled, Add task was clicked once without error; the task appeared once, became selected, opened its editor, visibly persisted `7`, reset TaskForm points to `1` with all other creation fields, and returned loading to normal.
+- A points-only PATCH changed `7` to `12` with one Save click and no error; refresh or reopening confirmed persisted `12` and no unrelated changes.
+- Cleanup confirmed the exact task and points `12`, accepted native deletion confirmation once, removed only that task, restored the empty baseline, preserved Draft status, and left no error or residue.
+- Follow-up UX mismatch: TextTaskEditor and SingleChoiceTaskEditor use raw string points and client-block empty, zero, negative, and decimal values, but use `Number.isInteger` rather than `Number.isSafeInteger`. Unsafe integers can reach PATCH; PATCH safely rejects them, so server integrity remains protected. No unsafe-integer browser write test occurred.
+- TaskForm validation, strict POST/PATCH contracts, `Promise<boolean>`, failure preservation, success reset, ownership/authentication, selection, optional fields, types, images, Preview, publication guards, and deletion guards remain unchanged.
 
 Planning topics:
 
-- Choose an existing owned disposable Draft quest.
-- Create one temporary task with valid points.
-- Verify numeric points persistence after reload.
-- Verify successful reset returns points to `1`.
-- Verify PATCH with a valid safe integer.
-- Verify invalid values are blocked without modifying stored data.
-- Plan exact deletion cleanup.
+- Inspect TextTaskEditor and SingleChoiceTaskEditor points parsing and validation.
+- Align editor validation with TaskForm and PATCH.
+- Require digit-only safe integers at least `1`.
+- Preserve temporary empty editing and unsaved invalid local input after failed save.
+- Add or align accessible inline error behavior.
+- Avoid duplicated validation where practical.
+- Identify the smallest safe file scope.
 - No implementation or live write without explicit approval.
 - No implementation until architecture approval.
 

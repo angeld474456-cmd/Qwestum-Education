@@ -515,9 +515,21 @@ Next:
 
 Next:
 
-- Sprint 12.18.34 - Points Validation Controlled Write Verification Planning.
-  - Planning only. Choose an owned disposable Draft quest, create one temporary task with valid points, verify points persistence and successful reset to `1`, verify PATCH with a valid safe integer, verify invalid values are blocked without stored-data changes, and plan exact deletion cleanup.
-  - No live write without explicit approval.
+- Sprint 12.18.34 - Points Validation Controlled Write Verification.
+  - Planning phase: selected an owned disposable Draft target, defined one temporary task, points persistence and successful-reset checks, valid PATCH verification, invalid-value protection, and exact cleanup before live-write approval.
+  - Controlled live verification used owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`) with an empty baseline.
+  - The only temporary task was `TEMP - Sprint 12.18.34 Points Verification DELETE ME`, with the approved description, `S34-CORRECT`, `S34-HINT`, `text`, create points `7`, and PATCH points `12`.
+  - With No throttling and request blocking disabled, one successful create selected/opened the task, persisted visible points `7`, reset TaskForm points to `1` and other fields, and returned loading to normal.
+  - One points-only PATCH changed `7` to `12`; refresh or reopening confirmed persistence and no unrelated changes.
+  - Cleanup confirmed the unique task and points `12`, accepted native delete confirmation once, deleted only that task, restored the empty baseline, preserved Draft status, and left no error or residue.
+  - Follow-up: both task editors use `Number.isInteger`, so unsafe integers can reach PATCH; PATCH rejects them safely with its finite safe-integer rule. No unsafe-integer browser write test occurred.
+
+Next:
+
+- Sprint 12.18.35 - Editor Points Safe-Integer Validation Planning.
+  - Planning only. Inspect both editor points parsers and align them with TaskForm and PATCH: digit-only safe integers at least `1`, temporary empty editing, preserved unsaved invalid input on failed save, and accessible inline errors.
+  - Identify the smallest safe file scope and avoid duplicated validation where practical.
+  - No implementation or live write without explicit approval.
 
 ## Suggested Future Milestones
 

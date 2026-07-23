@@ -540,6 +540,15 @@
   - No-write browser verification passed: clearing `1` remained empty without `0`, replacement typing worked without Ctrl+A, empty/zero submit displayed the error without a create request or reset, entering `7` cleared the error, and normal keyboard editing changed `7` to `12`.
   - No successful create request, task creation, Supabase data change, or cleanup occurred. Existing creation, failure/reset, UI, editor, image, Preview, publication, and deletion-guard behavior remains unchanged.
 
+- Sprint 12.18.34 - Points Validation Controlled Write Verification.
+  - Controlled verification used owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`) with an empty task-list baseline.
+  - Created and removed only `TEMP - Sprint 12.18.34 Points Verification DELETE ME`, using the approved description, `S34-CORRECT`, `S34-HINT`, `text`, create points `7`, and PATCH points `12`.
+  - With No throttling and no request blocking, one Add task action had no error, produced one selected/open editor task with points `7`, reset TaskForm points to `1` and its other fields, and returned loading to normal.
+  - One points-only Save updated `7` to `12` without error; refresh or reopening confirmed persistence and no unrelated changes.
+  - Cleanup verified the exact task/points `12`, confirmed native deletion once, removed only that task, restored the empty baseline, preserved Draft status, and left no error or residue.
+  - Follow-up client/server UX mismatch: both task editors use `Number.isInteger`, so unsafe integers can reach PATCH; PATCH safely rejects them because its strict contract requires a finite safe integer at least `1`. No unsafe-integer browser write test occurred.
+  - TaskForm, strict API contracts, creation/failure/reset behavior, ownership, selection, optional fields/types, images, Preview, publication, and deletion guards remain unchanged.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

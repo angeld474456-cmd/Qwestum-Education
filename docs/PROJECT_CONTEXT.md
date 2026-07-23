@@ -570,9 +570,18 @@ Completed Sprint 12 work:
   - No-write browser verification passed: Backspace left `1` empty without producing `0`, replacement typing worked without Ctrl+A, empty and `0` submit showed the exact error without creating a task or resetting the form, entering `7` cleared the error, and normal keyboard replacement from `7` to `12` worked. No successful create request, task creation, Supabase data change, or cleanup occurred.
   - `Promise<boolean>`, failure preservation, successful reset, title alert, optional text fields, task types, labels, layout, selection, editor behavior, images, Preview, and publication/deletion guards remain unchanged.
 
+- Sprint 12.18.34 - Points Validation Controlled Write Verification.
+  - Controlled live verification used owned Draft quest `ej57j` (`1a206882-650e-4982-840a-fe6108872cac`) with an empty task-list baseline; it remained Draft / `Черновик`.
+  - Created and then removed only `TEMP - Sprint 12.18.34 Points Verification DELETE ME`, using description `Disposable create and PATCH verification for safe integer points.`, correct answer `S34-CORRECT`, hint `S34-HINT`, `text`, create points `7`, and PATCH points `12`.
+  - With Network set to No throttling and request blocking disabled, Add task was clicked once without error; the task appeared once, became selected, opened its editor, and visibly persisted points `7`. TaskForm reset its points to `1`, reset the remaining creation fields, and returned its button/loading state to normal.
+  - Only points changed from `7` to `12`; Save was clicked once without error, editor/task state showed `12`, and refresh or reopening confirmed points `12` persisted without unrelated changes.
+  - Cleanup reconfirmed the unique task and points `12`, accepted the native delete dialog once, deleted only that task, restored the empty baseline, left the quest Draft, and produced no unexpected error or residue.
+  - Follow-up UX mismatch: TextTaskEditor and SingleChoiceTaskEditor use raw string state and block empty, zero, negative, and decimal values, but still use `Number.isInteger`. Unsafe integers can reach PATCH and are safely rejected by the finite safe-integer API contract; server integrity remains protected. No unsafe-integer browser write test was performed.
+  - TaskForm safe-integer validation, strict POST/PATCH contracts, `Promise<boolean>`, failure preservation, successful reset, ownership/authentication, selection, optional fields, types, image controls, Preview, publication guards, and deletion guards remain unchanged.
+
 Next sprint:
 
-- Sprint 12.18.34 - Points Validation Controlled Write Verification Planning.
+- Sprint 12.18.35 - Editor Points Safe-Integer Validation Planning.
 
 ## Stack
 
