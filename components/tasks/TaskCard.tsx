@@ -6,12 +6,14 @@ import { getTaskTypeLabel } from "@/components/tasks/editor/TextTaskEditor";
 interface TaskCardProps {
   index: number;
   task: QuestTask;
+  onSelect: () => void;
   onDelete: (id: string) => void;
 }
 
 export default function TaskCard({
   index,
   task,
+  onSelect,
   onDelete,
 }: TaskCardProps) {
   return (
@@ -46,8 +48,12 @@ export default function TaskCard({
         <div className="flex gap-3">
 
           <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelect();
+            }}
             className="rounded-lg bg-blue-600 px-4 py-2 hover:bg-blue-700 transition"
-            disabled
             aria-label="Редактировать задание"
           >
             ✏️

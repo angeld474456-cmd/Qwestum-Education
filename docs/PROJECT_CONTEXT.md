@@ -513,9 +513,19 @@ Completed Sprint 12 work:
   - Non-blocking UX issues found: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor, while clicking the card itself still opens the editor.
   - Deferred follow-up: plan a small UX sprint to add the visible `Баллы` label and make the pencil edit button functional while preserving card selection and delete behavior.
 
+- Sprint 12.18.24 - Task Creation and Card Action UX Implementation.
+  - Implemented the approved small UX fixes in `TaskForm`, `TaskCard`, and `TaskList` only.
+  - `TaskForm` now has a visible semantic `Баллы` label associated with the Points input through `htmlFor="task-points"` and `id="task-points"` while preserving the existing aria-label, value, min, onChange, default value, and submitted points behavior.
+  - `TaskCard` now accepts a typed `onSelect` callback, the pencil button is enabled, has `type="button"`, preserves the Russian aria-label, styling, icon, and selected rendering, and calls `event.stopPropagation()` before invoking the existing edit/select behavior exactly once.
+  - `TaskList` passes the existing `onSelectTask(task)` behavior into `TaskCard`; card click remains unchanged and pencil click opens the same task without duplicate card selection.
+  - Manual authenticated browser verification passed: the visible `Баллы` label appeared, the pencil button opened the task editor, card click continued to open/select the task, delete confirmation and deletion worked, and no console or layout issue was reported.
+  - One test task was accidentally deleted during verification. All current quest/task data is test data, no production data was affected, no recovery is needed, and continued development is unaffected.
+  - Remaining non-blocking considerations: the static `task-points` id is safe with the current single `TaskForm` instance but would need unique ids if multiple forms render simultaneously; delete-button click still bubbles to the card wrapper, which was pre-existing and unchanged.
+  - Unchanged scope: no route/API changes, schema/migration/RLS/policy/index changes, task content/type changes, save/autosave changes, Storage changes, runtime/student changes, publication safety changes, or deletion-guard changes.
+
 Next sprint:
 
-- Sprint 12.18.23 - Task Creation and Card Action UX Planning.
+- Sprint 12.18.25 - Task Action Event Isolation Planning.
 
 ## Stack
 

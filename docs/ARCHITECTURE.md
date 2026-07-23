@@ -553,6 +553,14 @@ Decisions after audit:
 - Optional task `points` PATCH support is now browser-write verified.
 - Non-blocking UX issues remain: `TaskForm` has a Points input with an aria-label but no visible `Баллы` label; `TaskCard` has a visible pencil button that does not independently open the editor even though card click selection works.
 - Next safe step is planning Task Creation and Card Action UX polish.
+- Sprint 12.18.24 implemented the approved Task Creation and Card Action UX fixes in `TaskForm`, `TaskCard`, and `TaskList` only.
+- `TaskForm` now has a visible semantic `Баллы` label associated with the Points input through `htmlFor="task-points"` and `id="task-points"` while preserving the existing aria-label, value, min, onChange, default value, and submitted points behavior.
+- `TaskCard` now has a typed `onSelect` callback and an enabled pencil button with `type="button"`; the button preserves its Russian aria-label, styling, icon, and selected rendering, calls `event.stopPropagation()`, and invokes the existing task selection/edit behavior exactly once.
+- `TaskList` passes `onSelectTask(task)` into `TaskCard`; card click remains unchanged, and pencil click opens the same task without duplicate bubbling.
+- Manual authenticated browser verification passed for the visible `Баллы` label, pencil edit action, card click selection, delete confirmation/deletion flow, and layout/console sanity.
+- One test task was accidentally deleted during verification. All current quest/task data is test data, no production data was affected, no recovery is needed, and continued development is unaffected.
+- Remaining non-blocking considerations: the static `task-points` id is safe with the current single `TaskForm` instance but should be revisited if multiple forms render simultaneously; delete-button bubbling into the card wrapper is pre-existing and unchanged.
+- Next safe step is planning Task Action Event Isolation.
 
 Schema mismatch risks:
 

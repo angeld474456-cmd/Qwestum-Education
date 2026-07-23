@@ -6,34 +6,37 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan small UX corrections for task creation and task card edit actions.
+Plan whether task action button clicks should be isolated from task card selection.
 
 ## Next Task
 
-Sprint 12.18.23 - Task Creation and Card Action UX Planning.
+Sprint 12.18.25 - Task Action Event Isolation Planning.
 
 Planning only. Do not implement until architecture is approved.
 
 Current state:
 
-- Sprint 12.18.21 controlled write verification passed through normal authenticated owner-safe teacher UI/API flows.
-- Text task `TEMP - Points persistence text` verified points `7` persistence after save/reload, text/content persistence, internal `text` type, and visible `Текстовое задание` display.
-- Single Choice task `TEMP - Points persistence single choice` verified points `9` persistence, `Alpha`/`Beta` option persistence, `Beta` correct answer persistence through `correctOptionId`, visible `Выбор одного ответа` display, and Preview reflecting the persisted correct answer.
-- Cleanup passed: both temporary tasks were deleted, no temporary rows remain, no image was uploaded, no orphaned Storage object exists, no new quest was created, no Public quest was modified, no last-public-task deletion test occurred, and original quest/tasks were otherwise unchanged.
-- Optional `points` PATCH support is browser-write verified.
-- Two non-blocking UX issues remain: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor.
+- Sprint 12.18.24 implemented the approved small UX fixes for task creation and task card actions.
+- `TaskForm` now has a visible semantic `Баллы` label associated with the Points input through `htmlFor="task-points"` and `id="task-points"`.
+- Existing Points aria-label, value, min, onChange, default value, and submitted points behavior remain unchanged.
+- `TaskCard` has an enabled pencil button with `type="button"` and a typed `onSelect` callback.
+- Pencil click calls `event.stopPropagation()` and invokes the existing task selection/edit behavior exactly once.
+- `TaskList` passes `onSelectTask(task)` into `TaskCard`; card click remains unchanged.
+- Manual browser verification passed for label visibility, pencil edit action, card click selection, delete confirmation/deletion flow, and no reported console or layout issue.
+- One test task was accidentally deleted during verification. All current quest/task data is test data, no production data was affected, no recovery is needed, and continued development is unaffected.
+- Remaining non-blocking considerations: delete-button click still bubbles to the card wrapper; static `task-points` id is safe with the current single `TaskForm` instance but would need unique ids if multiple forms render simultaneously.
 
 Planning topics:
 
-- Add a visible semantic `Баллы` label to `TaskForm`.
-- Preserve the existing Points aria-label and submitted points behavior.
-- Inspect `TaskCard` pencil button wiring.
-- Make the pencil button invoke the existing task selection/edit handler.
-- Prevent duplicate click behavior from card bubbling.
-- Preserve delete button behavior.
-- Preserve card selection behavior.
-- Verify keyboard accessibility.
-- Confirm exact files likely to change.
+- Inspect delete-button event propagation.
+- Determine whether delete click should avoid selecting/opening the task card.
+- Preserve confirmation and deletion behavior.
+- Preserve last-public-task protection.
+- Preserve keyboard accessibility.
+- Avoid changing task CRUD APIs.
+- Assess whether static `task-points` id needs future-proofing now or can remain deferred.
+- Identify exact files likely to change.
+- Define manual verification strategy.
 - No implementation until architecture approval.
 
 Out of scope:
@@ -46,8 +49,11 @@ Out of scope:
 - New indexes.
 - Task content schema changes.
 - Task type changes.
+- Save or autosave changes.
 - Storage writes.
 - Runtime/student changes.
+- Publication safety changes.
+- Last-public-task deletion guard changes.
 - Public catalog or student-facing changes.
 
 Required validation for any later implementation:

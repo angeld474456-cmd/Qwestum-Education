@@ -435,12 +435,20 @@ Completed:
   - Optional `points` PATCH support is now browser-write verified.
   - Non-blocking UX issues recorded: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor.
 
+- Sprint 12.18.24 - Task Creation and Card Action UX Implementation.
+  - Added a visible semantic `Баллы` label to `TaskForm`, associated with the Points input by `htmlFor="task-points"` and `id="task-points"`, while preserving existing aria-label and submitted points behavior.
+  - Enabled the `TaskCard` pencil button, added `type="button"`, and wired it through a typed `onSelect` callback to the existing task selection/edit behavior.
+  - `TaskList` passes `onSelectTask(task)` into `TaskCard`; card click remains unchanged, and pencil click calls `event.stopPropagation()` to avoid duplicate card selection.
+  - Manual browser verification passed for label visibility, pencil edit action, card click selection, delete confirmation/deletion flow, and no reported console or layout issue.
+  - One test task was accidentally deleted during verification. All current quest/task data is test data, no production data was affected, no restoration is required, and continued development is unaffected.
+  - Remaining non-blocking considerations: the static `task-points` id is safe for the current single `TaskForm` instance but would need unique ids if multiple forms render together; delete-button bubbling to the card wrapper remains pre-existing and unchanged.
+
 Next:
 
-- Sprint 12.18.23 - Task Creation and Card Action UX Planning.
-  - Plan adding a visible semantic `Баллы` label to `TaskForm` while preserving the existing aria-label and submitted points behavior.
-  - Plan `TaskCard` pencil button wiring so it invokes the existing task selection/edit handler without breaking card click selection or delete behavior.
-  - Include keyboard accessibility and bubbling/duplicate-click behavior in the plan.
+- Sprint 12.18.25 - Task Action Event Isolation Planning.
+  - Inspect delete-button event propagation and decide whether delete clicks should avoid selecting/opening the task card.
+  - Preserve confirmation, deletion behavior, last-public-task protection, keyboard accessibility, and task CRUD API boundaries.
+  - Assess whether the static `task-points` id needs future-proofing now or can remain deferred.
   - Planning only until architecture approval.
 
 ## Suggested Future Milestones

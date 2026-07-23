@@ -102,14 +102,21 @@ export default function TaskForm({ onSave }: TaskFormProps) {
           </select>
         </div>
 
-        <input
-          type="number"
-          value={points}
-          min={1}
-          onChange={(e)=>setPoints(Number(e.target.value))}
-          className="rounded-xl bg-[#1B2435] p-4"
-          aria-label="Баллы"
-        />
+        <div>
+          <label htmlFor="task-points" className="mb-2 block text-slate-300">
+            Баллы
+          </label>
+
+          <input
+            id="task-points"
+            type="number"
+            value={points}
+            min={1}
+            onChange={(e)=>setPoints(Number(e.target.value))}
+            className="w-full rounded-xl bg-[#1B2435] p-4"
+            aria-label="Баллы"
+          />
+        </div>
 
       </div>
 

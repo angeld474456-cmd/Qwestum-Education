@@ -483,6 +483,15 @@
   - Non-blocking UX issues recorded for future planning: `TaskForm` Points input has an aria-label but no visible `Баллы` label; `TaskCard` pencil button is visible but does not independently open the editor even though card click selection works.
   - Unchanged scope: no route changes, API changes beyond already-implemented optional points support, schema/migration/RLS/policy/index changes, task content schema changes, task type changes, Storage writes, or runtime/student changes.
 
+- Sprint 12.18.24 - Task Creation and Card Action UX Implementation.
+  - Added a visible semantic `Баллы` label to `TaskForm`, associated with the existing Points input through `htmlFor="task-points"` and `id="task-points"`, while preserving aria-label, value, min, onChange, default value, and submitted points behavior.
+  - Added a typed `onSelect` callback to `TaskCard`, enabled the pencil button, added `type="button"`, preserved its Russian aria-label, styling, icon, and selected rendering, and wired click handling to call `event.stopPropagation()` before invoking the existing task selection/edit behavior exactly once.
+  - `TaskList` now passes `onSelectTask(task)` into `TaskCard`; card click remains unchanged, and pencil click opens the same task without duplicate bubbling.
+  - Manual authenticated browser verification passed: visible `Баллы` label appeared, pencil button opened the task editor, card click continued to open/select the task, delete confirmation and deletion worked, and no console or layout issue was reported.
+  - One test task was accidentally deleted during verification. All current quest/task data is test data, no production data was affected, no restoration is required, and continued development is unaffected.
+  - Remaining non-blocking considerations: static `task-points` is safe with the current single `TaskForm` instance but would need unique ids if multiple forms render simultaneously; delete-button bubbling into the card wrapper remains pre-existing and unchanged.
+  - Unchanged scope: no route/API, schema/migration/RLS/policy/index, task content/type, save/autosave, Storage, runtime/student, publication safety, or deletion-guard change.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.
