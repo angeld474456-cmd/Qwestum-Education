@@ -557,6 +557,13 @@
   - Task type is chosen only during creation; an existing task's stored type selects the editor and cannot be changed there. To use another type, the teacher must create a new task with the desired type and may manually delete the old task if no longer needed. No automatic conversion exists; future conversion requires explicit field-mapping and data-loss rules.
   - POST/PATCH contracts, `Promise<boolean>`, failure preservation/reset, editor fields, Single Choice options/correct-answer behavior, image controls, selection, responsive layout, Preview, publication guards, and deletion guards remain unchanged.
 
+- Sprint 12.18.38 - Immutable Task Type Helper Text.
+  - Added below both read-only type fields: `Тип задания выбирается при создании и не меняется после сохранения.` and `Чтобы использовать другой тип, создайте новое задание и при необходимости удалите прежнее.`
+  - No type select/state, conversion, or duplication action was added. Stable editor-specific label IDs and visible, secondary, naturally wrapping helper text preserve accessibility without interactive semantics.
+  - Wide and narrow no-write visual verification confirmed exact readable copy, non-editable fields, no clipping or horizontal scroll, stable width, and usable Save/other controls. No save, PATCH, live-data action, or cleanup occurred.
+  - Stored `task_type` still selects the editor; another type requires a new task and optional manual deletion of the old one. Automatic conversion remains deferred pending explicit field mapping, data-loss rules, API design, and regression coverage.
+  - Points validation, editor fields/options/correct answers, images, save/loading/errors, selection, TaskForm, registry, API/schema/RLS/Storage, Preview, publication, and deletion guards remain unchanged.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

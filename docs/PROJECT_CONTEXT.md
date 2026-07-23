@@ -587,9 +587,16 @@ Completed Sprint 12 work:
   - Task type is chosen only during creation; an existing task's stored type selects TextTaskEditor or SingleChoiceTaskEditor and cannot be changed in the editor. To use another type, the teacher must create a new task with the desired type and may manually delete the old task if no longer needed. No automatic conversion exists; future conversion requires explicit field-mapping and data-loss rules.
   - POST/PATCH contracts, editor fields, Single Choice options and correct-answer behavior, image controls, selected-task behavior, responsive layout, Preview, publication guards, and deletion guards remain unchanged.
 
+- Sprint 12.18.38 - Immutable Task Type Helper Text.
+  - TextTaskEditor and SingleChoiceTaskEditor now display below their read-only type fields: `Тип задания выбирается при создании и не меняется после сохранения.` and `Чтобы использовать другой тип, создайте новое задание и при необходимости удалите прежнее.`
+  - The type field remains immutable: no select, dropdown, type state, conversion, or duplication control was added. Labels use stable editor-specific IDs, and the helper is visible normal text with secondary styling and natural wrapping.
+  - No-write visual verification passed in both editors on wide and narrow layouts: exact copy was visible, type fields remained non-editable, text wrapped without clipping or horizontal scrolling, editor width did not expand, and Save plus other controls remained usable. No save, PATCH, live-data action, or cleanup occurred.
+  - Current MVP behavior remains: stored `task_type` chooses the editor; another type requires creating a new task and optionally manually deleting the old one. Automatic conversion is deferred pending explicit field mapping, data-loss rules, API design, and regression coverage.
+  - Points validation, editor fields, options, correct-answer behavior, images, Save/loading/errors, selected-task behavior, TaskForm, TaskEditor registry, API/schema/RLS/Storage, Preview, publication, and deletion guards remain unchanged.
+
 Next sprint:
 
-- Sprint 12.18.37 - Task Type Conversion and Editor UX Review Planning.
+- Sprint 12.18.39 - Task Workspace Accessibility and Status Messaging Planning.
 
 ## Stack
 

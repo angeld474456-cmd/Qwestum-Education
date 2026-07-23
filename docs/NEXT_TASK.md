@@ -6,30 +6,31 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan whether existing teacher tasks should support type conversion and identify the smallest safe editor UX improvement.
+Plan the smallest accessibility and status-messaging improvement for the teacher task workspace.
 
 ## Next Task
 
-Sprint 12.18.37 - Task Type Conversion and Editor UX Review Planning.
+Sprint 12.18.39 - Task Workspace Accessibility and Status Messaging Planning.
 
 Planning only. Do not implement or perform a live write until architecture approval and explicit write authorization.
 
 Current state:
 
-- Sprint 12.18.36 completed shared points validation alignment with `lib/task-points.ts`. `parsePositiveSafeInteger(value: string): number | null` and `Баллы должны быть целым числом не меньше 1.` are now shared by TaskForm, TextTaskEditor, and SingleChoiceTaskEditor.
-- All three surfaces accept digit-only positive safe integers at least `1`, retain raw string state and temporary empty editing, and preserve numeric payload points. Editors retain their validation summaries, disable Save while invalid, and expose conditional `aria-invalid`/`aria-describedby` with one visible points error.
-- Browser verification checked invalid values first: empty, `0`, decimal, and `9007199254740992` remained invalid, and the unsafe integer was not stored. A valid `12` cleared the points error, succeeded through PATCH, and remained `12` after refresh with no unrelated field changes. No cleanup was required for the existing test task.
-- Task type is chosen only during creation. An existing task's stored `text` or `single_choice` type determines which editor opens and cannot be changed there. To use another type, the teacher must create a new task with the desired type and may manually delete the old task if no longer needed. No automatic conversion exists; future conversion requires explicit field-mapping and data-loss rules.
-- POST/PATCH contracts, `Promise<boolean>`, failure preservation/reset, editor fields, options, correct-answer behavior, images, selection, responsive layout, Preview, publication guards, and deletion guards remain unchanged.
+- Sprint 12.18.38 added below both read-only task-type fields: `Тип задания выбирается при создании и не меняется после сохранения.` and `Чтобы использовать другой тип, создайте новое задание и при необходимости удалите прежнее.`
+- Type remains immutable: no select, type state, conversion, or duplication action exists. Labels use stable editor-specific IDs, and the visible secondary helper text wraps naturally without interactive semantics.
+- No-write visual verification in both editors and on wide/narrow layouts confirmed exact readable copy, non-editable fields, no clipping or horizontal scroll, stable width, and usable Save/other controls. No save, PATCH, live-data action, or cleanup occurred.
+- Stored `task_type` still selects the editor; another type requires creating a new task and optionally manually deleting the old one. Automatic conversion remains deferred pending explicit field mapping, data-loss rules, API design, and regression coverage.
+- Points validation, editor fields/options/correct answers, images, save/loading/errors, selection, TaskForm, TaskEditor registry, APIs, schema, RLS, Storage, Preview, publication, and deletion guards remain unchanged.
 
 Planning topics:
 
-- Review whether changing an existing task type should be supported.
-- Compare delete-and-recreate against controlled conversion.
-- Identify compatible and incompatible fields between `text` and `single_choice`.
-- Define data-loss warnings and preserve task ownership and ordering.
-- Assess API and database implications.
-- Decide whether conversion belongs in MVP or should be deferred.
+- Review task editor success and error feedback.
+- Review whether successful saves need visible confirmation.
+- Review workspace-level error association and focus behavior.
+- Review disabled-button explanations.
+- Review keyboard navigation through task cards and editor actions.
+- Review selected-card accessibility beyond color.
+- Identify the smallest safe improvement.
 - No implementation or live write without explicit approval.
 - No implementation until architecture approval.
 

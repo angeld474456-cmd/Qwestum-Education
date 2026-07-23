@@ -547,6 +547,21 @@ Next:
   - Planning only. Review whether existing task type changes should be supported; compare delete-and-recreate with controlled conversion; identify compatible/incompatible fields, data-loss warnings, task ownership and ordering, API/database implications, and whether conversion belongs in MVP.
   - No implementation or live write without explicit approval.
 
+Next:
+
+- Sprint 12.18.38 - Immutable Task Type Helper Text.
+  - Added the exact helper below the read-only task-type field in both editors: `Тип задания выбирается при создании и не меняется после сохранения.` and `Чтобы использовать другой тип, создайте новое задание и при необходимости удалите прежнее.`
+  - Type remains immutable; no select, type state, conversion, or duplication action was added. Labels use stable editor-specific IDs, and visible secondary helper text wraps naturally without interactive semantics.
+  - No-write visual verification on wide and narrow layouts confirmed exact copy, non-editable fields, no clipping or horizontal scrolling, stable editor width, and usable Save/other controls. No save, PATCH, live-data action, or cleanup occurred.
+  - Stored `task_type` still selects the editor. Another type requires a new task and optional manual deletion of the old task; automatic conversion is deferred pending field mapping, data-loss rules, API design, and regression coverage.
+  - Points validation, editor fields/options/correct answers, images, save/loading/errors, selection, TaskForm, registry, API/schema/RLS/Storage, Preview, publication, and deletion guards remain unchanged.
+
+Next:
+
+- Sprint 12.18.39 - Task Workspace Accessibility and Status Messaging Planning.
+  - Planning only. Review task-editor success and error feedback, workspace error association and focus behavior, disabled-button explanations, keyboard navigation through task cards/editor actions, selected-card accessibility beyond color, and the smallest safe improvement.
+  - No implementation or live write without explicit approval.
+
 ## Suggested Future Milestones
 
 - Add more task types through the existing registry pattern.

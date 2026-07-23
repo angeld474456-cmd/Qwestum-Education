@@ -80,15 +80,26 @@ export default function TextTaskEditor({
       <div className="grid grid-cols-2 gap-4">
 
         <div>
-          <label className="mb-2 block text-slate-300">
+          <label
+            htmlFor="text-task-type"
+            className="mb-2 block text-slate-300"
+          >
             Тип задания
           </label>
 
           <input
+            id="text-task-type"
             value={getTaskTypeLabel(task.task_type)}
             readOnly
             className="w-full rounded-xl bg-[#1B2435] p-4"
           />
+
+          <p className="mt-2 text-sm leading-5 text-slate-400">
+            Тип задания выбирается при создании и не меняется после сохранения.
+            <br />
+            Чтобы использовать другой тип, создайте новое задание и при
+            необходимости удалите прежнее.
+          </p>
         </div>
 
         <div>
