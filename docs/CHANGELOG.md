@@ -1,5 +1,14 @@
 # Changelog
 
+## Sprint 12.19.2 - Live Schema and Public Read Boundary Verification
+
+- Passed authoritative manual read-only Supabase metadata verification. The live schema contains RLS-enabled `profiles`, `quests`, `quest_tasks`, and `subjects`, but no `categories`; no relevant catalog view, materialized view, function, or RPC exists. No project file, live data, SQL, schema, RLS, grant, Storage, staging, commit, or push changed.
+- Recorded current owner-only RLS, broad ACL interpretation, public `quest-images` disclosure tradeoff, missing `supabase_migrations` history, missing catalog/task indexes, live constraints, and type drift. `getOwnedQuestTasks().select("*")` remains private-only.
+- Selected two narrow SECURITY DEFINER RPCs with explicit allowlisted fields, fixed search path, internal subject join and task `EXISTS`, no task rows/counts, and no author/raw-path/answer/content/scoring exposure. Security-invoker view, published base-table policy, service role, and a duplicated catalog table are rejected for MVP.
+- Recorded the cover decision: initial public DTO omits covers because raw `cover_image_path` cannot cross a public RPC boundary; fallback covers remain acceptable until safe media delivery is decided.
+- **NOT APPLIED - REQUIRES SEPARATE APPROVAL:** plan `quest_tasks(quest_id)`, partial public catalog ordering index, `list_public_catalog_quests()`, and `get_public_catalog_quest(uuid)` with revoked default PUBLIC EXECUTE and grants only to anon/authenticated. **NOT EXECUTED:** rollback removes callers, revokes EXECUTE, drops RPCs/indexes, and rechecks anonymous denial plus teacher owner access.
+- Recommendation A: Sprint 12.19.3 prepares migration SQL only. Future read-only verification and separately approved temporary publish/unpublish verification are required; the task-workspace QA backlog remains separate.
+
 ## Sprint 12 Teacher Experience
 
 - `36e5d94` Add teacher quest library page.
