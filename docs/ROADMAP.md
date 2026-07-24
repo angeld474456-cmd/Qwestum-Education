@@ -646,6 +646,15 @@ Next:
 - Sprint 12.19.4 - Public Catalog Read Boundary Migration File Implementation.
   - Implementation-only: create exactly `database/migrations/012_add_public_catalog_read_boundary.sql` with the reviewed two indexes, two SECURITY DEFINER SQL functions, fixed search path, explicit fields/signatures, and grants/revokes. No application or documentation change, no live SQL, and separate approval before application.
 
+- Sprint 12.19.4 - Public Catalog Read Boundary Migration Application.
+  - Completed version `20260724204657` through the standard Supabase CLI delivery migration. It adds `quest_tasks_quest_id_idx`, `quests_public_catalog_created_at_id_idx`, and the narrow public list/detail SECURITY DEFINER RPCs without adding public table policies, changing RLS, or changing Storage.
+  - Anonymous list/detail, DTO boundary, missing-ID zero rows, direct anonymous base-table denial, pagination normalization, and deterministic ordering passed. Verification is **PARTIAL PASS** because authenticated smoke testing and independent live ACL/index/RLS/Storage metadata re-inspection remain unavailable in the current environment.
+
+Next:
+
+- Sprint 12.19.5 - Public Catalog RPC Application Integration Planning.
+  - Planning only: analyze the repository, design a dedicated public catalog service and route/page integration, define loading/error/empty states, and map the current RPC's search, subject, grade, difficulty, language, limit, and offset behavior to application UX. Do not implement code until separately approved; category/tag filtering remains deferred.
+
 ## Suggested Future Milestones
 
 - Add more task types through the existing registry pattern.

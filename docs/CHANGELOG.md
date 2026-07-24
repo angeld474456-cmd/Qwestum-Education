@@ -1,5 +1,13 @@
 # Changelog
 
+## Sprint 12.19.4 - Public Catalog Read Boundary Migration Application
+
+- Created the standard CLI delivery copy at `supabase/migrations/20260724204657_add_public_catalog_read_boundary.sql`; it is byte-identical to the reviewed `database/migrations/012_add_public_catalog_read_boundary.sql` source.
+- Applied live migration version `20260724204657`, introducing `quest_tasks_quest_id_idx`, partial `quests_public_catalog_created_at_id_idx`, and the allowlisted public catalog list/detail RPCs.
+- Anonymous verification confirmed public DTO-only list/detail behavior, missing UUID zero rows, direct anonymous `quests` and `quest_tasks` denial, pagination normalization, and deterministic ordering.
+- Verification is **PARTIAL PASS**: no safe authenticated context was available, and independent live ACL/index/RLS/Storage metadata re-inspection was incomplete in the available CLI environment.
+- Migration 012 made no data-row, RLS, or Storage change.
+
 ## Sprint 12.19.3 - Public Catalog Read Boundary Migration Planning
 
 - Completed exact migration and rollback planning without creating a migration file, executing SQL, or changing live data/schema/indexes/functions/grants/RLS/Storage.
