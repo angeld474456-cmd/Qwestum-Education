@@ -602,6 +602,13 @@
   - Browser-native `Удалить задание?` is keyboard accessible and exposed to screen readers by the browser, but omits the task title. It was not independently screen-reader tested in this project. A custom dialog is optional polish because of focus-management and regression risk.
   - QA timing: isolate Settings navigation before internal testing; verify unselected deletion focus, only-task heading fallback, valid create/reset, and API-failure retention before public MVP; defer session localization, busy semantics, Save associations, radio-group semantics, and confirm redesign to post-MVP. No additional live verification occurred.
 
+- Sprint 12.19.1 - Public Quest Catalog and Student Access Planning.
+  - Planning passed: current public routes are `/` and `/login`; legacy `/quests*` routes redirect to the session-protected, owner-safe teacher workspace, including owner-only Preview/Play. Current local `QuestRunner` payload exposes answer data and `content.correctOptionId`, so it cannot be used for public/student runtime.
+  - `is_public` is the sole mutable publication state; publishing needs one task, while cover/completeness requirements, slug, `published_at`, state enum, price/currency/entitlement, author profile, moderation, and versioning do not exist. Legacy task content can be null. `001_initial_schema.sql` is empty, so no local migration history is authoritative and no live schema inspection occurred.
+  - Current RLS denies anonymous and authenticated non-owner published reads; existing owner policies stay intact. Normal anon-key clients are used, no service-role public client is acceptable, and the owner task `select("*")` service stays private. The selected direction is server-rendered anonymous catalog/detail reads through a published-only projection/view/RPC, public quest DTO, and later student task DTO; exact view versus RPC awaits live verification.
+  - MVP uses `/catalog`, `/catalog/[id]`, and later login-gated `/catalog/[id]/start`; free-only cards/filtering with no payments, results, assignment, enrollment, or role inference. DTOs exclude ownership, paths, draft data, answers, hints, `correctOptionId`, scoring/raw JSON, and errors. Covers are optional but current public paths include owner UUIDs; use validated URLs/fallback and decide disclosure acceptance.
+  - Next is read-only Sprint 12.19.2 live schema/public-read-boundary verification: inspect columns/types/keys/indexes/policies/functions/views/RPCs/Storage, compare drift, and produce unapplied migration/rollback plans. No SQL, migration, RLS/Storage change, catalog code, or live-data modification is authorized. Existing task-workspace QA remains separate.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

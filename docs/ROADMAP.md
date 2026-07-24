@@ -612,8 +612,17 @@ Next:
 Next:
 
 - Sprint 12.19.1 - Public Quest Catalog and Student Access Planning.
-  - Planning only. Inspect publication eligibility, draft exclusion, public and legacy routes, Preview/Play, RLS/server-read boundaries, catalog route/card/filter model, student entry flow, schema and publication gaps, covers, API/service changes, security constraints, and static/browser test plans.
-  - Do not weaken owner-only teacher policy or implement schema/RLS/Storage/live changes without separate approval. Retain the task-workspace QA backlog.
+  - Planning passed. Current public routes are `/` and `/login`; `/quests*` redirects into the session-protected, owner-safe teacher workspace, where Preview/Play remain teacher-only. `QuestRunner` is local-only and current tasks expose `answer` plus `content.correctOptionId`, so public/student delivery needs a separate sanitized DTO.
+  - Verified quests use `is_public` as their only publication state alongside the existing title, description, owner, metadata, cover/category/tags, and created fields. Settings can publish/unpublish; publishing requires one task, but covers/completeness are not required and published content remains mutable. No slug, published timestamp, pricing/entitlement, author profile, moderation, or state enum exists; legacy task content may be null.
+  - Local schema history is incomplete because `001_initial_schema.sql` is empty; no live schema inspection occurred. Current RLS is owner-only, anonymous/non-owner public reads fail, and owner policies must not be widened. Normal anon-key clients are used; service-role access is rejected. The owner task `select("*")` service is private and must not be reused publicly.
+  - Recommended MVP is anonymous server-rendered `/catalog` and `/catalog/[id]` through a dedicated published-only projection/view/RPC and public service, with login before later `/catalog/[id]/start`. Keep `is_public`, use separate public/student DTOs, preserve `/quests` redirects, defer slugs, and choose view versus RPC after live verification. UUID access requires published-only authorization and indistinguishable 404s.
+  - Initial cards: optional cover, title, short description, difficulty, grade, language, subject, and action. Server URL filters: text, subject, grade, difficulty, language. Defer duration/category/tags/count/date; omit attribution, pricing, popularity, points, and payment state. Catalog is free-only; assignments, enrollment, attempts, results, payment, entitlement, and complex roles are later scope.
+  - Public DTOs allow public ID, display metadata, optional approved fields, and validated cover URL only; deny owner/raw-path/draft metadata, answer/hint/`correctOptionId`, scoring/raw task data, notes, and errors. Covers are public but paths contain owner UUIDs: use fallback and decide disclosure acceptance. Use dynamic/short-revalidated server reads, safe local return URLs, generic errors, 404 for draft/missing, and no play for taskless public quests. Existing task-workspace QA is separate.
+
+Next:
+
+- Sprint 12.19.2 - Live Schema and Public Read Boundary Verification.
+  - Read-only only: inspect live schema, types, keys/indexes, policies, functions/views/RPCs, and cover Storage read state; compare local drift; select view/RPC/published-policy direction; produce unapplied migration and rollback plans. No SQL, RLS, Storage, catalog code, or live-data change without explicit approval.
 
 ## Suggested Future Milestones
 
