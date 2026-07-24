@@ -635,7 +635,16 @@ Next:
 Next:
 
 - Sprint 12.19.3 - Public Catalog Read Boundary Migration Planning.
-  - Planning-only: prepare exact index/RPC/return-type/signature/security/grant/rollback/read-only-validation SQL, verify PostgREST compatibility and naming, and do not apply SQL or write application code. Task-workspace QA remains separate.
+  - Planning passed without creating a migration file or applying SQL. Selected two separate `LANGUAGE sql`, `STABLE`, `SECURITY DEFINER` RPCs created by `postgres`: `list_public_catalog_quests(text, text, integer, integer, text, integer, integer)` and `get_public_catalog_quest(uuid)`. They use fixed `pg_catalog, public` search path, schema-qualified tables/pg_catalog helpers, no dynamic SQL/auth.uid()/role switching/temp objects, and only the public DTO.
+  - Both require public status plus internal task `EXISTS`, return no task/count/owner/path/scoring data, and join only subject name. List includes all approved search/subject/grade/difficulty/language/limit/offset parameters; search is literal case-insensitive with wildcard escaping, subject is normalized exact-name, grade is inclusive, limit clamps 1-100, offset clamps non-negative, and ordering is `created_at DESC NULLS LAST, id DESC`.
+  - Plan ordinary transaction-compatible `quest_tasks_quest_id_idx` and partial `quests_public_catalog_created_at_id_idx`; defer broader filter indexes. Use `CREATE FUNCTION` to fail visibly on unexpected signatures. Revoke PUBLIC/anon/authenticated/service_role execution and grant only anon/authenticated; do not alter table grants, RLS, Storage, or public task access.
+  - **NOT APPLIED - REQUIRES SEPARATE APPROVAL:** planned migration contains only two indexes, two RPCs, and explicit REVOKE/GRANT statements. **NOT EXECUTED:** rollback removes callers, revokes execution, drops detail/list functions then indexes, and verifies anonymous denial plus teacher owner reads. Migration first, metadata/schema-cache/anonymous validation second, application callers last; transaction failure, signature conflicts, index locks, schema-cache delay, and unpublish caching remain release concerns.
+  - Future read-only verification covers metadata/ACL/index/direct-anon/RPC-output checks. Separately approved controlled verification publishes then restores one existing owned Draft with a task. Task-workspace QA remains separate.
+
+Next:
+
+- Sprint 12.19.4 - Public Catalog Read Boundary Migration File Implementation.
+  - Implementation-only: create exactly `database/migrations/012_add_public_catalog_read_boundary.sql` with the reviewed two indexes, two SECURITY DEFINER SQL functions, fixed search path, explicit fields/signatures, and grants/revokes. No application or documentation change, no live SQL, and separate approval before application.
 
 ## Suggested Future Milestones
 

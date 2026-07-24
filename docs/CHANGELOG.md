@@ -1,5 +1,13 @@
 # Changelog
 
+## Sprint 12.19.3 - Public Catalog Read Boundary Migration Planning
+
+- Completed exact migration and rollback planning without creating a migration file, executing SQL, or changing live data/schema/indexes/functions/grants/RLS/Storage.
+- Selected indexed, separate `LANGUAGE sql`, `STABLE`, `SECURITY DEFINER` list/detail RPCs owned by `postgres`, with fixed `pg_catalog, public` search path, explicit DTO-only fields, internal published-plus-task-EXISTS eligibility, subject-name join, and no dynamic SQL/auth.uid()/role switching/temp objects.
+- List accepts search, subject name, grade, difficulty, language, limit, and offset. It uses normalized literal case-insensitive search, exact normalized subject matching, inclusive grades, clamped offset pagination, and deterministic `created_at DESC NULLS LAST, id DESC` ordering. Detail returns zero or one approved DTO row.
+- Planned objects are ordinary `quest_tasks_quest_id_idx`, partial `quests_public_catalog_created_at_id_idx`, the two functions, and PUBLIC/anon/authenticated/service_role execution revokes followed by anon/authenticated grants. `CREATE FUNCTION` is selected; no table grant, RLS, Storage, public-task, or service-role catalog change is planned.
+- **NOT APPLIED - REQUIRES SEPARATE APPROVAL** and **NOT EXECUTED** rollback are recorded. Migration deploys and validates before application callers; separate controlled publish/unpublish verification and task-workspace QA remain required.
+
 ## Sprint 12.19.2 - Live Schema and Public Read Boundary Verification
 
 - Passed authoritative manual read-only Supabase metadata verification. The live schema contains RLS-enabled `profiles`, `quests`, `quest_tasks`, and `subjects`, but no `categories`; no relevant catalog view, materialized view, function, or RPC exists. No project file, live data, SQL, schema, RLS, grant, Storage, staging, commit, or push changed.

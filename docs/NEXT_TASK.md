@@ -6,34 +6,31 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Prepare the approved public-read database migration boundary without applying it.
+Implement the approved public catalog read-boundary migration file without applying it.
 
 ## Next Task
 
-Sprint 12.19.3 - Public Catalog Read Boundary Migration Planning.
+Sprint 12.19.4 - Public Catalog Read Boundary Migration File Implementation.
 
-Planning-only. Do not implement application code, apply SQL, or perform a live write without separate explicit approval.
+Implementation-only. Create the reviewed migration file only; do not apply SQL or perform a live write without separate explicit approval.
 
 Current state:
 
-- Sprint 12.19.2 passed authoritative read-only live-schema verification. `public.profiles`, `public.quests`, `public.quest_tasks`, and `public.subjects` exist with RLS enabled and FORCE RLS disabled; `public.categories` does not exist. `001_initial_schema.sql` remains incomplete foundational history, and no `supabase_migrations` relation or live migration identifiers were available.
-- Current owner RLS remains intact: no anonymous published quest policy and no anonymous task-read policy exist. Broad table ACLs for anon/authenticated/service_role do not expose rows while RLS is correct. No service-role catalog client is approved.
-- The selected catalog boundary is two narrow SECURITY DEFINER RPCs, `list_public_catalog_quests()` and `get_public_catalog_quest(uuid)`, returning explicit allowlisted fields only. Both require `is_public IS TRUE` and internal task `EXISTS`; no task row/count, author, subject id, raw cover path, answer, hint, content, scoring, or validation data may be returned.
-- Subject name is joined within the RPC. Initial public DTOs omit covers because exposing `cover_image_path` through an RPC is rejected; public Storage and owner UUID paths remain a separate existing disclosure tradeoff.
-- Include `quest_tasks(quest_id)` and the partial public catalog ordering index in the first approved migration. Defer subject, difficulty, language, and grade indexes until query plans or scale justify them.
+- Sprint 12.19.3 passed migration planning. The selected boundary is two separate `LANGUAGE sql`, `STABLE`, `SECURITY DEFINER` functions created by `postgres`: `public.list_public_catalog_quests(text, text, integer, integer, text, integer, integer)` and `public.get_public_catalog_quest(uuid)`.
+- Both use fixed `SET search_path = pg_catalog, public`, schema-qualified base tables, pg_catalog-qualified helpers, no dynamic SQL/auth.uid()/role switching/temp objects, and the exact public DTO only. They require `q.is_public IS TRUE` plus internal task `EXISTS`, join only subject name, and expose no task row/count, owner, subject id, cover path, answer, hint, content, scoring, validation, or error detail.
+- List parameters are search, subject name, grade, difficulty, language, limit, and offset. Search is trimmed, whitespace-normalized, case-insensitive literal title/description matching with `%`, `_`, and `!` escaped. Subject match is normalized case-insensitive exact name; grade is inclusive; limit clamps to 1-100, offset to non-negative; order is `created_at DESC NULLS LAST, id DESC`.
+- The first migration will use ordinary transaction-compatible `CREATE INDEX` for `quest_tasks_quest_id_idx` and `quests_public_catalog_created_at_id_idx`; broader filter indexes are deferred. It will use `CREATE FUNCTION`, explicit PUBLIC/anon/authenticated/service_role revokes, and grants only anon/authenticated EXECUTE. No table grants, RLS, Storage, or service-role application logic changes are approved.
 - Preserve task-workspace QA separately: Settings navigation, deletion focus cases, create/reset, API-failure retention, session localization, busy semantics, Save associations, radio-group semantics, and native-confirm decision.
 
 Planning topics:
 
-- Design exact SQL for `public.quest_tasks(quest_id)`, the partial public catalog ordering index, `list_public_catalog_quests()`, and `get_public_catalog_quest(uuid)`.
-- Define exact PostgreSQL return types, RPC signatures, deterministic ordering, and any optional filter parameters. Keep initial task-existence checks internal through `EXISTS`.
-- Define SECURITY DEFINER owner, fixed `search_path`, schema qualification, explicit output columns, and `REVOKE`/`GRANT` statements; verify PostgREST RPC compatibility and naming has no conflict.
-- Prepare migration and rollback SQL plus read-only validation queries, but do not apply or execute them.
+- Create exactly `database/migrations/012_add_public_catalog_read_boundary.sql` with the reviewed two indexes, two SECURITY DEFINER SQL RPCs, explicit signatures/return fields, fixed search path, and exact REVOKE/GRANT statements.
+- Perform static SQL and security review: no `SELECT *`, no public base-table/task policy, no table grants, no application data write, no RLS/Storage change, and no function overload.
+- Do not write application code or documentation. Do not apply the migration to Supabase. Separate explicit approval is required before live application.
 
 Out of scope:
 
-- SQL application, migrations, indexes, views, RPCs, RLS/grant/Storage policy changes.
-- Catalog/detail/start routes, API/service implementation, runtime/student work, or publication behavior changes.
+- Live SQL application, RLS/grant/Storage policy changes, catalog/detail/start routes, API/service implementation, runtime/student work, and publication behavior changes.
 - Live data, Storage writes, task-content/type changes, saves/autosaves, or teacher workflow changes.
 
 Required validation for any later implementation:
