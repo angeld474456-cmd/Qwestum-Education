@@ -1,6 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import TaskEditor from "@/components/tasks/TaskEditor";
@@ -28,6 +34,10 @@ type TasksResponse = {
   error?: string;
 };
 
+type PendingFocusTarget =
+  | { type: "task"; taskId: string }
+  | { type: "task-list-heading" };
+
 export default function QuestTasksClient({
   questId,
   initialTasks,
@@ -40,6 +50,87 @@ export default function QuestTasksClient({
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const selectedTaskIdRef = useRef<string | null>(initialTasks[0]?.id ?? null);
+  const taskPencilRefs = useRef(new Map<string, HTMLButtonElement>());
+  const taskListHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const pendingFocusTargetRef = useRef<PendingFocusTarget | null>(null);
+  const [focusSignal, setFocusSignal] = useState(0);
+
+  useEffect(() => {
+    selectedTaskIdRef.current = selectedTask?.id ?? null;
+  }, [selectedTask]);
+
+  useLayoutEffect(() => {
+    const pendingFocusTarget = pendingFocusTargetRef.current;
+
+    if (!pendingFocusTarget) return;
+
+    if (pendingFocusTarget.type === "task") {
+      const targetTaskExists = tasks.some(
+        (task) => task.id === pendingFocusTarget.taskId
+      );
+
+      if (!targetTaskExists) {
+        pendingFocusTargetRef.current = null;
+        return;
+      }
+
+      const pencilButton = taskPencilRefs.current.get(
+        pendingFocusTarget.taskId
+      );
+
+      if (!pencilButton) return;
+
+      pencilButton.focus();
+
+      if (document.activeElement === pencilButton) {
+        pendingFocusTargetRef.current = null;
+      }
+    } else {
+      const taskListHeading = taskListHeadingRef.current;
+
+      if (!taskListHeading) return;
+
+      taskListHeading.focus();
+
+      if (document.activeElement === taskListHeading) {
+        pendingFocusTargetRef.current = null;
+      }
+    }
+  }, [focusSignal, tasks]);
+
+  const registerTaskPencil = useCallback(
+    (
+      taskId: string,
+      element: HTMLButtonElement | null,
+      isCleanup = false
+    ) => {
+      if (!element) return;
+
+      if (isCleanup) {
+        if (taskPencilRefs.current.get(taskId) === element) {
+          taskPencilRefs.current.delete(taskId);
+        }
+
+        return;
+      }
+
+      taskPencilRefs.current.set(taskId, element);
+
+      if (
+        pendingFocusTargetRef.current?.type === "task" &&
+        pendingFocusTargetRef.current.taskId === taskId
+      ) {
+        setFocusSignal((currentSignal) => currentSignal + 1);
+      }
+    },
+    []
+  );
+
+  function handleSelectTask(task: QuestTask) {
+    selectedTaskIdRef.current = task.id;
+    setSelectedTask(task);
+  }
 
   function syncSelectedTask(loadedTasks: QuestTask[]) {
     setSelectedTask((currentTask) => {
@@ -330,9 +421,38 @@ export default function QuestTasksClient({
         return;
       }
 
+      const deletedIndex = tasks.findIndex((task) => task.id === id);
       const nextTasks = tasks.filter((task) => task.id !== id);
+      const deletedTaskWasSelected = selectedTaskIdRef.current === id;
+      let pendingFocusTarget: PendingFocusTarget | null = null;
+
+      if (nextTasks.length === 0) {
+        pendingFocusTarget = { type: "task-list-heading" };
+      } else if (deletedTaskWasSelected) {
+        pendingFocusTarget = {
+          type: "task",
+          taskId: nextTasks[0].id,
+        };
+      } else if (deletedIndex >= 0) {
+        const nearestTask =
+          nextTasks[deletedIndex] ?? nextTasks[deletedIndex - 1];
+
+        if (nearestTask) {
+          pendingFocusTarget = {
+            type: "task",
+            taskId: nearestTask.id,
+          };
+        }
+      }
+
       setTasks(nextTasks);
       syncSelectedTask(nextTasks);
+
+      if (pendingFocusTarget) {
+        pendingFocusTargetRef.current = pendingFocusTarget;
+        setFocusSignal((currentSignal) => currentSignal + 1);
+      }
+
       setStatusMessage("Задание удалено.");
     } catch (error) {
       console.error(error);
@@ -383,7 +503,11 @@ export default function QuestTasksClient({
 
         <div className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-12">
           <div className="xl:col-span-4">
-            <h2 className="mb-4 text-2xl font-bold">
+            <h2
+              ref={taskListHeadingRef}
+              tabIndex={-1}
+              className="mb-4 text-2xl font-bold"
+            >
               Задания
             </h2>
 
@@ -395,8 +519,9 @@ export default function QuestTasksClient({
               <TaskList
                 tasks={tasks}
                 selectedTaskId={selectedTask?.id ?? null}
-                onSelectTask={setSelectedTask}
+                onSelectTask={handleSelectTask}
                 onDelete={handleDeleteTask}
+                onRegisterTaskPencil={registerTaskPencil}
               />
             )}
 

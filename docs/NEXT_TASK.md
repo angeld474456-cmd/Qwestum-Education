@@ -6,33 +6,32 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan the smallest safe focus-recovery behavior after task-card deletion.
+Review the remaining launch-relevant accessibility and status behavior in the teacher task workspace.
 
 ## Next Task
 
-Sprint 12.18.43 - Deleted Task Focus Recovery Planning.
+Sprint 12.18.45 - Task Workspace Accessibility Completion Review Planning.
 
 Planning only. Do not implement or perform a live write until architecture approval and explicit write authorization.
 
 Current state:
 
-- Sprint 12.18.42 updated only `TaskList` and `TaskCard`: `isSelected` is derived from the existing `selectedTaskId` and passed to `TaskCard`, without duplicate selection state or callback/order changes.
-- The selected card retains its violet ring and shows visible secondary `Выбрано`; the wrapper remains a non-focusable mouse-selection `div` with no role, `tabIndex`, or keyboard handler. Metadata wraps naturally.
-- The native pencil retains `stopPropagation()` and `onSelect`, has accessible name `Открыть задание «{title}»`, and receives `aria-current="true"` only when selected. No `aria-selected`, `aria-pressed`, listbox, option, tab, or composite-widget semantics were added.
-- Manual authenticated no-write verification confirmed Tab access, Enter/Space pencil activation, unchanged mouse selection, selected-state movement, readable narrow layout, and reachable actions. No Save, Create, Delete, upload, removal, POST, PATCH, DELETE, or live-data change occurred.
-- No automatic focus, refs, or deletion-focus recovery were added. Delete confirmation/isolation, status messaging, selected-task synchronization, task display, TaskForm, editors, points validation, immutable-type guidance, APIs, Preview, and guards remain unchanged.
+- Sprint 12.18.44 implemented deleted-task focus recovery in `QuestTasksClient`, `TaskList`, and `TaskCard`. Selected deletion retains existing `syncSelectedTask(nextTasks)` behavior and focuses the selected first remaining pencil; unselected deletion retains selection and focuses the next surviving pencil or the previous one; only-task deletion focuses the existing `Задания` heading outside normal Tab order.
+- The current selected task ID is mirrored in a ref for DELETE-response-time decisions. The identity-safe pencil registry stores exact elements in a ref and removes them only when the element identity still matches.
+- The initial `useEffect([tasks])` approach failed manual focus verification despite successful deletion and selection sync. `focusSignal` and `useLayoutEffect` now focus after commit; matching registration retries an existing missing target, and a target absent from current tasks clears without unrelated focus.
+- Controlled final retest created and deleted one temporary selected Text task: the remaining task became selected, focus moved to its pencil, Enter activated it immediately, and cleanup restored the prior count. Other selected/unselected positions and the only-task fallback remain statically reviewed only.
+- Confirmation, DELETE/API behavior, error and status handling, TaskForm, editors, points validation, immutable-type guidance, images, Preview, publication safety, and deletion guards remain unchanged.
 
 Planning topics:
 
-- Review focus after deleting a selected task.
-- Review focus after deleting an unselected task.
-- Prevent focus loss when the deleted card disappears.
-- Determine whether focus should move to the next task, previous task, task-list heading, or create-task control.
-- Preserve selection synchronization, confirmation, and event isolation.
-- Avoid automatic editor focus.
-- Verify keyboard and screen-reader behavior.
-- Identify the smallest safe implementation.
-- Controlled temporary-task deletion requires separate approval.
+- Review the combined task-workspace accessibility improvements.
+- Review remaining TaskForm native alert validation.
+- Review disabled Save explanations.
+- Review session-expired announcement before redirect.
+- Review loading and busy announcements.
+- Review unselected-task deletion focus behavior and the empty-list heading fallback.
+- Distinguish MVP blockers from optional polish.
+- Identify the smallest remaining safe improvement.
 - No implementation or live write without explicit approval.
 
 Out of scope:

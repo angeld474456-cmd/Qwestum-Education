@@ -8,6 +8,10 @@ interface TaskListProps {
   selectedTaskId: string | null;
   onSelectTask: (task: QuestTask) => void;
   onDelete: (id: string) => void;
+  onRegisterTaskPencil: (
+    taskId: string,
+    element: HTMLButtonElement | null
+  ) => void;
 }
 
 export default function TaskList({
@@ -15,6 +19,7 @@ export default function TaskList({
   selectedTaskId,
   onSelectTask,
   onDelete,
+  onRegisterTaskPencil,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return (
@@ -51,6 +56,7 @@ export default function TaskList({
             isSelected={selectedTaskId === task.id}
             onSelect={() => onSelectTask(task)}
             onDelete={onDelete}
+            onRegisterPencil={onRegisterTaskPencil}
           />
 
         </div>

@@ -585,6 +585,19 @@ Next:
   - Planning only. Review focus after deletion of selected and unselected tasks; prevent focus loss when a card disappears; evaluate moving focus to next task, previous task, task-list heading, or create control; preserve selection synchronization, confirmation, and event isolation; avoid automatic editor focus; verify keyboard and screen-reader behavior; identify the smallest safe implementation.
   - Controlled temporary-task deletion requires separate approval. No implementation or live write without explicit approval.
 
+- Sprint 12.18.44 - Deleted Task Focus Recovery.
+  - Implemented in `QuestTasksClient`, `TaskList`, and `TaskCard`. Selected deletion preserves the existing `syncSelectedTask(nextTasks)` behavior, selects the first remaining task, and focuses its native pencil. Unselected deletion keeps selection and focuses the next surviving task at the deleted index, otherwise the previous task. Only-task deletion focuses the existing `Задания` heading with `tabIndex={-1}`.
+  - A current selected-task-id ref resolves selection changes while DELETE is in flight. An identity-safe callback-ref `Map<taskId, HTMLButtonElement>` registers exact pencils and unregisters only when the stored element identity matches, preventing stale cleanup from removing a replacement.
+  - The initial controlled test successfully deleted the selected temporary task, synchronized selection, and showed `Задание удалено.`, but focus did not move to the intended remaining pencil and Enter immediately after deletion did not activate it. Temporary data was cleaned up, and the implementation was not committed before the corrective `focusSignal`/`useLayoutEffect` work. Matching ref registration performs the bounded retry for an existing missing ref, while a target absent from current tasks is cleared without unrelated focus.
+  - Final controlled retest created and deleted one temporary selected Text task. The remaining task became selected, its intended pencil received focus, Enter activated it immediately without another Tab press, `Задание удалено.` appeared, and temporary-data cleanup restored the original task count. No existing task, image, or Storage object was intentionally modified.
+  - Selected temporary-task deletion is live verified. Other selected/unselected first, middle, and last positions and the only-task heading fallback were statically reviewed only. Confirmation, DELETE/API behavior, errors, guards, ordering, TaskForm, editors, images, Preview, schema/RLS, publication, and deletion guards remain unchanged.
+
+Next:
+
+- Sprint 12.18.45 - Task Workspace Accessibility Completion Review Planning.
+  - Planning only. Review combined accessibility improvements, native TaskForm alerts, disabled Save explanations, session-expired and loading/busy announcements, unselected-delete focus, and the empty-list heading fallback. Distinguish MVP blockers from optional polish and identify the smallest safe improvement.
+  - No implementation or live write without explicit approval.
+
 ## Suggested Future Milestones
 
 - Add more task types through the existing registry pattern.

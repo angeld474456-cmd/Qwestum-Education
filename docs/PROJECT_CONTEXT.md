@@ -609,9 +609,17 @@ Completed Sprint 12 work:
   - Manual authenticated no-write verification confirmed keyboard Tab access, Enter and Space pencil activation, unchanged mouse selection, selected ring/text movement, readable narrow layout, wrapping metadata, and reachable actions. No Save, Create, Delete, upload, removal, POST, PATCH, DELETE, or live-data change occurred.
   - No automatic focus, refs, or deletion-focus recovery were added. Delete confirmation/isolation, status messaging, selection synchronization, task display, TaskForm, editors, validation, immutable-type guidance, APIs, Preview, and guards remain unchanged.
 
+- Sprint 12.18.44 - Deleted Task Focus Recovery.
+  - Implemented deletion-focus recovery across `QuestTasksClient`, `TaskList`, and `TaskCard`. After a successful selected-task deletion, the unchanged `syncSelectedTask(nextTasks)` algorithm selects the first remaining task and focus moves to its native pencil button. After an unselected deletion, selection remains unchanged and focus moves to the next surviving task at the deleted index, or the previous task; focus and selection may intentionally differ. Deleting the only task focuses the existing `Задания` heading with `tabIndex={-1}`.
+  - `selectedTaskId` is mirrored in a current ref, so selected versus unselected deletion is decided at successful DELETE response time rather than from a stale closure. Cancellation, session expiry, server rejection, guards, and other failed DELETE paths create no focus target.
+  - `QuestTasksClient` owns an identity-safe `Map<taskId, HTMLButtonElement>` in a ref. Each `TaskCard` retains and unregisters its exact mounted pencil element; cleanup deletes only when `map.get(taskId) === element`, so stale callback-ref cleanup cannot remove a replacement.
+  - The initial controlled test successfully deleted the selected temporary task, synchronized selection, and showed `Задание удалено.`, but focus did not move to the intended remaining pencil and Enter immediately after deletion did not activate it. Temporary data was cleaned up, and the implementation was not committed before the corrective `focusSignal`/`useLayoutEffect` work. A registered target clears after focus succeeds; an existing target with a temporarily missing button remains pending until only its matching registration retries; a target absent from current tasks clears without redirecting focus.
+  - The final controlled retest created and deleted exactly one temporary selected Text task. `Задание удалено.` appeared, an existing remaining task became selected, focus moved to its intended pencil, and Enter immediately activated it without an additional Tab press. Temporary data was removed, the original task count was restored, cleanup completed, no existing task was intentionally modified, and no image or Storage operation occurred.
+  - Selected temporary-task deletion is live verified. Selected/unselected first, middle, and last deletion variants, plus the only-task heading fallback, were statically reviewed only and were not all live-write verified. Task ordering, confirmation, DELETE contract, status messages, error handling, TaskForm, editors, points validation, immutable-type guidance, images, Preview, schema, RLS, publication, and deletion guards remain unchanged.
+
 Next sprint:
 
-- Sprint 12.18.43 - Deleted Task Focus Recovery Planning.
+- Sprint 12.18.45 - Task Workspace Accessibility Completion Review Planning.
 
 ## Stack
 

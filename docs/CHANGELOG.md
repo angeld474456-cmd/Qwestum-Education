@@ -578,6 +578,13 @@
   - Manual authenticated no-write verification confirmed keyboard Tab access, Enter/Space pencil activation, unchanged mouse selection, selected-state movement, wrapping metadata, reachable narrow-layout actions, and no live write. No Save, Create, Delete, upload, removal, POST, PATCH, DELETE, or live-data change occurred.
   - No automatic focus, refs, or deletion-focus recovery were added; delete confirmation/isolation, status messages, synchronization, task display, TaskForm, editors, validation, immutable-type guidance, APIs, Preview, and guards remain unchanged.
 
+- Sprint 12.18.44 - Deleted Task Focus Recovery.
+  - Added post-successful-DELETE focus recovery in `QuestTasksClient`, `TaskList`, and `TaskCard`. The unchanged selected-task sync selects the first remaining task after selected deletion and its pencil receives focus; unselected deletion retains selection and focuses the next surviving task at the deleted index or the previous task; only-task deletion focuses the existing `Задания` heading with `tabIndex={-1}`.
+  - A current selected-task-id ref handles selection races during DELETE. The identity-safe pencil registry stores exact DOM elements in a ref, and callback-ref cleanup removes an entry only when its identity still matches.
+  - The initial controlled test successfully deleted the selected temporary task, synchronized selection, and showed `Задание удалено.`, but focus did not move to the intended remaining pencil and Enter immediately after deletion did not activate it. Temporary data was cleaned up, and the implementation was not committed before the corrective `focusSignal`/`useLayoutEffect` work. Only matching registration now retries a temporarily absent existing target, while an absent task target clears safely without unrelated focus.
+  - Final controlled retest created and deleted one temporary selected Text task. The remaining task became selected, its intended pencil focused, Enter activated it immediately without another Tab press, `Задание удалено.` appeared, and temporary-data cleanup restored the original task count. No existing task, image, or Storage object was intentionally modified.
+  - The selected temporary-task path is live verified; other selected/unselected positions and the only-task fallback were statically reviewed only. Confirmation, DELETE/API behavior, errors, guards, TaskForm, editors, points validation, immutable-type guidance, images, Preview, schema/RLS, publication, and deletion guards remain unchanged.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

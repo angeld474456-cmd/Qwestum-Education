@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback, useRef } from "react";
+
 import { QuestTask } from "@/services/quest.service";
 import { getTaskTypeLabel } from "@/components/tasks/editor/TextTaskEditor";
 
@@ -9,6 +11,11 @@ interface TaskCardProps {
   isSelected: boolean;
   onSelect: () => void;
   onDelete: (id: string) => void;
+  onRegisterPencil: (
+    taskId: string,
+    element: HTMLButtonElement,
+    isCleanup?: boolean
+  ) => void;
 }
 
 export default function TaskCard({
@@ -17,7 +24,27 @@ export default function TaskCard({
   isSelected,
   onSelect,
   onDelete,
+  onRegisterPencil,
 }: TaskCardProps) {
+  const pencilElementRef = useRef<HTMLButtonElement | null>(null);
+  const setPencilRef = useCallback(
+    (element: HTMLButtonElement | null) => {
+      if (element) {
+        pencilElementRef.current = element;
+        onRegisterPencil(task.id, element);
+        return;
+      }
+
+      const mountedElement = pencilElementRef.current;
+
+      if (mountedElement) {
+        onRegisterPencil(task.id, mountedElement, true);
+        pencilElementRef.current = null;
+      }
+    },
+    [onRegisterPencil, task.id]
+  );
+
   return (
     <div className="rounded-2xl bg-[#111827] p-6">
 
@@ -53,6 +80,7 @@ export default function TaskCard({
 
           <button
             type="button"
+            ref={setPencilRef}
             onClick={(event) => {
               event.stopPropagation();
               onSelect();
