@@ -595,6 +595,13 @@
   - Added conditional `aria-invalid`, `aria-describedby="task-title-error"`, and `#task-title-error` with `role="alert"`; visible labeling, red error styling, points validation, `Promise<boolean>` behavior, API error ownership, payload, selection, layout, and APIs remain unchanged.
   - Manual browser verification covered invalid local-title behavior only: focus, whitespace handling, retained type/points, and non-whitespace error clearing. No valid create, Save, POST, upload, removal, cleanup, or live-data write occurred. Success reset and API-failure retention are static-only review; intermittent Settings navigation remains separate deferred QA.
 
+- Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
+  - Planning review passed: the teacher task workspace has no currently evidenced MVP accessibility blocker for keyboard creation, editing, selection, deletion, validation recovery, card navigation, or deletion focus recovery. Immediate accessibility implementation ends; launch QA and non-blocking backlog remain.
+  - Important non-blocking: session-expired text remains English, redirects immediately, and the login page explains the reason; no arbitrary delay is recommended, so future work should improve localization and login feedback. No busy semantics and incomplete individual Save-error associations remain.
+  - Single Choice correct-answer radios have visual context but no programmatic group label; every radio exposes repeated `Правильный ответ`. Future `fieldset`/`legend` or equivalent review is recommended; no implementation was performed.
+  - Browser-native `Удалить задание?` is keyboard accessible and exposed to screen readers by the browser, but omits the task title. It was not independently screen-reader tested in this project. A custom dialog is optional polish because of focus-management and regression risk.
+  - QA timing: isolate Settings navigation before internal testing; verify unselected deletion focus, only-task heading fallback, valid create/reset, and API-failure retention before public MVP; defer session localization, busy semantics, Save associations, radio-group semantics, and confirm redesign to post-MVP. No additional live verification occurred.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

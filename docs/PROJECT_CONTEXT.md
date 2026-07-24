@@ -629,11 +629,20 @@ Completed Sprint 12 work:
   - Error lifecycle: initial render has no error; whitespace remains invalid; non-whitespace input clears the error; repeated invalid submission refocuses the field; successful creation clears it. The `Promise<boolean>` contract, points validation/order, create reset, failed-create retention, payload, selection, layout, and APIs remain unchanged.
   - Manual browser verification covered local invalid-title behavior only: empty and whitespace-only titles showed the error, focus returned to title, type and points remained unchanged, and valid typing cleared the error. No valid-title create, Save, POST, upload, removal, cleanup, or live-data write occurred. Successful-create reset and API-failure retention are statically reviewed only.
 
+- Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
+  - Planning review passed: no current MVP accessibility blocker was found for keyboard-only task creation, editing, selection, deletion, validation recovery, task-card navigation, or post-delete focus recovery. Immediate task-workspace accessibility implementation stops while launch QA and a non-blocking backlog remain preserved.
+  - Completed coverage includes assertive workspace errors and polite conditional success status; inline blank-title recovery; associated editor labels and read-only type guidance; associated points errors; native pencil selection with visible `Выбрано`; isolated delete actions; bounded identity-safe deletion focus recovery; and accessible image upload/removal controls.
+  - Important non-blocking findings: session-expired text remains English, redirects immediately, and the login page explains the reason; no arbitrary delay is recommended, so future work should prioritize localization and clearer login feedback. There is no `aria-busy` or action-specific busy text, and editor Save validation is not individually associated to every affected control.
+  - The Single Choice correct-answer radios have visual context but no programmatic group label; each currently exposes the repeated accessible name `Правильный ответ`. Future `fieldset`/`legend` or equivalent group-label review is recommended; no implementation was performed.
+  - The browser-native `Удалить задание?` confirmation is keyboard accessible and exposed to screen readers by the browser, but omits the task title. It was not independently screen-reader tested in this project. Replacing it with a custom dialog remains optional polish because of focus-management and regression risk.
+  - QA backlog: runtime Settings-navigation isolation before internal testing; unselected first/middle/last deletion focus, only-task heading fallback, valid create/reset after Sprint 12.18.48, and API-failure field retention before public MVP; session localization, busy semantics, Save associations, radio-group semantics, and custom-confirm decision after MVP.
+  - Settings navigation remains unresolved deferred QA, not part of accessibility implementation: its reported triggers are `Добавить вариант` and far-right document scrolling; static inspection found no form, Link wrapper, overlay, router call, redirect, or confirmed overlap, and no speculative fix was made.
+
 Next sprint:
 
-- Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
-  - Planning only. Review the workspace accessibility state after Sprints 12.18.38-12.18.48, session-expiry wording, loading/busy semantics, disabled editor Save explanations, native delete confirmation, and the unselected-delete and empty-list focus verification gaps.
-  - Keep intermittent Settings navigation as deferred QA; classify remaining findings as MVP blockers, important non-blocking, or polish, then recommend whether accessibility work can end before the next product feature. No implementation or live write without separate approval.
+- Sprint 12.19.1 - Public Quest Catalog and Student Access Planning.
+  - Planning only. Inspect publication eligibility, draft exclusion, current public/legacy routes, Preview/Play, RLS and server-read boundaries; design route and card models, required metadata, subject/grade/difficulty/language/free-paid/search filters, public browsing, sign-in/start, and later assignment/enrollment boundaries.
+  - Determine public-read access architecture without weakening teacher owner policies, schema/publication/cover readiness gaps, required server/API changes, security constraints, and static/browser test plans. No implementation, schema/RLS/Storage change, or live write without separate approval. Preserve the task-workspace QA backlog.
 
 ## Stack
 

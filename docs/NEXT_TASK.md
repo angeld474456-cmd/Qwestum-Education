@@ -6,33 +6,31 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Review whether the teacher task workspace has any remaining launch-blocking accessibility issues.
+Plan public quest discovery and student access without weakening teacher ownership boundaries.
 
 ## Next Task
 
-Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
+Sprint 12.19.1 - Public Quest Catalog and Student Access Planning.
 
 Planning only. Do not implement or perform a live write until architecture approval and explicit write authorization.
 
 Current state:
 
-- Sprint 12.18.48 replaced the native TaskForm blank-title alert with local `titleError`, a typed ref to the existing title input, and `Введите название задания.`. Blank and whitespace-only titles focus the input and stop before points validation or `onSave`; no request or field reset occurs.
-- The title input conditionally uses `aria-invalid` and `aria-describedby="task-title-error"`; `#task-title-error` is conditional, has `role="alert"`, and preserves existing red styling and visible label association. Points behavior, `Promise<boolean>` creation, workspace API errors, payload, selection, layout, and APIs remain unchanged.
-- Manual browser verification covered local invalid-title behavior, focus, whitespace handling, retained type/points, and error clearing after valid input. No valid create, Save, POST, upload, removal, cleanup, or live-data write occurred. Success reset and API-failure retention are static-only review.
-- Deferred QA: intermittent user-reported navigation to quest Settings while clicking `Добавить вариант` or dragging the far-right document scrollbar remains unconfirmed and outside active implementation scope.
+- Sprint 12.18.49 exit review found no current MVP accessibility blocker for keyboard-only task creation, editing, selection, deletion, validation recovery, task-card navigation, or focus recovery. Immediate task-workspace accessibility implementation stops; QA backlog remains.
+- Completed coverage includes workspace live regions, inline title validation, field associations, immutable-type guidance, points associations, selected-card cues, isolated delete, deletion focus recovery, and image-control names.
+- Important non-blocking: English immediate session-expiry/login feedback, no `aria-busy` or action-specific busy text, Save errors not individually associated to every invalid editor field, and missing programmatic Single Choice radio-group labeling. Native `Удалить задание?` is optional polish.
+- Deferred QA: runtime Settings-navigation isolation before internal testing; unselected deletion positions, only-task heading fallback, valid create/reset, and API-failure retention before public MVP. Settings navigation remains unresolved and no speculative fix is authorized.
 
 Planning topics:
 
-- Review complete workspace accessibility after Sprints 12.18.38-12.18.48.
-- Determine whether any remaining issue blocks MVP launch.
-- Review session-expiry wording and login explanation.
-- Review loading and busy semantics.
-- Review disabled editor Save explanations.
-- Review native delete confirmation usage.
-- Review unselected-deletion and empty-list focus verification gaps.
-- Retain intermittent Settings navigation as deferred QA.
-- Classify findings as MVP blockers, important non-blocking, or optional polish.
-- Recommend whether to stop accessibility work and move to the next product feature.
+- Inspect the current quest publication model and public-read eligibility fields.
+- Confirm Draft exclusion, existing public and legacy routes, and Preview/Play behavior.
+- Inspect RLS and server-read boundaries; compare authenticated, anonymous, and server-only public-read designs without weakening owner-only teacher policies.
+- Design public catalog routes, cards, required metadata, and subject/grade/difficulty/language/free-paid/search filters.
+- Design student public browsing, sign-in, start-quest, and later assignment/enrollment boundaries.
+- Identify schema, publication-state, cover-image, API/service, and security gaps without implementing changes.
+- Define static and browser test plans and distinguish MVP catalog scope from later marketplace/payment features.
+- Retain task-workspace QA references: Settings navigation, deletion focus, create/reset, API-failure retention, session localization, busy semantics, Save associations, radio-group semantics, and confirm decision.
 - No implementation or live write without explicit approval.
 
 Out of scope:

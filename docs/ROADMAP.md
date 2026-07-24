@@ -602,11 +602,18 @@ Next:
   - Conditional `aria-invalid`, `aria-describedby="task-title-error"`, and `#task-title-error[role="alert"]` provide field-specific semantics while preserving the visible label and existing red error styling. Points validation, `Promise<boolean>` creation, workspace API errors, payload, selection, layout, APIs, and the deferred Settings QA item remain unchanged.
   - Manual local browser verification covered invalid titles, focus, retained type/points, and error clearing after non-whitespace input. No valid create, Save, POST, upload, removal, cleanup, or live-data write occurred; success reset and API-failure retention are static-only review.
 
+- Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
+  - Planning review passed and closes immediate task-workspace accessibility implementation: no current MVP blocker was found for keyboard creation/editing/selection/deletion, validation recovery, task-card navigation, or deletion focus recovery. Existing accessibility coverage includes live regions, inline title validation, labels, immutable type guidance, points associations, selected-card cues, isolated delete, focus recovery, and image-control names.
+  - Important non-blocking backlog: session-expired text remains English, redirects immediately, and the login page explains the reason; no arbitrary delay is recommended, so future work should improve localization and login feedback. Missing `aria-busy` and action-specific busy text, plus editor Save errors not individually associated to every field, remain.
+  - Single Choice correct-answer radios have visual context but no programmatic group label; every radio exposes repeated `Правильный ответ`. Future `fieldset`/`legend` or equivalent group-label review is recommended; no implementation was performed.
+  - Browser-native `Удалить задание?` is keyboard accessible and exposed to screen readers by the browser, but omits the task title. It was not independently screen-reader tested in this project. Custom-dialog work remains optional polish because of focus-management and regression risk.
+  - Before internal testing: Settings-navigation runtime isolation. Before public MVP: unselected deletion positions, only-task heading fallback, valid create/reset, and API-failure retention. Post-MVP: session localization, busy semantics, Save associations, radio-group semantics, and custom-confirm decision. Settings navigation remains unresolved deferred QA with no speculative fix.
+
 Next:
 
-- Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
-  - Planning only. Review the complete workspace accessibility state after Sprints 12.18.38-12.18.48, including session-expiry wording, loading/busy semantics, disabled editor Save explanations, native delete confirmation, and unselected-delete/empty-list focus verification gaps.
-  - Keep intermittent Settings navigation as deferred QA. Classify remaining work and recommend whether to end accessibility work before the next product feature; no implementation or live write without separate approval.
+- Sprint 12.19.1 - Public Quest Catalog and Student Access Planning.
+  - Planning only. Inspect publication eligibility, draft exclusion, public and legacy routes, Preview/Play, RLS/server-read boundaries, catalog route/card/filter model, student entry flow, schema and publication gaps, covers, API/service changes, security constraints, and static/browser test plans.
+  - Do not weaken owner-only teacher policy or implement schema/RLS/Storage/live changes without separate approval. Retain the task-workspace QA backlog.
 
 ## Suggested Future Milestones
 
