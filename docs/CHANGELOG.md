@@ -590,6 +590,11 @@
   - Type and points associations, validation, save and payload behavior, images, options, correct answers, layout, responsive behavior, APIs, schema, and Storage remain unchanged. Manual read-only verification confirmed all four labels focus their controls; no Save, server request, or live-data write occurred.
   - Separately recorded deferred QA for an intermittent user-observed transition to quest Settings while clicking `Добавить вариант` or dragging the far-right document scrollbar. Static inspection found no confirmed application code path, so no speculative fix was made or claimed; runtime isolation remains pending.
 
+- Sprint 12.18.48 - Task Creation Inline Title Validation.
+  - Replaced the TaskForm native blank-title alert with `titleError`, a typed title-input ref, and the inline `Введите название задания.` error. Blank and whitespace-only titles focus the existing input and return before points validation or `onSave`; no request or reset occurs.
+  - Added conditional `aria-invalid`, `aria-describedby="task-title-error"`, and `#task-title-error` with `role="alert"`; visible labeling, red error styling, points validation, `Promise<boolean>` behavior, API error ownership, payload, selection, layout, and APIs remain unchanged.
+  - Manual browser verification covered invalid local-title behavior only: focus, whitespace handling, retained type/points, and non-whitespace error clearing. No valid create, Save, POST, upload, removal, cleanup, or live-data write occurred. Success reset and API-failure retention are static-only review; intermittent Settings navigation remains separate deferred QA.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

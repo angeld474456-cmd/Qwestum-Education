@@ -623,11 +623,17 @@ Completed Sprint 12 work:
   - Manual read-only browser verification confirmed that all four labels focus their associated controls. No Save action, server request, or live-data write occurred.
   - A separate intermittent QA observation remains unresolved: the user reported occasional navigation to quest Settings while using `Добавить вариант` or dragging the outer document scrollbar at the far-right edge. Static investigation found no confirmed form, Link, parent navigation handler, router call, redirect, stretched link, overlay, fixed right-edge element, or horizontal-overflow source. Runtime isolation is pending; no speculative fix was made or claimed, and this does not describe Sprint 12.18.46 implementation behavior.
 
+- Sprint 12.18.48 - Task Creation Inline Title Validation.
+  - `TaskForm` now replaces the native blank-title alert with local `titleError` state, a typed ref to the existing title input, and the exact inline error `Введите название задания.`. Blank and whitespace-only titles set the error, focus the existing input with `focus()`, and return before points validation or `onSave`, with no request and no field reset.
+  - The title input conditionally uses `aria-invalid` and `aria-describedby="task-title-error"`; the conditional `#task-title-error` uses `role="alert"` and existing red error styling. The visible label association remains unchanged, no duplicate ID or ARIA naming was added, and API failures remain in the existing `QuestTasksClient` workspace error region.
+  - Error lifecycle: initial render has no error; whitespace remains invalid; non-whitespace input clears the error; repeated invalid submission refocuses the field; successful creation clears it. The `Promise<boolean>` contract, points validation/order, create reset, failed-create retention, payload, selection, layout, and APIs remain unchanged.
+  - Manual browser verification covered local invalid-title behavior only: empty and whitespace-only titles showed the error, focus returned to title, type and points remained unchanged, and valid typing cleared the error. No valid-title create, Save, POST, upload, removal, cleanup, or live-data write occurred. Successful-create reset and API-failure retention are statically reviewed only.
+
 Next sprint:
 
-- Sprint 12.18.47 - Task Creation Inline Validation Planning.
-  - Planning only. Inspect the native `alert("Введите название задания")` in `TaskForm`; design the smallest accessible inline replacement, exact error copy, blank-title focus behavior, and preservation of entered values and the existing `Promise<boolean>` create contract.
-  - Distinguish TaskForm creation validation from editor save validation. Keep the intermittent Settings-navigation issue as deferred QA, not active implementation scope. No API, route, schema, RLS, Storage, live write, or implementation without separate approval.
+- Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
+  - Planning only. Review the workspace accessibility state after Sprints 12.18.38-12.18.48, session-expiry wording, loading/busy semantics, disabled editor Save explanations, native delete confirmation, and the unselected-delete and empty-list focus verification gaps.
+  - Keep intermittent Settings navigation as deferred QA; classify remaining findings as MVP blockers, important non-blocking, or polish, then recommend whether accessibility work can end before the next product feature. No implementation or live write without separate approval.
 
 ## Stack
 

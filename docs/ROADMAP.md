@@ -597,11 +597,16 @@ Next:
   - Stable editor-specific IDs prevent collisions; existing type and points associations, points validation associations, editor behavior, layout, responsive behavior, APIs, schema, and Storage remain unchanged. Manual read-only verification confirmed all four labels focus their associated controls; no Save, server request, or live-data write occurred.
   - Deferred QA: the user observed intermittent Settings navigation while using `Добавить вариант` or the far-right document scrollbar. Static inspection found no confirmed code path or geometry cause, so no speculative fix was made. Runtime browser isolation remains pending; this unresolved observation is separate from the verified label work.
 
+- Sprint 12.18.48 - Task Creation Inline Title Validation.
+  - Replaced TaskForm's native blank-title alert with local `titleError`, a typed ref to the existing title input, and the exact inline error `Введите название задания.`. Blank and whitespace-only titles focus the input and return before points validation or `onSave`; repeated invalid submissions refocus it without sending a request or resetting fields.
+  - Conditional `aria-invalid`, `aria-describedby="task-title-error"`, and `#task-title-error[role="alert"]` provide field-specific semantics while preserving the visible label and existing red error styling. Points validation, `Promise<boolean>` creation, workspace API errors, payload, selection, layout, APIs, and the deferred Settings QA item remain unchanged.
+  - Manual local browser verification covered invalid titles, focus, retained type/points, and error clearing after non-whitespace input. No valid create, Save, POST, upload, removal, cleanup, or live-data write occurred; success reset and API-failure retention are static-only review.
+
 Next:
 
-- Sprint 12.18.47 - Task Creation Inline Validation Planning.
-  - Planning only. Review the native `alert("Введите название задания")` in `TaskForm`, the smallest accessible inline replacement, exact copy, blank-title focus, field preservation, and the existing `Promise<boolean>` create contract. Distinguish creation validation from editor save validation.
-  - The intermittent Settings-navigation observation remains deferred QA, not implementation scope. No implementation, API/schema/route/RLS/Storage change, or live write without explicit approval.
+- Sprint 12.18.49 - Task Workspace Accessibility Exit Review Planning.
+  - Planning only. Review the complete workspace accessibility state after Sprints 12.18.38-12.18.48, including session-expiry wording, loading/busy semantics, disabled editor Save explanations, native delete confirmation, and unselected-delete/empty-list focus verification gaps.
+  - Keep intermittent Settings navigation as deferred QA. Classify remaining work and recommend whether to end accessibility work before the next product feature; no implementation or live write without separate approval.
 
 ## Suggested Future Milestones
 

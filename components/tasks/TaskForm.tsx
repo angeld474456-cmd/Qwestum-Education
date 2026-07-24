@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   POINTS_VALIDATION_MESSAGE,
   parsePositiveSafeInteger,
@@ -21,18 +21,23 @@ interface TaskFormProps {
 
 export default function TaskForm({ onSave }: TaskFormProps) {
   const [title, setTitle] = useState("");
+  const [titleError, setTitleError] = useState(false);
   const [description, setDescription] = useState("");
   const [answer, setAnswer] = useState("");
   const [hint, setHint] = useState("");
   const [points, setPoints] = useState("1");
   const [pointsError, setPointsError] = useState(false);
   const [taskType, setTaskType] = useState<TaskType>("text");
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit() {
     if (!title.trim()) {
-      alert("Введите название задания");
+      setTitleError(true);
+      titleInputRef.current?.focus();
       return;
     }
+
+    setTitleError(false);
 
     const parsedPoints = parsePositiveSafeInteger(points);
 
@@ -55,6 +60,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
     if (!created) return;
 
     setTitle("");
+    setTitleError(false);
     setDescription("");
     setAnswer("");
     setHint("");
@@ -76,11 +82,31 @@ export default function TaskForm({ onSave }: TaskFormProps) {
 
         <input
           id="task-title"
+          ref={titleInputRef}
           className="w-full rounded-xl bg-[#1B2435] p-4"
           placeholder="Название задания"
           value={title}
-          onChange={(e)=>setTitle(e.target.value)}
+          onChange={(e) => {
+            const nextTitle = e.target.value;
+            setTitle(nextTitle);
+
+            if (titleError && nextTitle.trim()) {
+              setTitleError(false);
+            }
+          }}
+          aria-invalid={titleError || undefined}
+          aria-describedby={titleError ? "task-title-error" : undefined}
         />
+
+        {titleError ? (
+          <p
+            id="task-title-error"
+            role="alert"
+            className="mt-2 text-sm text-red-300"
+          >
+            Введите название задания.
+          </p>
+        ) : null}
       </div>
 
       <div className="mt-4">
