@@ -53,11 +53,15 @@ export default function TextTaskEditor({
     <div className="mt-8 space-y-6">
 
       <div>
-        <label className="mb-2 block text-slate-300">
+        <label
+          htmlFor="text-task-title"
+          className="mb-2 block text-slate-300"
+        >
           Название
         </label>
 
         <input
+          id="text-task-title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="w-full rounded-xl bg-[#1B2435] p-4"
@@ -65,11 +69,15 @@ export default function TextTaskEditor({
       </div>
 
       <div>
-        <label className="mb-2 block text-slate-300">
+        <label
+          htmlFor="text-task-description"
+          className="mb-2 block text-slate-300"
+        >
           Текст задания
         </label>
 
         <textarea
+          id="text-task-description"
           rows={6}
           value={description}
           onChange={(e) => setDescription(e.target.value)}

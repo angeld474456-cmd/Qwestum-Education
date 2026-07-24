@@ -592,11 +592,16 @@ Next:
   - Final controlled retest created and deleted one temporary selected Text task. The remaining task became selected, its intended pencil received focus, Enter activated it immediately without another Tab press, `Задание удалено.` appeared, and temporary-data cleanup restored the original task count. No existing task, image, or Storage object was intentionally modified.
   - Selected temporary-task deletion is live verified. Other selected/unselected first, middle, and last positions and the only-task heading fallback were statically reviewed only. Confirmation, DELETE/API behavior, errors, guards, ordering, TaskForm, editors, images, Preview, schema/RLS, publication, and deletion guards remain unchanged.
 
+- Sprint 12.18.46 - Task Editor Field Label Accessibility.
+  - Completed the focused accessibility improvement in `TextTaskEditor` and `SingleChoiceTaskEditor`: `Название` -> `#text-task-title`, `Текст задания` -> `#text-task-description`, `Вопрос` -> `#single-choice-task-title`, and `Описание` -> `#single-choice-task-description`.
+  - Stable editor-specific IDs prevent collisions; existing type and points associations, points validation associations, editor behavior, layout, responsive behavior, APIs, schema, and Storage remain unchanged. Manual read-only verification confirmed all four labels focus their associated controls; no Save, server request, or live-data write occurred.
+  - Deferred QA: the user observed intermittent Settings navigation while using `Добавить вариант` or the far-right document scrollbar. Static inspection found no confirmed code path or geometry cause, so no speculative fix was made. Runtime browser isolation remains pending; this unresolved observation is separate from the verified label work.
+
 Next:
 
-- Sprint 12.18.45 - Task Workspace Accessibility Completion Review Planning.
-  - Planning only. Review combined accessibility improvements, native TaskForm alerts, disabled Save explanations, session-expired and loading/busy announcements, unselected-delete focus, and the empty-list heading fallback. Distinguish MVP blockers from optional polish and identify the smallest safe improvement.
-  - No implementation or live write without explicit approval.
+- Sprint 12.18.47 - Task Creation Inline Validation Planning.
+  - Planning only. Review the native `alert("Введите название задания")` in `TaskForm`, the smallest accessible inline replacement, exact copy, blank-title focus, field preservation, and the existing `Promise<boolean>` create contract. Distinguish creation validation from editor save validation.
+  - The intermittent Settings-navigation observation remains deferred QA, not implementation scope. No implementation, API/schema/route/RLS/Storage change, or live write without explicit approval.
 
 ## Suggested Future Milestones
 

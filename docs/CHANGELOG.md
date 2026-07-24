@@ -585,6 +585,11 @@
   - Final controlled retest created and deleted one temporary selected Text task. The remaining task became selected, its intended pencil focused, Enter activated it immediately without another Tab press, `Задание удалено.` appeared, and temporary-data cleanup restored the original task count. No existing task, image, or Storage object was intentionally modified.
   - The selected temporary-task path is live verified; other selected/unselected positions and the only-task fallback were statically reviewed only. Confirmation, DELETE/API behavior, errors, guards, TaskForm, editors, points validation, immutable-type guidance, images, Preview, schema/RLS, publication, and deletion guards remain unchanged.
 
+- Sprint 12.18.46 - Task Editor Field Label Accessibility.
+  - Added stable label/control associations in the two editors: `Название` -> `#text-task-title`, `Текст задания` -> `#text-task-description`, `Вопрос` -> `#single-choice-task-title`, and `Описание` -> `#single-choice-task-description`.
+  - Type and points associations, validation, save and payload behavior, images, options, correct answers, layout, responsive behavior, APIs, schema, and Storage remain unchanged. Manual read-only verification confirmed all four labels focus their controls; no Save, server request, or live-data write occurred.
+  - Separately recorded deferred QA for an intermittent user-observed transition to quest Settings while clicking `Добавить вариант` or dragging the far-right document scrollbar. Static inspection found no confirmed application code path, so no speculative fix was made or claimed; runtime isolation remains pending.
+
 ## Current State On `feature/next-work`
 
 Documented baseline for future Codex chats.

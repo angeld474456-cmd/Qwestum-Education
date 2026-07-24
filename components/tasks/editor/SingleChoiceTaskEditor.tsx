@@ -126,11 +126,15 @@ export default function SingleChoiceTaskEditor({
     <div className="mt-8 space-y-6">
 
       <div>
-        <label className="mb-2 block text-slate-300">
+        <label
+          htmlFor="single-choice-task-title"
+          className="mb-2 block text-slate-300"
+        >
           Вопрос
         </label>
 
         <input
+          id="single-choice-task-title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           className="w-full rounded-xl bg-[#1B2435] p-4"
@@ -138,11 +142,15 @@ export default function SingleChoiceTaskEditor({
       </div>
 
       <div>
-        <label className="mb-2 block text-slate-300">
+        <label
+          htmlFor="single-choice-task-description"
+          className="mb-2 block text-slate-300"
+        >
           Описание
         </label>
 
         <textarea
+          id="single-choice-task-description"
           rows={6}
           value={description}
           onChange={(e) => setDescription(e.target.value)}

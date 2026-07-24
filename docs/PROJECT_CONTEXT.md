@@ -617,9 +617,17 @@ Completed Sprint 12 work:
   - The final controlled retest created and deleted exactly one temporary selected Text task. `Задание удалено.` appeared, an existing remaining task became selected, focus moved to its intended pencil, and Enter immediately activated it without an additional Tab press. Temporary data was removed, the original task count was restored, cleanup completed, no existing task was intentionally modified, and no image or Storage operation occurred.
   - Selected temporary-task deletion is live verified. Selected/unselected first, middle, and last deletion variants, plus the only-task heading fallback, were statically reviewed only and were not all live-write verified. Task ordering, confirmation, DELETE contract, status messages, error handling, TaskForm, editors, points validation, immutable-type guidance, images, Preview, schema, RLS, publication, and deletion guards remain unchanged.
 
+- Sprint 12.18.46 - Task Editor Field Label Accessibility.
+  - Implemented only in `TextTaskEditor` and `SingleChoiceTaskEditor`: `Название` labels `#text-task-title`, `Текст задания` labels `#text-task-description`, `Вопрос` labels `#single-choice-task-title`, and `Описание` labels `#single-choice-task-description`.
+  - The editor-specific IDs are stable and cannot collide. Existing read-only type-field IDs, points IDs, `aria-invalid`, and `aria-describedby` associations remain unchanged; no state, validation, save, payload, image, option, correct-answer, layout, responsive, API, schema, or Storage behavior changed.
+  - Manual read-only browser verification confirmed that all four labels focus their associated controls. No Save action, server request, or live-data write occurred.
+  - A separate intermittent QA observation remains unresolved: the user reported occasional navigation to quest Settings while using `Добавить вариант` or dragging the outer document scrollbar at the far-right edge. Static investigation found no confirmed form, Link, parent navigation handler, router call, redirect, stretched link, overlay, fixed right-edge element, or horizontal-overflow source. Runtime isolation is pending; no speculative fix was made or claimed, and this does not describe Sprint 12.18.46 implementation behavior.
+
 Next sprint:
 
-- Sprint 12.18.45 - Task Workspace Accessibility Completion Review Planning.
+- Sprint 12.18.47 - Task Creation Inline Validation Planning.
+  - Planning only. Inspect the native `alert("Введите название задания")` in `TaskForm`; design the smallest accessible inline replacement, exact error copy, blank-title focus behavior, and preservation of entered values and the existing `Promise<boolean>` create contract.
+  - Distinguish TaskForm creation validation from editor save validation. Keep the intermittent Settings-navigation issue as deferred QA, not active implementation scope. No API, route, schema, RLS, Storage, live write, or implementation without separate approval.
 
 ## Stack
 
