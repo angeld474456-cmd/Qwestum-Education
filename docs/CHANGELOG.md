@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.19.6 - Public Runtime Database Boundary
+
+- Added the reviewed source migration `database/migrations/013_add_public_runtime_boundary.sql` and byte-identical CLI delivery migration `supabase/migrations/20260725213130_add_public_runtime_boundary.sql`.
+- Applied live version `20260725213130`, creating `public.get_public_runtime_quest(uuid)` and `public.score_public_runtime_quest(uuid, jsonb)` for sanitized anonymous runtime fetch and server-side Single Choice scoring; Text tasks remain `not_scored` and no attempts are persisted.
+- Read-only smoke checks confirmed eligible fetch, missing-ID zero rows, allowlisted observed DTO fields, valid exact-ID unanswered scoring, unknown-task zero rows, oversized-payload zero rows, and no anonymous REST data exposure from `quests` or `quest_tasks`.
+- No table/data/RLS/Storage/index/application change, rollback, or migration repair occurred. Verification remains partial because the available CLI dump path requires Docker Desktop and no eligible public Single Choice runtime quest was available without mutation; metadata re-inspection and several dataset-dependent cases remain unverified.
+
 ## Sprint 12.19.5 - Public Catalog RPC Application Integration
 
 - Added anonymous public catalog routes `/catalog` and `/catalog/[id]`, backed by the new server-only `services/public-catalog.server.ts` public RPC boundary.

@@ -10,24 +10,22 @@ Plan the safe transition from public quest detail to a future student runtime.
 
 ## Next Task
 
-Sprint 12.19.6 - Public Quest Detail-to-Student Runtime Planning.
+Sprint 12.19.7 - Public Runtime Application Integration Planning.
 
 Planning-only. Follow analysis -> architecture -> plan. Do not implement application code, apply SQL, or perform live writes without separate explicit approval.
 
 Current state:
 
-- Migration version `20260724204657` supplies the allowlisted public catalog RPC boundary. Sprint 12.19.5 now consumes it through server-only `/catalog` and `/catalog/[id]` routes.
-- Public catalog access remains metadata-only: no owner data, cover path, task data, answers, hints, points, scoring, or student runtime is exposed. Only published quests with at least one task appear.
-- Catalog supports search, subject, one grade, difficulty, and capped offset pagination. Language/category/tag filtering and totals remain deferred.
+- Migration version `20260725213130` now supplies `public.get_public_runtime_quest(uuid)` and `public.score_public_runtime_quest(uuid, jsonb)` for the anonymous temporary runtime. Public catalog metadata remains served separately through the existing catalog RPCs and server-only `/catalog` routes.
+- The runtime RPCs keep correct answers server-side, expose no direct anonymous base-table reads, return generic zero rows for unavailable/invalid input, and do not persist attempts or results. Live smoke coverage is partial; its documented metadata and dataset limitations remain open verification work.
 
 Planning topics:
 
-- Inspect the teacher-only `QuestRunner`, task renderers, task DTOs, and public detail route to identify data that must never cross a future student boundary.
-- Define a sanitized public/student task DTO and delivery architecture without reusing teacher task services or the current answer-bearing runtime payload.
-- Plan public detail-to-start routing, authentication requirements, safe local return paths, publication/taskless withdrawal behavior, and generic not-found handling.
-- Define loading, error, empty, unavailable, and runtime completion-state requirements plus anonymous/authenticated verification coverage.
-- Preserve the catalog DTO denylist, cover omission, current direct-table denial, and separation from teacher Preview/Play.
+- Analyze the teacher-only `QuestRunner`, task renderers, public detail page, and already-applied runtime RPC DTOs before defining application ownership boundaries.
+- Produce the architecture and exact file-by-file plan. Planned creates are `types/public-runtime.ts`, `services/public-runtime.server.ts`, `app/api/public/quests/[id]/submit/route.ts`, `app/catalog/[id]/start/page.tsx`, `app/catalog/[id]/start/loading.tsx`, `app/catalog/[id]/start/error.tsx`, `components/public-runtime/PublicQuestRunner.tsx`, `components/public-runtime/PublicTaskRenderer.tsx`, `components/public-runtime/PublicTextTask.tsx`, `components/public-runtime/PublicSingleChoiceTask.tsx`, and `components/public-runtime/PublicQuestResults.tsx`. The planned modification is `components/catalog/PublicQuestDetail.tsx` for the start CTA.
+- Define server-only RPC access, request validation, generic unavailable/invalid handling, loading/error/completion states, no-answer-leak guarantees, and no-persistent-attempt behavior.
+- Plan publication/taskless withdrawal handling, safe start routing, anonymous verification, and later authentication decisions without reusing teacher Preview/Play or its answer-bearing payload.
 
 Out of scope:
 
-- Application implementation, task/start routes, student runtime, new RPCs, schema/RLS/Storage changes, task exposure, attempts/results, live data writes, staging, commit, and push.
+- Code implementation before explicit approval, new RPCs, schema/RLS/Storage changes, persistent attempts/results, authentication, payments, production rate limiting, live data writes, staging, commit, and push.

@@ -659,10 +659,16 @@ Next:
   - Manual browser verification passed for anonymous catalog access, Cyrillic/Latin search, filters, Reset, public detail, teacher redirects/dashboard behavior, and the expanded public-header catalog link. Only published quests with at least one task appear; pagination beyond the first page remains unexercised because fewer than 24 eligible quests exist.
   - No live schema, data, RLS, Storage, migration, grant, or Supabase change occurred.
 
+Sprint 12.19.6 - Public Runtime Database Boundary
+
+- Completed live application of migration `20260725213130_add_public_runtime_boundary.sql`, creating the sanitized fetch and server-side scoring RPCs without table/data/RLS/Storage/index/application changes or persistent attempts.
+- Read-only smoke checks confirmed eligible fetch, missing-ID zero rows, allowlisted observed DTO fields, valid exact-ID unanswered scoring, unknown-task zero rows, oversized-payload zero rows, and no direct anonymous REST data exposure. Metadata and dataset-dependent cases remain partially unverified because the CLI dump path requires Docker Desktop and no eligible public Single Choice runtime quest was available without mutation.
+
 Next:
 
-- Sprint 12.19.6 - Public Quest Detail-to-Student Runtime Planning.
-  - Planning only: analyze the existing teacher runtime and the public detail boundary, define the sanitized task-delivery contract, publication withdrawal behavior, start/auth/return-path requirements, loading/error/not-found states, and verification plan. No application code, RPC, schema, RLS, Storage, data, or live write occurs without separate approval.
+- Sprint 12.19.7 - Public Runtime Application Integration Planning.
+  - Begin with repository analysis, runtime architecture, and an exact implementation plan. Planned creates are `types/public-runtime.ts`, `services/public-runtime.server.ts`, `app/api/public/quests/[id]/submit/route.ts`, `app/catalog/[id]/start/page.tsx`, `app/catalog/[id]/start/loading.tsx`, `app/catalog/[id]/start/error.tsx`, `components/public-runtime/PublicQuestRunner.tsx`, `components/public-runtime/PublicTaskRenderer.tsx`, `components/public-runtime/PublicTextTask.tsx`, `components/public-runtime/PublicSingleChoiceTask.tsx`, and `components/public-runtime/PublicQuestResults.tsx`. The planned modification is `components/catalog/PublicQuestDetail.tsx` for the start CTA. Preserve the RPC allowlist, generic unavailable behavior, no direct anonymous table reads, no answer leakage, and no persistent attempts.
+  - Code starts only after separate approval of the analysis -> architecture -> plan. Authentication, payments, production rate limiting, and any schema/RLS/Storage change remain out of scope.
 
 ## Suggested Future Milestones
 
