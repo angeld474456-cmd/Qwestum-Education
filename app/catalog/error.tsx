@@ -1,0 +1,23 @@
+"use client";
+
+type CatalogErrorProps = {
+  reset: () => void;
+};
+
+export default function CatalogError({ reset }: CatalogErrorProps) {
+  return (
+    <main className="min-h-screen bg-[#070B14] px-6 py-12 text-white">
+      <section className="mx-auto max-w-3xl rounded-lg border border-slate-800 bg-[#111827] p-8 text-center">
+        <h1 className="text-2xl font-semibold">Каталог временно недоступен</h1>
+        <p className="mt-3 text-slate-400">Попробуйте обновить страницу позже.</p>
+        <button
+          type="button"
+          onClick={reset}
+          className="mt-6 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
+        >
+          Повторить
+        </button>
+      </section>
+    </main>
+  );
+}

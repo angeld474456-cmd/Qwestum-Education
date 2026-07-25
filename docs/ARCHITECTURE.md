@@ -727,3 +727,13 @@ The functions revoke default PUBLIC execution and grant EXECUTE only to `anon` a
 The dual-path migration convention is intentional: `database/migrations/012_add_public_catalog_read_boundary.sql` remains the reviewed project migration source, while the byte-identical `supabase/migrations/20260724204657_add_public_catalog_read_boundary.sql` is the standard Supabase CLI delivery file that the linked CLI applies. `supabase/.temp/` is ignored link metadata and is not migration source.
 
 Anonymous list/detail behavior, DTO boundary, missing-ID zero rows, direct anonymous base-table denial, pagination normalization, and deterministic ordering were verified. Overall verification is **PARTIAL PASS** because no safe authenticated context was available and independent live catalog metadata re-inspection for ACL/index/RLS/Storage was incomplete in the available CLI environment.
+
+## Sprint 12.19.5 - Public Catalog RPC Application Integration
+
+`services/public-catalog.server.ts` is the server-only application boundary for public catalog reads. It uses the existing server Supabase client and calls only `public.list_public_catalog_quests(...)` and `public.get_public_catalog_quest(uuid)`; it never reads `quests` or `quest_tasks` directly, never uses a service-role credential, and never returns raw database errors.
+
+The application DTO remains allowlisted: `id`, `title`, `description`, `subjectName`, `difficulty`, `languageCode`, `gradeMin`, `gradeMax`, `estimatedDurationMinutes`, `category`, `tags`, and `createdAt`. RPC rows are mapped from snake_case to camelCase, tags normalize to an array, and language is accepted only as `ru`, `kk`, `en`, or null. No owner IDs, subject ID, cover path, publication internals, task data, answers, hints, points, or scoring data cross the service boundary.
+
+`/catalog` and `/catalog/[id]` are Server Component routes outside the authenticated dashboard. The list uses a standard GET form and URL query synchronization for search, subject, one inclusive grade, difficulty, and offset; language/category/tag filtering is intentionally not exposed. It fetches 25 rows, renders 24, and uses Previous/Next offset links that preserve only supported filters. Next is withheld at offset `10000` even if an extra row exists. Detail validates the UUID before an RPC call and maps malformed, missing, unpublished, and taskless IDs to the same safe not-found state; metadata exposes only the allowlisted public values.
+
+Existing `/quests` and `/quests/[id]` redirects still lead to teacher workspace routes. The public catalog adds no student start/play/runtime path, no public base-table read, and no change to auth, RLS, Storage, schema, migrations, grants, or teacher services.

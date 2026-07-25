@@ -652,8 +652,17 @@ Next:
 
 Next:
 
-- Sprint 12.19.5 - Public Catalog RPC Application Integration Planning.
-  - Planning only: analyze the repository, design a dedicated public catalog service and route/page integration, define loading/error/empty states, and map the current RPC's search, subject, grade, difficulty, language, limit, and offset behavior to application UX. Do not implement code until separately approved; category/tag filtering remains deferred.
+- Sprint 12.19.5 - Public Catalog RPC Application Integration.
+  - Completed public `/catalog` and `/catalog/[id]` Server Component routes backed only by the allowlisted public list/detail RPCs through `services/public-catalog.server.ts`.
+  - Added GET-synchronized search, subject, one grade, and difficulty filters; category/tags are display-only and language/category/tag filtering remains deferred.
+  - Added 25-row fetches with 24 visible results, Previous/Next offset pagination, and the `offset < 10000` Next guard. Public detail is metadata-only with safe not-found behavior and no student runtime/start flow.
+  - Manual browser verification passed for anonymous catalog access, Cyrillic/Latin search, filters, Reset, public detail, teacher redirects/dashboard behavior, and the expanded public-header catalog link. Only published quests with at least one task appear; pagination beyond the first page remains unexercised because fewer than 24 eligible quests exist.
+  - No live schema, data, RLS, Storage, migration, grant, or Supabase change occurred.
+
+Next:
+
+- Sprint 12.19.6 - Public Quest Detail-to-Student Runtime Planning.
+  - Planning only: analyze the existing teacher runtime and the public detail boundary, define the sanitized task-delivery contract, publication withdrawal behavior, start/auth/return-path requirements, loading/error/not-found states, and verification plan. No application code, RPC, schema, RLS, Storage, data, or live write occurs without separate approval.
 
 ## Suggested Future Milestones
 

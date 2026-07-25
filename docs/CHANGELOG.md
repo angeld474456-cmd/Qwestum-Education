@@ -1,5 +1,14 @@
 # Changelog
 
+## Sprint 12.19.5 - Public Catalog RPC Application Integration
+
+- Added anonymous public catalog routes `/catalog` and `/catalog/[id]`, backed by the new server-only `services/public-catalog.server.ts` public RPC boundary.
+- Added the allowlisted public DTO mapping, GET-synchronized search/subject/one-grade/difficulty filters, 25-row fetches with 24 rendered cards, and Previous/Next offset pagination.
+- Added a metadata-only public detail page with safe UUID/not-found behavior, fallback visual treatment, and no student runtime/start, task, answer, scoring, owner, or cover-path exposure.
+- Added the `Каталог квестов` public Header link, expanded its reliable hit target, and prevented a Next self-link at the `10000` offset cap.
+- Lint/build passed. Manual browser verification passed for anonymous catalog/detail access, Cyrillic and Latin search, filters, Reset, `/quests` redirect, dashboard behavior, and the Header link. Pagination beyond the first page could not be live exercised because fewer than 24 eligible public quests exist.
+- No live schema, data, RLS, Storage, migration, grant, or Supabase change occurred.
+
 ## Sprint 12.19.4 - Public Catalog Read Boundary Migration Application
 
 - Created the standard CLI delivery copy at `supabase/migrations/20260724204657_add_public_catalog_read_boundary.sql`; it is byte-identical to the reviewed `database/migrations/012_add_public_catalog_read_boundary.sql` source.

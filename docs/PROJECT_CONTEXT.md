@@ -707,3 +707,13 @@ The planned live-schema and public-read-boundary verification completed without 
 - Public catalog reads now use `public.list_public_catalog_quests(text, text, integer, integer, text, integer, integer)` and `public.get_public_catalog_quest(uuid)`. The DTO allowlist excludes owner IDs, `subject_id`, `cover_image_path`, task content, answers, hints, points, correct-answer data, and scoring data.
 - Anonymous direct reads of `quests` and `quest_tasks` remain blocked. Anonymous list/detail behavior, missing-UUID zero rows, pagination normalization, and deterministic ordering were verified without changing data.
 - Verification is **PARTIAL PASS**: no safe authenticated JWT/browser context was available, and independent live catalog re-inspection of ACL, index, RLS, and Storage metadata was incomplete in the available CLI environment. Migration 012 itself made no data-row, RLS, or Storage change.
+
+## Sprint 12.19.5 - Public Catalog RPC Application Integration
+
+- Implemented anonymous public routes `/catalog` and `/catalog/[id]`. Existing `/quests` and `/quests/[id]` teacher redirects remain unchanged.
+- `services/public-catalog.server.ts` is the server-only application boundary for `public.list_public_catalog_quests(...)` and `public.get_public_catalog_quest(uuid)`. It uses the normal server Supabase client only, performs no direct `quests` or `quest_tasks` read, uses no service-role credential, maps the allowlisted RPC rows from snake_case to camelCase, normalizes tags, and keeps generic failures separate from zero-row detail results.
+- Catalog MVP exposes search, subject, one grade value, and difficulty through GET query parameters. Language, category, and tag filtering are not exposed; category and tags remain display-only metadata.
+- The list fetches 25 rows, renders 24, and uses Previous/Next offset pagination while preserving supported filters. Next renders only when `hasNext` and `offset < 10000`, preventing a capped-offset self-link.
+- Public detail renders allowlisted metadata only with a fallback visual, generic not-found behavior for malformed, missing, unpublished, or taskless IDs, and no student start, play, task, answer, scoring, or owner-data exposure.
+- Manual browser verification passed for anonymous `/catalog`, Cyrillic and Latin search, grade/difficulty filters, Reset, public detail, `/quests` redirect, dashboard behavior, and the expanded `Каталог квестов` header hit area. Only published quests with at least one task appear. Pagination beyond the first page could not be live exercised because fewer than 24 eligible public quests exist.
+- No live schema, data, RLS, Storage, migration, grant, or Supabase change occurred during this application sprint.
