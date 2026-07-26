@@ -664,11 +664,17 @@ Sprint 12.19.6 - Public Runtime Database Boundary
 - Completed live application of migration `20260725213130_add_public_runtime_boundary.sql`, creating the sanitized fetch and server-side scoring RPCs without table/data/RLS/Storage/index/application changes or persistent attempts.
 - Read-only smoke checks confirmed eligible fetch, missing-ID zero rows, allowlisted observed DTO fields, valid exact-ID unanswered scoring, unknown-task zero rows, oversized-payload zero rows, and no direct anonymous REST data exposure. Metadata and dataset-dependent cases remain partially unverified because the CLI dump path requires Docker Desktop and no eligible public Single Choice runtime quest was available without mutation.
 
+Sprint 12.19.7 - Public Runtime Application Integration
+
+- Completed runtime types, the server-only RPC service, the bounded anonymous submit API, public runner/task/result components, `/catalog/[id]/start`, loading/error UI, and the public-detail start CTA. The runtime remains anonymous and browser-local, with no persistent attempts or direct anonymous table access.
+- Text-only manual browser smoke verification passed for start, submit, aggregate-only results, local retry/reset, and return navigation. Single Choice correct/incorrect/unanswered/foreign-option browser verification remains incomplete because no eligible public Single Choice quest was available without mutating live data.
+- Durable attempts, student accounts, assignments, payments, entitlements, production rate limiting, answer explanations, and production launch remain incomplete.
+
 Next:
 
-- Sprint 12.19.7 - Public Runtime Application Integration Planning.
-  - Begin with repository analysis, runtime architecture, and an exact implementation plan. Planned creates are `types/public-runtime.ts`, `services/public-runtime.server.ts`, `app/api/public/quests/[id]/submit/route.ts`, `app/catalog/[id]/start/page.tsx`, `app/catalog/[id]/start/loading.tsx`, `app/catalog/[id]/start/error.tsx`, `components/public-runtime/PublicQuestRunner.tsx`, `components/public-runtime/PublicTaskRenderer.tsx`, `components/public-runtime/PublicTextTask.tsx`, `components/public-runtime/PublicSingleChoiceTask.tsx`, and `components/public-runtime/PublicQuestResults.tsx`. The planned modification is `components/catalog/PublicQuestDetail.tsx` for the start CTA. Preserve the RPC allowlist, generic unavailable behavior, no direct anonymous table reads, no answer leakage, and no persistent attempts.
-  - Code starts only after separate approval of the analysis -> architecture -> plan. Authentication, payments, production rate limiting, and any schema/RLS/Storage change remain out of scope.
+- Sprint 12.19.8 - Single Choice Runtime Verification Readiness Planning.
+  - Begin with analysis -> architecture -> plan -> code after approval. Analyze eligible public Single Choice content availability and publication constraints, then define a controlled verification and cleanup protocol that does not mutate live data without separate approval.
+  - Plan coverage for correct, incorrect, unanswered, whitespace-only, and foreign-option submissions while preserving the no-answer-leak boundary. Do not implement code, create test data, apply SQL, or perform live writes as part of this planning sprint.
 
 ## Suggested Future Milestones
 

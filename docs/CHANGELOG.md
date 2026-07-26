@@ -1,5 +1,13 @@
 # Changelog
 
+## Sprint 12.19.7 - Public Runtime Application Integration
+
+- Added the public `/catalog/[id]/start` route, loading/error states, start CTA, sanitized runtime types, server-only runtime RPC service, bounded anonymous submit API, and public runner, task, and result components.
+- Kept the runtime temporary and browser-local: Text results are `not_scored`, Single Choice scoring stays server-side, retry/reset is local, no answer key is revealed, and no attempts are persisted.
+- Lint, build, and manual anonymous browser checks passed for the Text-only start, submit, aggregate-only result, local reset, return navigation, catalog, teacher redirect, and dashboard redirect flows.
+- Single Choice correct, incorrect, unanswered, and foreign-option browser flows were not manually verified because no eligible public Single Choice quest was available without live-data mutation. The reviewed contracts and components passed static review, lint, and build.
+- No live Supabase schema, data, RLS, Storage, migration, or grant change occurred during application-layer implementation.
+
 ## Sprint 12.19.6 - Public Runtime Database Boundary
 
 - Added the reviewed source migration `database/migrations/013_add_public_runtime_boundary.sql` and byte-identical CLI delivery migration `supabase/migrations/20260725213130_add_public_runtime_boundary.sql`.
