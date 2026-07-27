@@ -6,25 +6,25 @@ Sprint 12: Teacher Experience
 
 ## Objective
 
-Plan controlled readiness for the remaining public runtime Single Choice verification gap.
+Plan automated regression coverage for the verified public runtime boundary and browser behavior.
 
 ## Next Task
 
-Sprint 12.19.8 - Single Choice Runtime Verification Readiness Planning.
+Sprint 12.19.9 - Public Runtime Automated Regression-Test Planning.
 
-Planning-only. Follow analysis -> architecture -> plan -> code after approval. Do not implement application code, create test data, apply SQL, or perform live writes without separate explicit approval.
+Planning-only. Follow analysis -> architecture -> plan -> code after approval. Do not implement tests or application code, create fixture data, apply SQL, or perform live writes without separate explicit approval.
 
 Current state:
 
-- Sprint 12.19.7 completed the anonymous, browser-local runtime at `/catalog/[id]/start`, its server-only service, bounded submit API, task/result components, and public-detail start CTA. It preserves no direct anonymous table reads, no answer leakage, and no persistent attempts.
-- Text-only browser verification passed. Single Choice correct, incorrect, unanswered, whitespace-only, and foreign-option browser flows remain unverified because no eligible public Single Choice quest was available without live-data mutation.
+- Sprint 12.19.8 completed controlled Single Choice browser/runtime verification for correct, incorrect, unanswered, unknown-option, and foreign-option submissions. The temporary fixture was removed, the original four Text tasks were restored, and the quest returned to its prior published state.
+- Public runtime remains anonymous and browser-local, with server-only RPC access, generic invalid-submission behavior, no answer leakage, and no persistent attempts.
 
 Planning topics:
 
-- Analyze whether an existing eligible public Single Choice quest can safely support verification without changing live data, and document the publication, ownership, and cleanup constraints.
-- Produce the architecture and exact verification plan for correct, incorrect, unanswered, whitespace-only, and foreign-option submissions. Keep answer keys server-side and retain generic invalid/unavailable behavior.
-- Define the approval boundary for any future controlled test-data creation, publication change, or cleanup. No application implementation is authorized by this planning task.
+- Analyze the existing runtime service, submit route, runner, and current test tooling before choosing unit, route-level, and browser-level regression boundaries.
+- Produce the architecture and exact file-by-file plan for DTO mapping, input validation, no-answer-leak, Single Choice result handling, retry/reset, and duplicate-submit coverage.
+- Define fixture ownership and whether local-only fixtures can replace live data. No test or application implementation is authorized by this planning task.
 
 Out of scope:
 
-- Code implementation before explicit approval, new RPCs, schema/RLS/Storage changes, persistent attempts/results, authentication, payments, production rate limiting, live data writes, staging, commit, and push.
+- Test or application implementation before explicit approval, new RPCs, schema/RLS/Storage changes, persistent attempts/results, authentication, payments, production rate limiting, live data writes, staging, commit, and push.

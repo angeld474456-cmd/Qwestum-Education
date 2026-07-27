@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.19.8 - Single Choice Runtime Verification and Cleanup
+
+- Verified controlled Single Choice runtime outcomes: correct selections earned `2/2` with two correct statuses; incorrect selections earned `0/2` with two incorrect statuses; unanswered selections earned `0/2` with two unanswered statuses; four Text tasks remained `not_scored`.
+- Verified unknown and foreign option IDs return the same generic public HTTP `404` unavailable-quest response, with no correct-answer leakage. Browser-local retry/reset remained correct.
+- Created two temporary Single Choice tasks through the normal teacher UI, then removed only those tasks after verification. The original four Text tasks and prior published state were restored; no quest deletion or Storage cleanup was required.
+- No schema, migration, RLS, Storage, function, grant, or application-code change occurred during verification and cleanup.
+
 ## Sprint 12.19.7 - Public Runtime Application Integration
 
 - Added the public `/catalog/[id]/start` route, loading/error states, start CTA, sanitized runtime types, server-only runtime RPC service, bounded anonymous submit API, and public runner, task, and result components.

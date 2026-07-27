@@ -670,11 +670,17 @@ Sprint 12.19.7 - Public Runtime Application Integration
 - Text-only manual browser smoke verification passed for start, submit, aggregate-only results, local retry/reset, and return navigation. Single Choice correct/incorrect/unanswered/foreign-option browser verification remains incomplete because no eligible public Single Choice quest was available without mutating live data.
 - Durable attempts, student accounts, assignments, payments, entitlements, production rate limiting, answer explanations, and production launch remain incomplete.
 
+Sprint 12.19.8 - Single Choice Runtime Verification and Cleanup
+
+- Completed controlled temporary-fixture verification for correct, incorrect, and unanswered Single Choice scoring, generic unknown/foreign-option rejection, browser-local retry/reset, result rendering, and the no-answer-leak boundary.
+- The temporary two-task fixture was removed after verification. The quest returned from six tasks to its original four Text tasks and prior published state, with no media, Storage, schema, migration, RLS, function, grant, or application-code change.
+- Automated regression tests, production rate limiting, durable attempts, student accounts, payments, assignments, and production launch remain incomplete.
+
 Next:
 
-- Sprint 12.19.8 - Single Choice Runtime Verification Readiness Planning.
-  - Begin with analysis -> architecture -> plan -> code after approval. Analyze eligible public Single Choice content availability and publication constraints, then define a controlled verification and cleanup protocol that does not mutate live data without separate approval.
-  - Plan coverage for correct, incorrect, unanswered, whitespace-only, and foreign-option submissions while preserving the no-answer-leak boundary. Do not implement code, create test data, apply SQL, or perform live writes as part of this planning sprint.
+- Sprint 12.19.9 - Public Runtime Automated Regression-Test Planning.
+  - Begin with analysis -> architecture -> plan -> code after approval. Define the smallest test layers for runtime DTO mapping, submit-route validation, no-answer-leak assertions, Single Choice scoring result handling, retry/reset, and duplicate-submit protection.
+  - Do not implement tests, create fixture data, modify live Supabase, or change runtime behavior as part of this planning sprint.
 
 ## Suggested Future Milestones
 
