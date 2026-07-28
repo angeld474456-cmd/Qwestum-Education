@@ -101,7 +101,6 @@ export default function QuestSettingsForm({
   const [category, setCategory] = useState(quest.category ?? "");
   const [tagsInput, setTagsInput] = useState(formatTagsInput(quest.tags));
   const [difficulty, setDifficulty] = useState(Number(quest.difficulty) || 1);
-  const [isPublic, setIsPublic] = useState(Boolean(quest.is_public));
   const [persistedIsPublic, setPersistedIsPublic] = useState(
     Boolean(quest.is_public)
   );
@@ -226,7 +225,6 @@ export default function QuestSettingsForm({
           category,
           tags: tagsInput.split(",").map((tag) => tag.trim()),
           difficulty: normalizedDifficulty,
-          is_public: isPublic,
           grade_min: normalizedGradeMin,
           grade_max: normalizedGradeMax,
           estimated_duration_minutes: normalizedDuration,
@@ -253,7 +251,6 @@ export default function QuestSettingsForm({
       setCategory(result.quest.category ?? "");
       setTagsInput(formatTagsInput(result.quest.tags));
       setDifficulty(Number(result.quest.difficulty) || 1);
-      setIsPublic(Boolean(result.quest.is_public));
       setPersistedIsPublic(Boolean(result.quest.is_public));
       setGradeMin(metadataValue(result.quest.grade_min));
       setGradeMax(metadataValue(result.quest.grade_max));
@@ -527,20 +524,14 @@ export default function QuestSettingsForm({
 
           <QuestPublicationReadiness questId={quest.id} />
 
-          <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">
             <span>
               <span className="block font-semibold">Статус публикации</span>
               <span className="mt-1 block text-sm text-slate-400">
-                {isPublic ? "Опубликован" : "Черновик"}
+                {persistedIsPublic ? "Опубликован" : "Черновик"}
               </span>
             </span>
-            <input
-              type="checkbox"
-              checked={isPublic}
-              onChange={(event) => setIsPublic(event.target.checked)}
-              className="h-5 w-5"
-            />
-          </label>
+          </div>
         </div>
 
         {errorMessage ? (

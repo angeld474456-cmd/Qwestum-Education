@@ -11,7 +11,6 @@ type QuestPayload = {
   title?: unknown;
   description?: unknown;
   difficulty?: unknown;
-  is_public?: unknown;
   subject_id?: unknown;
   language_code?: unknown;
   category?: unknown;
@@ -45,18 +44,11 @@ function parseQuestPayload(body: QuestPayload) {
     };
   }
 
-  if (typeof body.is_public !== "boolean") {
-    return {
-      error: "Publication state must be true or false.",
-    };
-  }
-
   return {
     data: {
       title,
       description,
       difficulty,
-      is_public: body.is_public,
     },
   };
 }
@@ -385,6 +377,17 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     );
   }
 
+  if (
+    typeof body === "object" &&
+    body !== null &&
+    Object.prototype.propertyIsEnumerable.call(body, "is_public")
+  ) {
+    return NextResponse.json(
+      { error: "Publication state must be changed through the publication action." },
+      { status: 400 }
+    );
+  }
+
   const parsed = parseQuestPayload(body);
 
   if (parsed.error) {
@@ -463,7 +466,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   const { data: ownedQuest, error: ownedQuestError } = await supabase
     .from("quests")
-    .select("id, is_public, grade_min, grade_max")
+    .select("id, grade_min, grade_max")
     .eq("id", id)
     .eq("author_id", user.id)
     .maybeSingle();
@@ -526,30 +529,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       { error: "Grade from must be less than or equal to Grade to." },
       { status: 400 }
     );
-  }
-
-  const isDraftToPublic = !ownedQuest.is_public && parsed.data.is_public;
-
-  if (isDraftToPublic) {
-    const { count, error: taskCountError } = await supabase
-      .from("quest_tasks")
-      .select("id", { count: "exact", head: true })
-      .eq("quest_id", id);
-
-    if (taskCountError) {
-      console.error(taskCountError);
-      return NextResponse.json(
-        { error: "Unable to save quest settings." },
-        { status: 500 }
-      );
-    }
-
-    if ((count ?? 0) === 0) {
-      return NextResponse.json(
-        { error: "Добавьте хотя бы одно задание перед публикацией." },
-        { status: 400 }
-      );
-    }
   }
 
   const updateData = {
