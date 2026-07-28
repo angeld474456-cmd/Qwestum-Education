@@ -1,9 +1,87 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { blankTitleQuest, choiceTask, duplicateOptionIdsQuest, foreignCorrectOptionQuest, malformedSingleChoiceQuest, malformedTextQuest, missingCorrectOptionQuest, overlongDescriptionQuest, questId, textTask, tooManyTasksQuest, unsupportedTaskQuest, validMixedQuest, validQuest, warningsOnlyQuest, zeroTaskQuest } from "@/tests/fixtures/teacher-publication";
-const m=vi.hoisted(()=>({createClient:vi.fn(),auth:vi.fn(),from:vi.fn()}));
+import { blankTitleQuest, choiceTask, duplicateOptionIdsQuest, foreignCorrectOptionQuest, malformedSingleChoiceQuest, malformedTextQuest, missingCorrectOptionQuest, overlongDescriptionQuest, publicationRpcRowFixtures, questId, textTask, tooManyTasksQuest, unsupportedTaskQuest, validMixedQuest, validQuest, warningsOnlyQuest, zeroTaskQuest } from "@/tests/fixtures/teacher-publication";
+const m=vi.hoisted(()=>({createClient:vi.fn(),auth:vi.fn(),from:vi.fn(),rpc:vi.fn()}));
 vi.mock("server-only",()=>({})); vi.mock("@/lib/supabase/server",()=>({createClient:m.createClient}));
-import { getOwnedQuestPublicationReadiness } from "@/services/teacher-publication.server";
+import { getOwnedQuestPublicationReadiness, setOwnedQuestPublicationState } from "@/services/teacher-publication.server";
 function client(quest:unknown,tasks:unknown,error=false){let n=0;const q={select:vi.fn().mockReturnThis(),eq:vi.fn().mockReturnThis(),maybeSingle:vi.fn(async()=>n++?{data:tasks,error:error?{}:null}:{data:quest,error:error?{}:null}),order:vi.fn(async()=>({data:tasks,error:null}))};m.auth.mockResolvedValue({data:{user:{id:"owner"}}});m.from.mockReturnValue(q);m.createClient.mockResolvedValue({auth:{getUser:m.auth},from:m.from});}
+function publicationClient(data: unknown, error: unknown = null, user: unknown = { id: "owner" }) {
+  m.auth.mockResolvedValue({ data: { user } });
+  m.rpc.mockResolvedValue({ data, error });
+  m.createClient.mockResolvedValue({ auth: { getUser: m.auth }, rpc: m.rpc });
+}
+
+describe("publication action", () => {
+  beforeEach(() => vi.clearAllMocks());
+  it("returns unauthorized without calling the publication RPC", async () => {
+    publicationClient([], null, null);
+    await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "unauthorized" });
+    expect(m.rpc).not.toHaveBeenCalled(); expect(m.from).not.toHaveBeenCalled();
+  });
+  it("returns not_found for a malformed UUID without calling the publication RPC", async () => {
+    await expect(setOwnedQuestPublicationState("not-a-uuid", "publish")).resolves.toEqual({ status: "not_found" });
+    expect(m.createClient).not.toHaveBeenCalled(); expect(m.rpc).not.toHaveBeenCalled();
+  });
+  it("maps published and sends a publish RPC request", async () => {
+    publicationClient([{ ...publicationRpcRowFixtures.published }]);
+    await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "ok", publication: { isPublic: true, outcome: "published" } });
+    expect(m.rpc).toHaveBeenCalledTimes(1); expect(m.rpc).toHaveBeenCalledWith("set_owned_quest_publication_state", { p_quest_id: questId, p_publish: true }); expect(m.from).not.toHaveBeenCalled();
+  });
+  it("maps already_published", async () => {
+    publicationClient([{ ...publicationRpcRowFixtures.alreadyPublished }]);
+    await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "ok", publication: { isPublic: true, outcome: "already_published" } });
+  });
+  it("maps unpublished and sends an unpublish RPC request", async () => {
+    publicationClient([{ ...publicationRpcRowFixtures.unpublished }]);
+    await expect(setOwnedQuestPublicationState(questId, "unpublish")).resolves.toEqual({ status: "ok", publication: { isPublic: false, outcome: "unpublished" } });
+    expect(m.rpc).toHaveBeenCalledWith("set_owned_quest_publication_state", { p_quest_id: questId, p_publish: false });
+  });
+  it("maps already_draft", async () => {
+    publicationClient([{ ...publicationRpcRowFixtures.alreadyDraft }]);
+    await expect(setOwnedQuestPublicationState(questId, "unpublish")).resolves.toEqual({ status: "ok", publication: { isPublic: false, outcome: "already_draft" } });
+  });
+  it("maps blocked draft publication", async () => {
+    publicationClient([{ ...publicationRpcRowFixtures.blockedDraft }]);
+    await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "blocked" });
+  });
+  it("maps blocked already-public publication", async () => {
+    publicationClient([{ ...publicationRpcRowFixtures.blockedPublic }]);
+    await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "blocked" });
+  });
+  it("maps RPC not_found owner-safely", async () => {
+    publicationClient([{ ...publicationRpcRowFixtures.notFound }]);
+    await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "not_found" });
+  });
+  it("maps an RPC error to a safe error", async () => {
+    publicationClient(null, { message: "RAW_DB_MESSAGE_DO_NOT_EXPOSE", details: "RAW_DB_DETAIL_DO_NOT_EXPOSE" });
+    const result = await setOwnedQuestPublicationState(questId, "publish"); expect(result).toEqual({ status: "error" }); expect(JSON.stringify(result)).not.toMatch(/RAW_DB_MESSAGE_DO_NOT_EXPOSE|RAW_DB_DETAIL_DO_NOT_EXPOSE/);
+  });
+  it("maps an empty RPC result to error", async () => { publicationClient([]); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("maps multiple RPC rows to error", async () => { publicationClient([publicationRpcRowFixtures.published, publicationRpcRowFixtures.alreadyPublished]); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("maps null RPC data to error", async () => { publicationClient(null); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("maps non-array RPC data to error", async () => { publicationClient({ is_public: true, outcome: "published" }); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("maps a malformed RPC row to error", async () => { publicationClient([null]); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("maps malformed is_public to error", async () => { publicationClient([{ is_public: "true", outcome: "published" }]); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("maps an unknown outcome to error", async () => { publicationClient([{ is_public: true, outcome: "unexpected" }]); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("maps inconsistent published state to error", async () => { publicationClient([{ is_public: false, outcome: "published" }]); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+  it("rejects already_published with is_public false", async () => {
+    publicationClient([{ is_public: false, outcome: "already_published" }]);
+    const result = await setOwnedQuestPublicationState(questId, "publish");
+    expect(result).toEqual({ status: "error" });
+    expect(m.rpc).toHaveBeenCalledTimes(1);
+    expect(m.rpc).toHaveBeenCalledWith("set_owned_quest_publication_state", { p_quest_id: questId, p_publish: true });
+    expect(JSON.stringify(result)).not.toMatch(/RAW_DB_MESSAGE|RAW_DB_DETAIL/);
+  });
+  it("maps inconsistent unpublished state to error", async () => { publicationClient([{ is_public: true, outcome: "unpublished" }]); await expect(setOwnedQuestPublicationState(questId, "unpublish")).resolves.toEqual({ status: "error" }); });
+  it("rejects already_draft with is_public true", async () => {
+    publicationClient([{ is_public: true, outcome: "already_draft" }]);
+    const result = await setOwnedQuestPublicationState(questId, "unpublish");
+    expect(result).toEqual({ status: "error" });
+    expect(m.rpc).toHaveBeenCalledTimes(1);
+    expect(m.rpc).toHaveBeenCalledWith("set_owned_quest_publication_state", { p_quest_id: questId, p_publish: false });
+    expect(JSON.stringify(result)).not.toMatch(/RAW_DB_MESSAGE|RAW_DB_DETAIL/);
+  });
+  it("maps inconsistent not_found state to error", async () => { publicationClient([{ is_public: true, outcome: "not_found" }]); await expect(setOwnedQuestPublicationState(questId, "publish")).resolves.toEqual({ status: "error" }); });
+});
 describe("publication readiness",()=>{beforeEach(()=>vi.clearAllMocks());it("returns safe readiness",async()=>{client({...validQuest},[{...textTask},{...choiceTask}]);const r=await getOwnedQuestPublicationReadiness(questId);expect(r.status).toBe("ok");if(r.status==="ok"){expect(r.readiness.ready).toBe(true);expect(JSON.stringify(r.readiness)).not.toMatch(/correctOptionId|content|author_id/);}});it("maps validMixedQuest to an allowlisted ready DTO",async()=>{client({...validMixedQuest.quest},validMixedQuest.tasks.map((task)=>({...task})));const r=await getOwnedQuestPublicationReadiness(questId);expect(r.status).toBe("ok");if(r.status==="ok"){expect(r.readiness.ready).toBe(true);expect(r.readiness.blockers).toEqual([]);expect(r.readiness.taskCount).toBe(validMixedQuest.tasks.length);expect(r.readiness.supportedTaskCount).toBe(validMixedQuest.tasks.length);expect(JSON.stringify(r.readiness)).not.toMatch(/correctOptionId|content|author_id|owner/);}});it("keeps warningsOnlyQuest ready with allowlisted warnings",async()=>{client({...warningsOnlyQuest.quest},warningsOnlyQuest.tasks.map((task)=>({...task})));const r=await getOwnedQuestPublicationReadiness(questId);expect(r.status).toBe("ok");if(r.status==="ok"){expect(r.readiness.ready).toBe(true);expect(r.readiness.blockers).toEqual([]);expect(r.readiness.warnings.length).toBeGreaterThan(0);expect(r.readiness.taskCount).toBe(warningsOnlyQuest.tasks.length);expect(r.readiness.supportedTaskCount).toBe(warningsOnlyQuest.tasks.length);expect(JSON.stringify(r.readiness)).not.toMatch(/correctOptionId|content|author_id|owner/);}});it("blocks malformed cases",async()=>{for(const tasks of [[],Array.from({length:101},()=>({...textTask})),[{...textTask,task_type:"bad"}],[{...choiceTask,content:{options:[{id:"a",text:"A"},{id:"a",text:"B"}],correctOptionId:"a"}}],[{...choiceTask,content:{options:[{id:"a",text:"A"},{id:"b",text:"B"}]}}],[{...choiceTask,content:{options:[{id:"a",text:"A"},{id:"b",text:"B"}],correctOptionId:"x"}}]]){client({...validQuest},tasks);const r=await getOwnedQuestPublicationReadiness(questId);expect(r.status==="ok"&&r.readiness.ready).toBe(false);}});it("returns safe auth/not-found/error outcomes",async()=>{m.auth.mockResolvedValue({data:{user:null}});m.createClient.mockResolvedValue({auth:{getUser:m.auth}});await expect(getOwnedQuestPublicationReadiness(questId)).resolves.toEqual({status:"unauthorized"});client(null,[]);await expect(getOwnedQuestPublicationReadiness(questId)).resolves.toEqual({status:"not_found"});client(validQuest,[],true);await expect(getOwnedQuestPublicationReadiness(questId)).resolves.toEqual({status:"error"});});});
 describe("blank title readiness",()=>{beforeEach(()=>vi.clearAllMocks());it("blocks blankTitleQuest with quest_title_blank",async()=>{client({...blankTitleQuest.quest},blankTitleQuest.tasks.map((task)=>({...task})));const r=await getOwnedQuestPublicationReadiness(questId);expect(r.status).toBe("ok");if(r.status==="ok"){expect(r.readiness.ready).toBe(false);expect(r.readiness.blockers.map((x)=>x.code)).toContain("quest_title_blank");expect(r.readiness.taskCount).toBe(blankTitleQuest.tasks.length);expect(r.readiness.supportedTaskCount).toBe(blankTitleQuest.tasks.length);expect(r.readiness.warnings.length).toBeGreaterThanOrEqual(0);expect(JSON.stringify(r.readiness)).not.toMatch(/correctOptionId|content|author_id|owner/);}});});
 describe("overlong description readiness",()=>{beforeEach(()=>vi.clearAllMocks());it("blocks overlongDescriptionQuest with quest_description_too_long",async()=>{client({...overlongDescriptionQuest.quest},overlongDescriptionQuest.tasks.map((task)=>({...task})));const r=await getOwnedQuestPublicationReadiness(questId);expect(r.status).toBe("ok");if(r.status==="ok"){const blocker=r.readiness.blockers.find((x)=>x.code==="quest_description_too_long");expect(r.readiness.ready).toBe(false);expect(blocker?.field).toBe("description");expect(r.readiness.taskCount).toBe(overlongDescriptionQuest.tasks.length);expect(r.readiness.supportedTaskCount).toBe(overlongDescriptionQuest.tasks.length);expect(JSON.stringify(r.readiness)).not.toContain(overlongDescriptionQuest.quest.description);expect(JSON.stringify(r.readiness)).not.toMatch(/correctOptionId|content|author_id|owner/);}});});

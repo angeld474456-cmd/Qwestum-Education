@@ -17,3 +17,18 @@ export const missingCorrectOptionQuest = { quest: base(), tasks: [choice("444444
 export const foreignCorrectOptionQuest = { quest: base(), tasks: [choice("44444444-4444-4444-8444-444444444444", { options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correctOptionId: "foreign" })] };
 export const safeReadiness = Object.freeze({ ready: true, blockers: [], warnings: [], taskCount: 6, supportedTaskCount: 6 });
 export const validQuest = validMixedQuest.quest; export const textTask = validMixedQuest.tasks[0]; export const choiceTask = validMixedQuest.tasks[4];
+export const publicationDtoFixtures = Object.freeze({
+  published: Object.freeze({ isPublic: true, outcome: "published" as const }),
+  alreadyPublished: Object.freeze({ isPublic: true, outcome: "already_published" as const }),
+  unpublished: Object.freeze({ isPublic: false, outcome: "unpublished" as const }),
+  alreadyDraft: Object.freeze({ isPublic: false, outcome: "already_draft" as const }),
+});
+export const publicationRpcRowFixtures = Object.freeze({
+  published: Object.freeze({ is_public: true, outcome: "published" as const }),
+  alreadyPublished: Object.freeze({ is_public: true, outcome: "already_published" as const }),
+  unpublished: Object.freeze({ is_public: false, outcome: "unpublished" as const }),
+  alreadyDraft: Object.freeze({ is_public: false, outcome: "already_draft" as const }),
+  blockedDraft: Object.freeze({ is_public: false, outcome: "blocked" as const }),
+  blockedPublic: Object.freeze({ is_public: true, outcome: "blocked" as const }),
+  notFound: Object.freeze({ is_public: false, outcome: "not_found" as const }),
+});
