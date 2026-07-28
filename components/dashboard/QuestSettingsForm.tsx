@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import Card from "@/components/ui/Card";
+import QuestPublicationReadiness from "@/components/dashboard/QuestPublicationReadiness";
 import {
   isSessionExpiredResponse,
   redirectToSessionExpiredLogin,
@@ -523,6 +524,8 @@ export default function QuestSettingsForm({
               </>
             )}
           </div>
+
+          <QuestPublicationReadiness questId={quest.id} />
 
           <label className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">
             <span>
