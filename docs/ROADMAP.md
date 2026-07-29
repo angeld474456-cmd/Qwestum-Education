@@ -704,11 +704,15 @@ Sprint 12.20.3C4 - Publish/Unpublish Teacher Controls
 
 - Completed guarded, confirmed teacher Publish/Unpublish controls in `QuestPublicationReadiness`. Publish requires a current ready result; warnings allow it, blockers prevent it, and Unpublish requires no readiness. Manual browser verification passed for publish, unpublish, warnings, blockers, metadata invalidation, and refresh persistence. The publication flow is complete; public catalog lifecycle regression verification, cover delivery, student authentication/profile, student cabinet/history, persistent attempts, assignments, payments/entitlements, production rate limiting, and deployment remain incomplete.
 
+Sprint 12.20.6 - Controlled Public Publication Lifecycle Verification
+
+- Completed approved browser verification with existing Draft quest `1a206882-650e-4982-840a-fe6108872cac`: catalog list/detail/start and one safe Text-only submit became available after publish; a stale open runner submit was safely rejected after unpublish; republish restored visibility; final state returned to Draft. No metadata, task, cover, Storage, or repository change occurred.
+
 Next:
 
-- Sprint 12.20.5 - Public Catalog Publication Lifecycle Regression Verification Planning.
-  - Planning-only: define a safe candidate and pre-verification snapshot, a reversible publish/unpublish sequence, catalog list/detail and public runtime eligibility checks, withdrawal/re-publication, cache expectations, cleanup/restoration, a regression matrix, and future automated contract coverage.
-  - Any live publication mutation requires separate explicit approval. Application implementation, migrations, SQL execution, Supabase writes, cover delivery, student systems, payments, deployment, and package changes are out of scope.
+- Sprint 12.20.8 - Public Catalog Cover Delivery Planning.
+  - Planning-only: define a safe public cover delivery boundary for catalog list/detail pages while raw `cover_image_path` remains outside public DTOs. Compare delivery models, caching/expiry, fallbacks, path validation, eligibility, rollout/rollback, and verification.
+  - Any live Storage, policy, schema, or data change requires separate explicit approval. Implementation, migrations, SQL/RPC, public bucket changes, student systems, payments, deployment, and package changes are out of scope.
 
 ## Suggested Future Milestones
 

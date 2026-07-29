@@ -1,5 +1,10 @@
 # Changelog
 
+## Sprint 12.20.6 - Controlled Public Publication Lifecycle Verification
+
+- Verified approved Draft lifecycle for `1a206882-650e-4982-840a-fe6108872cac`: Draft baseline, Publish catalog/detail/runtime visibility, one safe Text-only submit, Unpublish withdrawal, stale-runner safe rejection, republish restoration, and final Draft restoration.
+- No answer/task content, Storage object, metadata, task, schema, migration, or repository change occurred; no persistent attempt/history was created.
+
 ## Sprint 12.20.2-12.20.3C4 - Teacher Publication Flow
 
 - Centralized catalog/runtime publication eligibility through Migration 014 and `public.is_public_runtime_eligible(uuid)`.

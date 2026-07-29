@@ -677,6 +677,16 @@ The planned live-schema and public-read-boundary verification completed without 
 - Manual browser verification passed for Draft readiness then Publish, Published then Unpublish, warnings allowing Publish, blockers preventing Publish, settings invalidation, and state surviving refresh. Automated verification passed: 6 test files, 88 tests passed, 0 failed; lint and production build passed.
 - No persistent student attempts, student accounts/cabinet, assignments, payments/entitlements, production rate limiting, or production deployment capability was added.
 
+## Sprint 12.20.6 - Controlled Public Publication Lifecycle Verification
+
+- With product-owner approval, the normal teacher UI was used with existing Draft quest `1a206882-650e-4982-840a-fe6108872cac`. Its original and final state were both Draft.
+- The quest had two tasks, two supported tasks, zero readiness blockers, and seven recommendations; readiness remained available before and after the controlled flow.
+- The anonymous Draft baseline was verified: the quest was absent from the public catalog, public detail was unavailable, and public runtime start was unavailable.
+- Publishing through the teacher UI survived refresh and made the quest visible in catalog list/detail and available in the public runtime. One safe Text-only browser submission returned zero correct, incorrect, and unanswered tasks with two `not_scored` tasks; no answer or sensitive data was exposed and no attempt/history was persisted.
+- Unpublishing through the teacher UI survived refresh. An already-open runner remained visible locally, but its next submission was rejected through the generic safe UI path; hard-refreshed catalog, detail, and start views withdrew access.
+- Republishing restored list/detail/runtime visibility. The mandatory final unpublish restored the exact original Draft baseline.
+- No metadata, task, cover, Storage object, repository file, schema, migration, or application code changed during verification.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.
