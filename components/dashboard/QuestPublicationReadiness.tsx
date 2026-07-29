@@ -10,6 +10,8 @@ import {
 
 type QuestPublicationReadinessProps = {
   questId: string;
+  initialIsPublic: boolean;
+  readinessInvalidationKey: number;
 };
 
 type PublicationIssueView = {
@@ -24,7 +26,21 @@ type PublicationReadinessView = {
   supportedTaskCount: number;
 };
 
-type RequestError = "unavailable" | "failed" | "session";
+type VersionedReadiness = {
+  value: PublicationReadinessView;
+  invalidationKey: number;
+};
+
+type PublicationAction = "publish" | "unpublish";
+type PublicationSuccessOutcome =
+  | "published"
+  | "already_published"
+  | "unpublished"
+  | "already_draft";
+type PublicationFeedback = {
+  tone: "success" | "error";
+  message: string;
+};
 
 function isPlainObject(value: unknown): value is object {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -107,8 +123,41 @@ function parsePublicationReadiness(
   return { ready, blockers, warnings, taskCount, supportedTaskCount };
 }
 
-function getErrorMessage(error: RequestError) {
-  switch (error) {
+function parsePublicationSuccess(value: unknown): {
+  isPublic: boolean;
+  outcome: PublicationSuccessOutcome;
+} | null {
+  if (!isPlainObject(value)) return null;
+
+  const publication = getOwnValue(value, "publication");
+  if (!isPlainObject(publication)) return null;
+
+  const isPublic = getOwnValue(publication, "isPublic");
+  const outcome = getOwnValue(publication, "outcome");
+
+  if (typeof isPublic !== "boolean" || typeof outcome !== "string") {
+    return null;
+  }
+
+  if (
+    (outcome === "published" || outcome === "already_published") &&
+    isPublic
+  ) {
+    return { isPublic, outcome };
+  }
+
+  if (
+    (outcome === "unpublished" || outcome === "already_draft") &&
+    !isPublic
+  ) {
+    return { isPublic, outcome };
+  }
+
+  return null;
+}
+
+function readinessErrorMessage(status: "unavailable" | "failed" | "session") {
+  switch (status) {
     case "session":
       return SESSION_EXPIRED_MESSAGE;
     case "unavailable":
@@ -118,42 +167,199 @@ function getErrorMessage(error: RequestError) {
   }
 }
 
+function publicationSuccessMessage(outcome: PublicationSuccessOutcome) {
+  switch (outcome) {
+    case "published":
+      return "Quest published.";
+    case "already_published":
+      return "Quest is already published.";
+    case "unpublished":
+      return "Quest unpublished.";
+    case "already_draft":
+      return "Quest is already a draft.";
+  }
+}
+
+function confirmationMessage(action: PublicationAction) {
+  return action === "publish"
+    ? "Publish this quest? It will become visible in the public catalog."
+    : "Unpublish this quest? It will no longer be available publicly.";
+}
+
 export default function QuestPublicationReadiness({
   questId,
+  initialIsPublic,
+  readinessInvalidationKey,
 }: QuestPublicationReadinessProps) {
-  const [readiness, setReadiness] = useState<PublicationReadinessView | null>(
+  const [isPublic, setIsPublic] = useState(initialIsPublic);
+  const [readiness, setReadiness] = useState<VersionedReadiness | null>(null);
+  const [readinessError, setReadinessError] = useState<
+    "unavailable" | "failed" | "session" | null
+  >(null);
+  const [publicationFeedback, setPublicationFeedback] =
+    useState<PublicationFeedback | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [mutationAction, setMutationAction] = useState<PublicationAction | null>(
     null,
   );
-  const [requestError, setRequestError] = useState<RequestError | null>(null);
-  const [checking, setChecking] = useState(false);
   const isMountedRef = useRef(true);
-  const requestInFlightRef = useRef(false);
+  const readinessInFlightRef = useRef(false);
+  const mutationInFlightRef = useRef(false);
+  const readinessAbortControllerRef = useRef<AbortController | null>(null);
+  const mutationAbortControllerRef = useRef<AbortController | null>(null);
+  const readinessRequestIdRef = useRef(0);
+  const mutationRequestIdRef = useRef(0);
+  const focusAfterMutationRef = useRef<"check" | "unpublish" | null>(null);
+  const checkButtonRef = useRef<HTMLButtonElement>(null);
+  const unpublishButtonRef = useRef<HTMLButtonElement>(null);
+
+  const mutating = mutationAction !== null;
+  const activeReadiness =
+    readiness?.invalidationKey === readinessInvalidationKey
+      ? readiness.value
+      : null;
 
   useEffect(() => {
     isMountedRef.current = true;
 
     return () => {
       isMountedRef.current = false;
+      readinessAbortControllerRef.current?.abort();
+      mutationAbortControllerRef.current?.abort();
     };
   }, []);
 
-  async function checkReadiness() {
-    if (requestInFlightRef.current) return;
+  useEffect(() => {
+    if (mutating || !focusAfterMutationRef.current) return;
 
-    requestInFlightRef.current = true;
+    const target = focusAfterMutationRef.current;
+    focusAfterMutationRef.current = null;
+    if (target === "unpublish") {
+      unpublishButtonRef.current?.focus();
+    } else {
+      checkButtonRef.current?.focus();
+    }
+  }, [isPublic, mutating]);
+
+  function abortReadinessRequest() {
+    readinessRequestIdRef.current += 1;
+    readinessAbortControllerRef.current?.abort();
+    readinessAbortControllerRef.current = null;
+    readinessInFlightRef.current = false;
+    if (isMountedRef.current) {
+      setChecking(false);
+    }
+  }
+
+  async function checkReadiness() {
+    if (readinessInFlightRef.current || mutationInFlightRef.current) return;
+
+    const requestId = ++readinessRequestIdRef.current;
+    const requestInvalidationKey = readinessInvalidationKey;
+    const controller = new AbortController();
+    readinessInFlightRef.current = true;
+    readinessAbortControllerRef.current = controller;
     setChecking(true);
     setReadiness(null);
-    setRequestError(null);
+    setReadinessError(null);
+    setPublicationFeedback(null);
 
     try {
       const response = await fetch(
         `/api/teacher/quests/${encodeURIComponent(questId)}/publication-readiness`,
-        { headers: { Accept: "application/json" } },
+        { headers: { Accept: "application/json" }, signal: controller.signal },
       );
+      const isCurrent =
+        readinessRequestIdRef.current === requestId &&
+        readinessAbortControllerRef.current === controller;
+
+      if (!isCurrent) return;
+
+      if (isSessionExpiredResponse(response)) {
+        if (isMountedRef.current) setReadinessError("session");
+        redirectToSessionExpiredLogin();
+        return;
+      }
+
+      if (response.status === 404) {
+        if (isMountedRef.current) setReadinessError("unavailable");
+        return;
+      }
+
+      if (!response.ok) {
+        if (isMountedRef.current) setReadinessError("failed");
+        return;
+      }
+
+      const payload: unknown = await response.json();
+      const nextReadiness = parsePublicationReadiness(payload);
+      if (!nextReadiness) {
+        if (isMountedRef.current) setReadinessError("failed");
+        return;
+      }
+
+      if (isMountedRef.current) {
+        setReadiness({ value: nextReadiness, invalidationKey: requestInvalidationKey });
+      }
+    } catch (error) {
+      if (
+        isMountedRef.current &&
+        !(error instanceof DOMException && error.name === "AbortError")
+      ) {
+        setReadinessError("failed");
+      }
+    } finally {
+      if (
+        readinessRequestIdRef.current === requestId &&
+        readinessAbortControllerRef.current === controller
+      ) {
+        readinessInFlightRef.current = false;
+        readinessAbortControllerRef.current = null;
+        if (isMountedRef.current) setChecking(false);
+      }
+    }
+  }
+
+  async function updatePublication(action: PublicationAction) {
+    if (mutationInFlightRef.current || readinessInFlightRef.current) return;
+    if (
+      action === "publish" &&
+      (!activeReadiness || !activeReadiness.ready || isPublic)
+    ) {
+      return;
+    }
+    if (action === "unpublish" && !isPublic) return;
+    if (!window.confirm(confirmationMessage(action))) return;
+
+    const requestId = ++mutationRequestIdRef.current;
+    const controller = new AbortController();
+    mutationInFlightRef.current = true;
+    mutationAbortControllerRef.current = controller;
+    abortReadinessRequest();
+    setMutationAction(action);
+    setReadiness(null);
+    setReadinessError(null);
+    setPublicationFeedback(null);
+
+    try {
+      const response = await fetch(
+        `/api/teacher/quests/${encodeURIComponent(questId)}/publication`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+          signal: controller.signal,
+        },
+      );
+      const isCurrent =
+        mutationRequestIdRef.current === requestId &&
+        mutationAbortControllerRef.current === controller;
+
+      if (!isCurrent) return;
 
       if (isSessionExpiredResponse(response)) {
         if (isMountedRef.current) {
-          setRequestError("session");
+          setPublicationFeedback({ tone: "error", message: SESSION_EXPIRED_MESSAGE });
         }
         redirectToSessionExpiredLogin();
         return;
@@ -161,139 +367,234 @@ export default function QuestPublicationReadiness({
 
       if (response.status === 404) {
         if (isMountedRef.current) {
-          setRequestError("unavailable");
+          setPublicationFeedback({
+            tone: "error",
+            message: "Quest publication is unavailable.",
+          });
+        }
+        return;
+      }
+
+      if (response.status === 409) {
+        if (isMountedRef.current) {
+          setReadiness(null);
+          setPublicationFeedback({
+            tone: "error",
+            message:
+              "Quest is not ready for publication. Check readiness again before publishing.",
+          });
         }
         return;
       }
 
       if (!response.ok) {
         if (isMountedRef.current) {
-          setRequestError("failed");
+          setPublicationFeedback({
+            tone: "error",
+            message: "Unable to update publication state.",
+          });
         }
         return;
       }
 
       const payload: unknown = await response.json();
-      const nextReadiness = parsePublicationReadiness(payload);
+      const publication = parsePublicationSuccess(payload);
+      const isOutcomeForAction =
+        publication &&
+        (action === "publish"
+          ? publication.outcome === "published" ||
+            publication.outcome === "already_published"
+          : publication.outcome === "unpublished" ||
+            publication.outcome === "already_draft");
 
-      if (!nextReadiness) {
+      if (!publication || !isOutcomeForAction) {
         if (isMountedRef.current) {
-          setRequestError("failed");
+          setPublicationFeedback({
+            tone: "error",
+            message: "Unable to update publication state.",
+          });
         }
         return;
       }
 
       if (isMountedRef.current) {
-        setReadiness(nextReadiness);
+        setIsPublic(publication.isPublic);
+        setReadiness(null);
+        setPublicationFeedback({
+          tone: "success",
+          message: publicationSuccessMessage(publication.outcome),
+        });
+        focusAfterMutationRef.current =
+          publication.isPublic ? "unpublish" : "check";
       }
-    } catch {
-      if (isMountedRef.current) {
-        setRequestError("failed");
+    } catch (error) {
+      if (
+        isMountedRef.current &&
+        !(error instanceof DOMException && error.name === "AbortError")
+      ) {
+        setPublicationFeedback({
+          tone: "error",
+          message: "Unable to update publication state.",
+        });
       }
     } finally {
-      requestInFlightRef.current = false;
-      if (isMountedRef.current) {
-        setChecking(false);
+      if (
+        mutationRequestIdRef.current === requestId &&
+        mutationAbortControllerRef.current === controller
+      ) {
+        mutationInFlightRef.current = false;
+        mutationAbortControllerRef.current = null;
+        if (isMountedRef.current) setMutationAction(null);
       }
     }
   }
 
-  const hasWarnings = (readiness?.warnings.length ?? 0) > 0;
-  const buttonLabel = checking
+  const hasWarnings = (activeReadiness?.warnings.length ?? 0) > 0;
+  const publishAvailable =
+    !isPublic &&
+    activeReadiness !== null &&
+    activeReadiness.ready &&
+    !checking &&
+    !mutating;
+  const readinessButtonLabel = checking
     ? "Checking readiness…"
-    : requestError
+    : readinessError
       ? "Retry"
-      : readiness
+      : activeReadiness
         ? "Check again"
         : "Check publication readiness";
 
   return (
     <section
       aria-labelledby="publication-readiness-heading"
+      aria-busy={checking || mutating}
       className="border-t border-slate-800 pt-6"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 id="publication-readiness-heading" className="font-semibold text-white">
-          Publication readiness
-        </h2>
+        <div>
+          <h2 id="publication-readiness-heading" className="font-semibold text-white">
+            Publication readiness
+          </h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Status: {isPublic ? "Published" : "Draft"}
+          </p>
+        </div>
         <button
+          ref={checkButtonRef}
           type="button"
           onClick={checkReadiness}
-          disabled={checking}
-          aria-busy={checking}
+          disabled={checking || mutating}
           className="rounded-xl border border-cyan-400/50 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/10 focus:outline-none focus:ring-2 focus:ring-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {buttonLabel}
+          {readinessButtonLabel}
         </button>
       </div>
 
-      {requestError ? (
-        <p
-          role="alert"
-          className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"
-        >
-          {getErrorMessage(requestError)}
-        </p>
-      ) : null}
-
-      {readiness ? (
-        <div aria-live="polite" className="mt-4 space-y-4">
+      <div aria-live="polite" className="mt-4 space-y-4">
+        {readinessError ? (
           <p
-            className={`text-sm font-semibold ${
-              readiness.ready
-                ? hasWarnings
-                  ? "text-amber-200"
-                  : "text-emerald-200"
-                : "text-red-200"
+            role="alert"
+            className="rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+          >
+            {readinessErrorMessage(readinessError)}
+          </p>
+        ) : null}
+
+        {publicationFeedback ? (
+          <p
+            role={publicationFeedback.tone === "error" ? "alert" : undefined}
+            className={`rounded-lg px-4 py-3 text-sm ${
+              publicationFeedback.tone === "success"
+                ? "border border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                : "border border-red-500/40 bg-red-500/10 text-red-200"
             }`}
           >
-            {readiness.ready
-              ? hasWarnings
-                ? "Ready for publication with recommendations"
-                : "Ready for publication"
-              : "Not ready for publication"}
+            {publicationFeedback.message}
           </p>
+        ) : null}
 
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div className="rounded-lg bg-slate-800/60 px-3 py-2">
-              <dt className="text-slate-400">Tasks</dt>
-              <dd className="mt-1 font-semibold text-white">
-                {readiness.taskCount}
-              </dd>
-            </div>
-            <div className="rounded-lg bg-slate-800/60 px-3 py-2">
-              <dt className="text-slate-400">Supported tasks</dt>
-              <dd className="mt-1 font-semibold text-white">
-                {readiness.supportedTaskCount}
-              </dd>
-            </div>
-          </dl>
+        {activeReadiness ? (
+          <div className="space-y-4">
+            <p
+              className={`text-sm font-semibold ${
+                activeReadiness.ready
+                  ? hasWarnings
+                    ? "text-amber-200"
+                    : "text-emerald-200"
+                  : "text-red-200"
+              }`}
+            >
+              {activeReadiness.ready
+                ? hasWarnings
+                  ? "Ready for publication with recommendations"
+                  : "Ready for publication"
+                : "Not ready for publication"}
+            </p>
 
-          {readiness.blockers.length > 0 ? (
-            <div>
-              <h3 className="text-sm font-semibold text-red-200">Blockers</h3>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
-                {readiness.blockers.map((issue, index) => (
-                  <li key={`${issue.message}-${index}`}>{issue.message}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg bg-slate-800/60 px-3 py-2">
+                <dt className="text-slate-400">Tasks</dt>
+                <dd className="mt-1 font-semibold text-white">
+                  {activeReadiness.taskCount}
+                </dd>
+              </div>
+              <div className="rounded-lg bg-slate-800/60 px-3 py-2">
+                <dt className="text-slate-400">Supported tasks</dt>
+                <dd className="mt-1 font-semibold text-white">
+                  {activeReadiness.supportedTaskCount}
+                </dd>
+              </div>
+            </dl>
 
-          {readiness.warnings.length > 0 ? (
-            <div>
-              <h3 className="text-sm font-semibold text-amber-200">
-                Recommendations
-              </h3>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
-                {readiness.warnings.map((issue, index) => (
-                  <li key={`${issue.message}-${index}`}>{issue.message}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+            {activeReadiness.blockers.length > 0 ? (
+              <div>
+                <h3 className="text-sm font-semibold text-red-200">Blockers</h3>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
+                  {activeReadiness.blockers.map((issue, index) => (
+                    <li key={`${issue.message}-${index}`}>{issue.message}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {activeReadiness.warnings.length > 0 ? (
+              <div>
+                <h3 className="text-sm font-semibold text-amber-200">
+                  Recommendations
+                </h3>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
+                  {activeReadiness.warnings.map((issue, index) => (
+                    <li key={`${issue.message}-${index}`}>{issue.message}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="flex flex-wrap gap-3">
+          {!isPublic ? (
+            <button
+              type="button"
+              onClick={() => updatePublication("publish")}
+              disabled={!publishAvailable}
+              className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {mutationAction === "publish" ? "Publishing…" : "Publish quest"}
+            </button>
+          ) : (
+            <button
+              ref={unpublishButtonRef}
+              type="button"
+              onClick={() => updatePublication("unpublish")}
+              disabled={mutating || checking}
+              className="rounded-xl border border-amber-400/50 px-4 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {mutationAction === "unpublish" ? "Unpublishing…" : "Unpublish quest"}
+            </button>
+          )}
         </div>
-      ) : null}
+      </div>
     </section>
   );
 }

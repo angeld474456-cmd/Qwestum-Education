@@ -101,9 +101,7 @@ export default function QuestSettingsForm({
   const [category, setCategory] = useState(quest.category ?? "");
   const [tagsInput, setTagsInput] = useState(formatTagsInput(quest.tags));
   const [difficulty, setDifficulty] = useState(Number(quest.difficulty) || 1);
-  const [persistedIsPublic, setPersistedIsPublic] = useState(
-    Boolean(quest.is_public)
-  );
+  const [readinessInvalidationKey, setReadinessInvalidationKey] = useState(0);
   const [gradeMin, setGradeMin] = useState(metadataValue(quest.grade_min));
   const [gradeMax, setGradeMax] = useState(metadataValue(quest.grade_max));
   const [estimatedDuration, setEstimatedDuration] = useState(
@@ -113,7 +111,6 @@ export default function QuestSettingsForm({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const hasTasks = taskCount > 0;
-  const showPublishedWithoutTasksWarning = persistedIsPublic && !hasTasks;
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -251,12 +248,12 @@ export default function QuestSettingsForm({
       setCategory(result.quest.category ?? "");
       setTagsInput(formatTagsInput(result.quest.tags));
       setDifficulty(Number(result.quest.difficulty) || 1);
-      setPersistedIsPublic(Boolean(result.quest.is_public));
       setGradeMin(metadataValue(result.quest.grade_min));
       setGradeMax(metadataValue(result.quest.grade_max));
       setEstimatedDuration(
         metadataValue(result.quest.estimated_duration_minutes)
       );
+      setReadinessInvalidationKey((current) => current + 1);
       setSuccessMessage("Настройки квеста сохранены.");
     } catch (error) {
       console.error(error);
@@ -474,9 +471,7 @@ export default function QuestSettingsForm({
         <div className="space-y-3">
           <div
             className={`rounded-xl border p-4 ${
-              showPublishedWithoutTasksWarning
-                ? "border-amber-500/40 bg-amber-500/10"
-                : hasTasks
+              hasTasks
                   ? "border-emerald-500/40 bg-emerald-500/10"
                   : "border-cyan-500/30 bg-cyan-500/10"
             }`}
@@ -489,19 +484,6 @@ export default function QuestSettingsForm({
                 <p className="mt-1 text-sm text-slate-300">
                   Квест можно опубликовать.
                 </p>
-              </>
-            ) : showPublishedWithoutTasksWarning ? (
-              <>
-                <p className="text-sm font-semibold text-amber-200">
-                  Квест опубликован, но в нем нет заданий. Снимите публикацию
-                  или добавьте задание.
-                </p>
-                <Link
-                  href={`/dashboard/quests/${quest.id}/tasks`}
-                  className="mt-3 inline-flex text-sm font-semibold text-cyan-300 transition hover:text-cyan-200"
-                >
-                  Перейти к заданиям
-                </Link>
               </>
             ) : (
               <>
@@ -522,16 +504,11 @@ export default function QuestSettingsForm({
             )}
           </div>
 
-          <QuestPublicationReadiness questId={quest.id} />
-
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-[#1B2435] p-4">
-            <span>
-              <span className="block font-semibold">Статус публикации</span>
-              <span className="mt-1 block text-sm text-slate-400">
-                {persistedIsPublic ? "Опубликован" : "Черновик"}
-              </span>
-            </span>
-          </div>
+          <QuestPublicationReadiness
+            questId={quest.id}
+            initialIsPublic={quest.is_public}
+            readinessInvalidationKey={readinessInvalidationKey}
+          />
         </div>
 
         {errorMessage ? (
