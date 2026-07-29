@@ -1,5 +1,13 @@
 # Changelog
 
+## Sprint 12.20.2-12.20.3C4 - Teacher Publication Flow
+
+- Centralized catalog/runtime publication eligibility through Migration 014 and `public.is_public_runtime_eligible(uuid)`.
+- Added owner-scoped readiness service/API/UI, then applied Migration 015 live as `20260728193030` with `public.set_owned_quest_publication_state(uuid, boolean)`.
+- Added the dedicated `POST /api/teacher/quests/[id]/publication` action, removed direct Settings PATCH publication mutation, and added guarded teacher Publish/Unpublish controls.
+- Manual verification covered readiness, warnings, blockers, Draft-to-Published, Published-to-Draft, metadata invalidation, and refresh persistence. Automated verification passed: 6 test files, 88 tests passed, 0 failed; lint and build passed.
+- No student persistence, payments/entitlements, or production deployment capability was added.
+
 ## Sprint 12.19.8 - Single Choice Runtime Verification and Cleanup
 
 - Verified controlled Single Choice runtime outcomes: correct selections earned `2/2` with two correct statuses; incorrect selections earned `0/2` with two incorrect statuses; unanswered selections earned `0/2` with two unanswered statuses; four Text tasks remained `not_scored`.
@@ -462,7 +470,7 @@
   - Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
   - Exact UX copy includes `Для публикации нужно хотя бы одно задание.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
   - The task link points to `/quests/[id]/tasks`.
-  - The publication checkbox remains enabled, and the server API remains the publication source of truth.
+  - Historical behavior: the publication checkbox was enabled at this point. It is superseded by the current dedicated teacher Publish/Unpublish controls; the server publication action remains the source of truth.
   - Server-rendered count may be stale until refresh; no polling or client-side task-count fetch exists.
   - Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks, and no data was modified.
   - Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.

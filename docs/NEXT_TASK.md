@@ -2,29 +2,29 @@
 
 ## Milestone
 
-Sprint 12: Teacher Experience
-
-## Objective
-
-Plan automated regression coverage for the verified public runtime boundary and browser behavior.
+Sprint 12: Teacher Experience / Public Publication Lifecycle
 
 ## Next Task
 
-Sprint 12.19.9 - Public Runtime Automated Regression-Test Planning.
+Sprint 12.20.5 - Public Catalog Publication Lifecycle Regression Verification Planning
 
-Planning-only. Follow analysis -> architecture -> plan -> code after approval. Do not implement tests or application code, create fixture data, apply SQL, or perform live writes without separate explicit approval.
+Planning-only. Follow analysis -> architecture -> plan -> code after approval. Do not implement tests or application code, apply SQL, or perform live writes without separate explicit approval.
 
-Current state:
+## Objective
 
-- Sprint 12.19.8 completed controlled Single Choice browser/runtime verification for correct, incorrect, unanswered, unknown-option, and foreign-option submissions. The temporary fixture was removed, the original four Text tasks were restored, and the quest returned to its prior published state.
-- Public runtime remains anonymous and browser-local, with server-only RPC access, generic invalid-submission behavior, no answer leakage, and no persistent attempts.
+Plan controlled verification that teacher publishing and unpublishing correctly affects public catalog list/detail visibility, public runtime start eligibility, and restoration after cleanup.
 
-Planning topics:
+## Planning Topics
 
-- Analyze the existing runtime service, submit route, runner, and current test tooling before choosing unit, route-level, and browser-level regression boundaries.
-- Produce the architecture and exact file-by-file plan for DTO mapping, input validation, no-answer-leak, Single Choice result handling, retry/reset, and duplicate-submit coverage.
-- Define fixture ownership and whether local-only fixtures can replace live data. No test or application implementation is authorized by this planning task.
+- Identify a safe existing teacher-owned candidate and define a pre-verification snapshot.
+- Define a reversible publish/unpublish sequence.
+- Verify public catalog list and detail visibility, plus public runtime start eligibility.
+- Verify withdrawal after unpublish and restoration after re-publication.
+- Define cache expectations, exact cleanup/restoration checks, and a regression matrix.
+- Identify future automated contract coverage without implementing tests.
 
-Out of scope:
+## Out Of Scope
 
-- Test or application implementation before explicit approval, new RPCs, schema/RLS/Storage changes, persistent attempts/results, authentication, payments, production rate limiting, live data writes, staging, commit, and push.
+- Any live publish/unpublish mutation; it requires separate explicit approval.
+- Application code, tests, migrations, SQL execution, Supabase writes, catalog redesign, and cover delivery.
+- Student authentication/profile/cabinet/history, persistent attempts, assignments, payments, production deployment, package changes, commit, and push.

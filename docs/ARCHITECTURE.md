@@ -463,7 +463,7 @@ Decisions after audit:
 - The onboarding is server-rendered, non-persistent, has no client state or dismiss behavior, links to `/quests/[id]/tasks`, and leaves publication behavior unchanged.
 - Browser verification passed with and without `created=1`, and no data was modified during verification.
 - No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included in Sprint 12.18.6.
-- Sprint 12.18.8 added the first publication-readiness rule: Draft-to-Public transitions require at least one task.
+- Sprint 12.18.8 added the first publication-readiness rule: Draft-to-Public transitions require at least one task. This direct Settings PATCH enforcement is historical and superseded by Sprint 12.20.2-12.20.3.
 - The route reads current `is_public` through the existing owner-safe lookup, counts `quest_tasks` only after authentication and ownership verification, uses exact count with `head: true`, and never trusts client task counts.
 - Zero or null task count returns HTTP 400 with `Добавьте хотя бы одно задание перед публикацией.`, and the quest update is not executed.
 - Task-count query failure uses the existing safe HTTP 500 response and does not expose Supabase internals; direct API requests cannot bypass the rule.
@@ -492,7 +492,7 @@ Decisions after audit:
 - Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
 - Exact copy: `Для публикации нужно хотя бы одно задание.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
 - The task link points to `/quests/[id]/tasks`.
-- The publication checkbox remains enabled because the server API remains authoritative and server-rendered task counts may be stale until refresh.
+- Historical note: the publication checkbox was enabled at this point. It is superseded by the dedicated publication action and current teacher controls.
 - No polling or client-side task-count fetch was added.
 - Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks; no data was modified during verification.
 - Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.
@@ -763,3 +763,15 @@ Controlled browser verification now confirms the existing architecture contract 
 The public fetch DTO exposed only runtime-safe task metadata plus Single Choice option IDs/text, and the result DTO exposed aggregates plus per-task status. Browser output, Network data, and runtime state exposed no `correctOptionId`, expected answer, raw content JSON, hidden answer key, owner metadata, or database details. Local retry/reset remained browser-local and did not reveal answer data.
 
 The temporary two-task fixture was created through the normal owner-scoped teacher UI and removed after verification. The quest was unpublished before cleanup, its four original Text tasks remained intact, its original published state was restored, and no media, Storage object, schema, function, RLS, grant, or migration change was involved.
+
+## Current Publication Architecture
+
+The teacher publication authority chain is:
+
+`QuestPublicationReadiness` -> `POST /api/teacher/quests/[id]/publication` -> publication server service -> `public.set_owned_quest_publication_state(uuid, boolean)` -> `public.is_public_runtime_eligible(uuid)`.
+
+- The UI never mutates Supabase directly and never sends `is_public` through Settings PATCH. The POST body is strictly `{ "action": "publish" | "unpublish" }`; the response maps only the allowlisted `{ publication: { isPublic, outcome } }` DTO and fixed safe errors.
+- Migration 015 is live as `20260728193030`. The function is `VOLATILE SECURITY DEFINER`, has fixed `pg_catalog, public` search path, requires authenticated execution only, owner-scopes by `auth.uid()`, locks `public.quest_tasks` during the publish-time eligibility snapshot, and returns fixed outcomes without task, answer, owner, or database data.
+- Settings PATCH is metadata-only and rejects any own enumerable `is_public` property. Successful metadata saves increment a readiness invalidation signal; they do not overwrite the panel's local publication state.
+- The panel uses manual readiness checks, no optimistic publication state, native confirmations, synchronous in-flight guards, abort/token and mounted-state protection, and safe focus movement after successful state changes. Warnings are non-blocking; blockers and a `409` require a fresh readiness check before Publish.
+- No browser UI renders raw task content, task IDs, options, answers, correct-answer data, owner metadata, or database errors.

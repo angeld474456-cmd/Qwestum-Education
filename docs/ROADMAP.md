@@ -28,9 +28,9 @@ Completed:
 - Sprint 12.2 — Teacher Preview / Play Routes.
   - Added `/dashboard/quests/[id]/preview`.
   - Added `/dashboard/quests/[id]/play`.
-- Sprint 12.3 — Teacher Quest Settings / Publish Controls.
+- Sprint 12.3 — Teacher Quest Settings / Publish Controls (historical direct Settings behavior; superseded by Sprint 12.20.3).
   - Added `/dashboard/quests/[id]/settings`.
-  - Supports editing `title`, `description`, `difficulty`, and `is_public`.
+  - Historically supported editing `title`, `description`, `difficulty`, and `is_public`; current Settings PATCH is metadata-only.
 - Sprint 12.4 — Teacher Quest Workspace Navigation.
   - Added `components/dashboard/QuestWorkspaceNav.tsx`.
   - Reused it on settings, preview, and play pages.
@@ -329,7 +329,7 @@ Completed:
   - Publication behavior remains unchanged, and no client state or dismiss behavior was added.
   - Browser verification passed with and without the query parameter, and no data was modified.
   - No create API, schema/migration, RLS/policy, index, `QuestSettingsForm`, `QuestCoverImageManager`, task route/editor, publication gating, deletion, public catalog, or student-facing change was included.
-- Sprint 12.18.8 - Enforce Task Required Before Publication.
+- Sprint 12.18.8 - Enforce Task Required Before Publication (historical direct Settings PATCH guard; superseded by Sprint 12.20.2-12.20.3).
   - Publication now requires at least one task only during a Draft-to-Public transition.
   - Current `is_public` is loaded through the existing owner-safe quest lookup.
   - Task count is queried only after authenticated ownership verification using `quest_tasks` exact count with `head: true`; client-provided task counts are never trusted.
@@ -357,7 +357,7 @@ Completed:
   - Draft task deletion, Public multi-task deletion, generic 404, unauthenticated behavior, legacy Public zero-task quests, Preview, and Play/Test remain unchanged.
   - Deferred limitations: count and deletion are non-transactional; concurrent deletion requests on a Public quest with multiple tasks could still race; a future transaction/RPC may provide stronger enforcement; no second confirmation or publication-aware delete UI was added.
   - No automatic unpublishing, transaction/RPC, migration, schema, RLS/policy, index, `QuestTasksClient`, Settings, Preview, Play/Test, public catalog, student-facing, or quest deletion change was included.
-- Sprint 12.18.12 - Publication Readiness Settings UX.
+- Sprint 12.18.12 - Publication Readiness Settings UX (historical checkbox UX; superseded by Sprint 12.20.3C4).
   - Settings now loads an owner-safe exact task count server-side.
   - `getOwnedQuestTaskCount(questId)` validates UUID shape and authentication, verifies ownership with quest id plus authenticated `author_id`, returns `null` for missing, foreign, unauthenticated, or invalid requests, and counts only after ownership verification.
   - Task count uses `quest_tasks` exact count with `head: true` and remains separate from the quest DTO.
@@ -365,7 +365,7 @@ Completed:
   - Readiness messaging appears near the publication control for Draft zero-task, ready, and legacy Public zero-task states.
   - Exact UX copy includes `Для публикации нужно хотя бы одно задание.`, `Добавьте задание, затем вернитесь в настройки и включите публикацию.`, `Заданий: {taskCount}`, `Квест можно опубликовать.`, `Квест опубликован, но в нем нет заданий. Снимите публикацию или добавьте задание.`, and `Перейти к заданиям`.
   - The task link points to `/quests/[id]/tasks`.
-  - The publication checkbox remains enabled, and the server API remains the publication source of truth.
+- Historical note: the publication checkbox was enabled at this point; current Settings has no publication checkbox.
   - Server-rendered count may be stale until refresh; no polling or client-side task-count fetch exists.
   - Manual browser verification passed for Draft zero-task, Draft with tasks, and Public with tasks, and no data was modified.
   - Publication API enforcement, direct API protection, legacy Public zero-task unpublishing, unrelated Settings saves, error/success display, `created=1` onboarding, owner-safe `notFound`, task CRUD, Preview, and Play/Test remain unchanged.
@@ -613,7 +613,7 @@ Next:
 
 - Sprint 12.19.1 - Public Quest Catalog and Student Access Planning.
   - Planning passed. Current public routes are `/` and `/login`; `/quests*` redirects into the session-protected, owner-safe teacher workspace, where Preview/Play remain teacher-only. `QuestRunner` is local-only and current tasks expose `answer` plus `content.correctOptionId`, so public/student delivery needs a separate sanitized DTO.
-  - Verified quests use `is_public` as their only publication state alongside the existing title, description, owner, metadata, cover/category/tags, and created fields. Settings can publish/unpublish; publishing requires one task, but covers/completeness are not required and published content remains mutable. No slug, published timestamp, pricing/entitlement, author profile, moderation, or state enum exists; legacy task content may be null.
+  - Historical planning note: verified quests use `is_public` as their only publication state. The former direct Settings publish/unpublish behavior is superseded by Sprint 12.20.3's dedicated publication action and canonical eligibility boundary. No slug, published timestamp, pricing/entitlement, author profile, moderation, or state enum exists; legacy task content may be null.
   - Local schema history is incomplete because `001_initial_schema.sql` is empty; no live schema inspection occurred. Current RLS is owner-only, anonymous/non-owner public reads fail, and owner policies must not be widened. Normal anon-key clients are used; service-role access is rejected. The owner task `select("*")` service is private and must not be reused publicly.
   - Recommended MVP is anonymous server-rendered `/catalog` and `/catalog/[id]` through a dedicated published-only projection/view/RPC and public service, with login before later `/catalog/[id]/start`. Keep `is_public`, use separate public/student DTOs, preserve `/quests` redirects, defer slugs, and choose view versus RPC after live verification. UUID access requires published-only authorization and indistinguishable 404s.
   - Sprint 12.19.1 initially considered optional covers for cards alongside title, short description, difficulty, grade, language, subject, and action. Sprint 12.19.2 supersedes cover delivery for the first DTO. Server URL filters remain text, subject, grade, difficulty, and language; duration/category/tags/count/date remain deferred; attribution, pricing, popularity, points, and payment state remain omitted. Catalog is free-only; assignments, enrollment, attempts, results, payment, entitlement, and complex roles are later scope.
@@ -676,11 +676,39 @@ Sprint 12.19.8 - Single Choice Runtime Verification and Cleanup
 - The temporary two-task fixture was removed after verification. The quest returned from six tasks to its original four Text tasks and prior published state, with no media, Storage, schema, migration, RLS, function, grant, or application-code change.
 - Automated regression tests, production rate limiting, durable attempts, student accounts, payments, assignments, and production launch remain incomplete.
 
+Sprint 12.20.2 - Publication Eligibility Boundary / Migration 014
+
+- Completed the canonical publication eligibility boundary. `public.is_public_runtime_eligible(uuid)` is now the shared catalog/runtime predicate; Migration 014 was applied live before its reviewed commit.
+
+Sprint 12.20.3A - Publication Readiness Service and API
+
+- Completed the owner-scoped readiness service and `GET /api/teacher/quests/[id]/publication-readiness`, returning only allowlisted readiness data and fixed safe outcomes.
+
+Sprint 12.20.3B - Teacher Publication Readiness UI
+
+- Completed the manual teacher readiness panel with validated DTO rendering, safe request handling, blockers/warnings, counts, retry, and session-expiry behavior.
+
+Sprint 12.20.3C1 - Owner-Safe Atomic Publication Mutation / Migration 015
+
+- Migration `20260728193030` is live. `public.set_owned_quest_publication_state(uuid, boolean)` performs authenticated owner-safe publication mutation with canonical eligibility recalculation, a task-table lock for the publish-time snapshot, and fixed outcomes.
+
+Sprint 12.20.3C2 - Dedicated Publication Action API
+
+- Completed `POST /api/teacher/quests/[id]/publication`. It accepts only publish/unpublish actions, uses the server publication boundary, and maps fixed safe success and error responses without raw database details.
+
+Sprint 12.20.3C3 - Remove Settings PATCH Publication Mutation
+
+- Completed metadata-only Settings PATCH. Any own enumerable `is_public` request property is rejected before authentication or data access; ordinary saves preserve stored publication state and invalidate readiness only after success.
+
+Sprint 12.20.3C4 - Publish/Unpublish Teacher Controls
+
+- Completed guarded, confirmed teacher Publish/Unpublish controls in `QuestPublicationReadiness`. Publish requires a current ready result; warnings allow it, blockers prevent it, and Unpublish requires no readiness. Manual browser verification passed for publish, unpublish, warnings, blockers, metadata invalidation, and refresh persistence. The publication flow is complete; public catalog lifecycle regression verification, cover delivery, student authentication/profile, student cabinet/history, persistent attempts, assignments, payments/entitlements, production rate limiting, and deployment remain incomplete.
+
 Next:
 
-- Sprint 12.19.9 - Public Runtime Automated Regression-Test Planning.
-  - Begin with analysis -> architecture -> plan -> code after approval. Define the smallest test layers for runtime DTO mapping, submit-route validation, no-answer-leak assertions, Single Choice scoring result handling, retry/reset, and duplicate-submit protection.
-  - Do not implement tests, create fixture data, modify live Supabase, or change runtime behavior as part of this planning sprint.
+- Sprint 12.20.5 - Public Catalog Publication Lifecycle Regression Verification Planning.
+  - Planning-only: define a safe candidate and pre-verification snapshot, a reversible publish/unpublish sequence, catalog list/detail and public runtime eligibility checks, withdrawal/re-publication, cache expectations, cleanup/restoration, a regression matrix, and future automated contract coverage.
+  - Any live publication mutation requires separate explicit approval. Application implementation, migrations, SQL execution, Supabase writes, cover delivery, student systems, payments, deployment, and package changes are out of scope.
 
 ## Suggested Future Milestones
 
