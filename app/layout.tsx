@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = localFont({
+  src: "./fonts/GeistVF.woff2",
+  display: "swap",
+  variable: "--font-sans",
+  weight: "100 900",
+});
 
 export const metadata: Metadata = {
   title: "Questum Education",
