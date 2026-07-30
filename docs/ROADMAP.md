@@ -708,11 +708,17 @@ Sprint 12.20.6 - Controlled Public Publication Lifecycle Verification
 
 - Completed approved browser verification with existing Draft quest `1a206882-650e-4982-840a-fe6108872cac`: catalog list/detail/start and one safe Text-only submit became available after publish; a stale open runner submit was safely rejected after unpublish; republish restored visibility; final state returned to Draft. No metadata, task, cover, Storage, or repository change occurred.
 
+Sprint 12.20.8-12.20.9B - Public Catalog Cover Delivery
+
+- Completed the approved opaque cover boundary: Migration 016 is live and verified; catalog RPCs expose `has_cover` only; list/detail render same-origin cover URLs through `GET /api/public/quests/[id]/cover`; and a stable 16:9 fallback handles unavailable media.
+- The media route rechecks public eligibility and returns validated image bytes only. No raw Storage path, direct Storage URL, public bucket conversion, Storage-policy change, or client-side service-role access was introduced. Browser verification covered media headers, safe 404s, fallback recovery, unpublish withdrawal, republish restoration, and original-state restoration. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and build passed.
+- The local server-only `sb_secret_...` key is configured and verified without recording a value. Legacy JWT-based API keys remain temporarily active for the browser anon client; migration to `sb_publishable_...` remains separate controlled work.
+
 Next:
 
-- Sprint 12.20.8 - Public Catalog Cover Delivery Planning.
-  - Planning-only: define a safe public cover delivery boundary for catalog list/detail pages while raw `cover_image_path` remains outside public DTOs. Compare delivery models, caching/expiry, fallbacks, path validation, eligibility, rollout/rollback, and verification.
-  - Any live Storage, policy, schema, or data change requires separate explicit approval. Implementation, migrations, SQL/RPC, public bucket changes, student systems, payments, deployment, and package changes are out of scope.
+- Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX Planning.
+  - Planning-only: define a consistent, accessible public catalog experience for initial loading, empty catalog, no-filter-results, unavailable detail, and recoverable server failure. Inventory list/detail/start states; distinguish empty, invalid-filter, unavailable, and generic-failure outcomes; define retry, focus, live-region, and responsive behavior; then produce a narrow implementation, test, and manual-verification plan.
+  - No UI implementation, runtime cover/header work, publication-boundary change, migration, SQL, Storage, package, student-system, payment, or deployment action is in scope.
 
 ## Suggested Future Milestones
 

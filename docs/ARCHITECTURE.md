@@ -764,6 +764,16 @@ The public fetch DTO exposed only runtime-safe task metadata plus Single Choice 
 
 The temporary two-task fixture was created through the normal owner-scoped teacher UI and removed after verification. The quest was unpublished before cleanup, its four original Text tasks remained intact, its original published state was restored, and no media, Storage object, schema, function, RLS, grant, or migration change was involved.
 
+## Current Public Catalog Cover Delivery
+
+Sprint 12.20.9B supersedes the historical catalog fallback-only decision without changing the public catalog's raw-path denylist. Migration 016 extends the list/detail RPC output with `has_cover boolean` only; it does not return `cover_image_path`, a bucket URL, a signed URL, owner data, or private Storage metadata.
+
+`services/public-catalog.server.ts` maps `has_cover` to an opaque same-origin `coverUrl` only when a cover is available. `PublicQuestCover` is used by catalog list/detail rendering, preserves a 16:9 layout, uses the native image element, and swaps a failed request to a stable fallback without a retry loop.
+
+`GET /api/public/quests/[id]/cover` is the sole public cover delivery boundary. Its server-only service validates the public quest ID, calls the service-role-only resolver, confirms the canonical internal path and current public eligibility, downloads from the fixed cover bucket, validates size, MIME, and image magic bytes, and returns bytes only for a valid image. Unavailable covers return a generic `404`; provider, configuration, and validation failures return a generic `500`; no raw object path, Storage URL, provider error, or credential crosses the route boundary.
+
+The local server-only `sb_secret_...` key is configured and verified without any value being recorded in the repository. The browser remains on the legacy JWT-based anon key temporarily; a migration to `sb_publishable_...` is a separate controlled security task. Migration 016 introduced no bucket conversion, Storage-policy change, or public base-table access.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

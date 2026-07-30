@@ -687,6 +687,15 @@ The planned live-schema and public-read-boundary verification completed without 
 - Republishing restored list/detail/runtime visibility. The mandatory final unpublish restored the exact original Draft baseline.
 - No metadata, task, cover, Storage object, repository file, schema, migration, or application code changed during verification.
 
+## Sprint 12.20.9B - Public Catalog Cover Delivery
+
+- Migration 016 is applied and verified in live Supabase. It adds the narrow service-role-only cover resolver while preserving the public catalog list/detail boundary and without converting a Storage bucket or exposing raw cover paths.
+- Public catalog list/detail rows expose only `has_cover` for cover availability. The application derives an opaque same-origin cover route from the public quest ID; neither the catalog DTO nor browser markup exposes a Storage object path.
+- `GET /api/public/quests/[id]/cover` rechecks public eligibility server-side, resolves and validates the stored cover internally, and returns only validated image bytes or generic `404`/`500` responses. The catalog list and detail use a reserved 16:9 cover area with a stable fallback when media is unavailable.
+- The local server-only `sb_secret_...` key is configured and verified without recording its value. Legacy JWT-based API keys remain temporarily active because the browser still uses the legacy anon key; a controlled migration to `sb_publishable_...` is separate future work.
+- Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and build passed. Controlled browser verification confirmed catalog/detail covers, public start continuity, safe media headers and 404s, stable fallback and recovery, unpublish withdrawal, republish restoration, and restoration of the original public state.
+- No cover object, cover path, quest metadata, task, Storage policy, bucket configuration, persistent attempt, payment, student system, or deployment capability was changed by this sprint.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.

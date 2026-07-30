@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.20.9B - Public Catalog Cover Delivery
+
+- Applied and verified Migration 016, adding the narrow service-role-only public cover resolver. Catalog list/detail output now provides `has_cover` only; no raw Storage path is public.
+- Added the same-origin `GET /api/public/quests/[id]/cover` delivery boundary, server-only cover resolution/download validation, catalog list/detail cover rendering, and a stable 16:9 fallback.
+- Verified catalog/detail covers, public start continuity, safe headers and 404s, fallback recovery, unpublish withdrawal, republish restoration, and original-state restoration. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and build passed.
+- No bucket conversion, Storage-policy change, cover-object mutation, quest metadata/task change, persistent attempt, payment, or deployment capability was added. The local `sb_secret_...` key is server-only and verified without recording a value; legacy JWT-based browser API keys remain temporary pending a separate controlled `sb_publishable_...` migration.
+
 ## Sprint 12.20.6 - Controlled Public Publication Lifecycle Verification
 
 - Verified approved Draft lifecycle for `1a206882-650e-4982-840a-fe6108872cac`: Draft baseline, Publish catalog/detail/runtime visibility, one safe Text-only submit, Unpublish withdrawal, stale-runner safe rejection, republish restoration, and final Draft restoration.
