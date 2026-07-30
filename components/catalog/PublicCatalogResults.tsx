@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import PublicQuestCover from "@/components/catalog/PublicQuestCover";
 import type {
   PublicCatalogListQuery,
   PublicCatalogListResult,
@@ -81,9 +82,11 @@ export default function PublicCatalogResults({
               href={`/catalog/${quest.id}`}
               className="group flex min-w-0 flex-col rounded-lg border border-slate-800 bg-[#111827] p-5 outline-none transition hover:border-violet-500 focus-visible:ring-2 focus-visible:ring-violet-500"
             >
-              <div className="flex aspect-video items-center justify-center rounded-md border border-slate-700 bg-slate-900 px-4 text-center text-sm font-semibold text-slate-500">
-                Questum
-              </div>
+              <PublicQuestCover
+                title={quest.title}
+                coverUrl={quest.coverUrl}
+                loading="lazy"
+              />
               <div className="mt-5 min-w-0">
                 <h2 className="text-xl font-bold text-white group-hover:text-violet-200">
                   {quest.title}

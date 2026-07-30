@@ -50,10 +50,25 @@ function nullableLanguageCode(
   return value === "ru" || value === "kk" || value === "en" ? value : null;
 }
 
+function isPlainObject(value: unknown): value is PublicCatalogRpcRow {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
 function mapPublicCatalogQuest(
-  row: PublicCatalogRpcRow
+  row: unknown
 ): PublicCatalogQuest | null {
-  if (typeof row.id !== "string" || typeof row.title !== "string") {
+  if (
+    !isPlainObject(row) ||
+    typeof row.id !== "string" ||
+    !isPublicCatalogQuestId(row.id) ||
+    typeof row.title !== "string" ||
+    typeof row.has_cover !== "boolean"
+  ) {
     return null;
   }
 
@@ -71,6 +86,7 @@ function mapPublicCatalogQuest(
     tags: Array.isArray(row.tags)
       ? row.tags.filter((tag): tag is string => typeof tag === "string")
       : [],
+    coverUrl: row.has_cover ? "/api/public/quests/" + row.id + "/cover" : null,
     createdAt: nullableString(row.created_at),
   };
 }
@@ -97,7 +113,7 @@ export async function listPublicCatalogQuests(
     throw new PublicCatalogUnavailableError();
   }
 
-  const quests = (data as PublicCatalogRpcRow[])
+  const quests = (data as unknown[])
     .map(mapPublicCatalogQuest)
     .filter((quest): quest is PublicCatalogQuest => quest !== null);
 
@@ -126,7 +142,7 @@ export const getPublicCatalogQuest = cache(
       throw new PublicCatalogUnavailableError();
     }
 
-    for (const row of data as PublicCatalogRpcRow[]) {
+    for (const row of data as unknown[]) {
       const quest = mapPublicCatalogQuest(row);
 
       if (quest) return quest;

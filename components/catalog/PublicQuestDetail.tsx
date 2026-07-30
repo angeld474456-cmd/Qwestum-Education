@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import PublicQuestCover from "@/components/catalog/PublicQuestCover";
 import type { PublicCatalogQuest } from "@/types/public-catalog";
 
 type PublicQuestDetailProps = {
@@ -34,7 +35,12 @@ export default function PublicQuestDetail({ quest }: PublicQuestDetailProps) {
 
   return (
     <article className="mx-auto max-w-4xl space-y-8">
-      <div className="aspect-video rounded-lg border border-slate-800 bg-slate-900" />
+      <PublicQuestCover
+        title={quest.title}
+        coverUrl={quest.coverUrl}
+        loading="eager"
+        className="aspect-video overflow-hidden rounded-lg border border-slate-800 bg-slate-900"
+      />
 
       <div>
         <p className="text-sm font-semibold uppercase tracking-wide text-violet-300">

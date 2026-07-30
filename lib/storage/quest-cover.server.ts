@@ -10,6 +10,15 @@ const acceptedCoverImageTypes: Record<string, string> = {
 };
 const coverImageFilenamePattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png|webp)$/i;
+const canonicalPublicCoverPathPattern =
+  /^teachers\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/quests\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/cover\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\.(jpg|jpeg|png|webp)$/;
+
+export type PublicQuestCoverObjectPath = {
+  authorId: string;
+  questId: string;
+  fileId: string;
+  extension: "jpg" | "jpeg" | "png" | "webp";
+};
 
 export const questCoverImageBucketName = bucketName;
 export const questCoverImageMaxFileSize = maxCoverImageFileSize;
@@ -45,6 +54,23 @@ export function getSafeQuestCoverImageObjectPath(
   if (!coverImageFilenamePattern.test(segments[5])) return null;
 
   return objectPath;
+}
+
+export function parsePublicQuestCoverImageObjectPath(
+  objectPath: string | null | undefined
+): PublicQuestCoverObjectPath | null {
+  if (typeof objectPath !== "string") return null;
+
+  const match = canonicalPublicCoverPathPattern.exec(objectPath);
+
+  if (!match) return null;
+
+  return {
+    authorId: match[1],
+    questId: match[2],
+    fileId: match[3],
+    extension: match[4] as PublicQuestCoverObjectPath["extension"],
+  };
 }
 
 export function getQuestCoverImagePublicUrl(objectPath: string | null) {

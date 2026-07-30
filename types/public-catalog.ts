@@ -12,6 +12,7 @@ export type PublicCatalogQuest = {
   estimatedDurationMinutes: number | null;
   category: string | null;
   tags: string[];
+  coverUrl: string | null;
   createdAt: string | null;
 };
 
