@@ -6,22 +6,24 @@ Sprint 12: Public Catalog Launch Readiness
 
 ## Next Task
 
-Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX Planning
+Sprint 12.20.11 - Production Build Reliability and Local Font Strategy Planning
 
 Planning-only. Follow analysis -> architecture -> plan -> code after approval. Do not implement application code, tests, or live changes without separate explicit approval.
 
 ## Objective
 
-Define a consistent, accessible public catalog experience for initial loading, empty catalog, no-filter-results, unavailable detail, and recoverable server failure.
+Define a controlled approach that allows production builds to succeed without depending on live Google Fonts access.
 
 ## Planning Topics
 
-- Inventory list/detail/start loading, empty, not-found, and error states.
-- Distinguish empty results, invalid filters, unavailable quests, and generic failures without exposing internal details.
-- Define retry, focus, live-region, and responsive behavior.
-- Produce a narrow implementation, test, and manual-verification plan.
+- Inventory all current `next/font` usage and the Geist dependency path.
+- Determine whether the repeated failure is network/environmental or configuration-related.
+- Compare locally bundled font files, an approved package-provided font source, and documented build-network/cache requirements.
+- Analyze licensing and provenance.
+- Define cache, CI, accessibility, visual-regression, rollback, and verification requirements.
+- Produce a planning-only implementation recommendation.
 
 ## Out Of Scope
 
-- UI implementation, runtime cover/header work, publication-boundary changes, migration creation/application, SQL, Storage, package changes, and direct live operations.
-- Student systems, persistent attempts, assignments, payments, deployment, commit, and push.
+- Font implementation, font binaries, package/configuration changes, UI redesign, and deployment.
+- Supabase, Storage, SQL, migrations, auth, publication, runtime, student systems, persistent attempts, assignments, payments, commit, and push.

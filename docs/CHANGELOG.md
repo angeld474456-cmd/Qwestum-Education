@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
+
+- Added distinct empty, filtered no-result, and nonzero-offset no-more-result catalog states with targeted local navigation; loading, detail not-found, detail error, and public start state UI now share safe accessible conventions through `PublicCatalogState`.
+- Verified manually for catalog filters/reset, zero states, navigation, malformed query normalization, unavailable-detail focus, responsive layout, and independent cover fallback. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and `git diff --check` passed.
+- Clean production build retries are externally blocked only by the Google Fonts Geist fetch. No TypeScript, Next.js route-boundary, lint, or application-code error was reported; no API, DTO, auth, publication, Supabase, Storage, migration, package, deployment, or configuration boundary changed.
+
 ## Sprint 12.20.9B - Public Catalog Cover Delivery
 
 - Applied and verified Migration 016, adding the narrow service-role-only public cover resolver. Catalog list/detail output now provides `has_cover` only; no raw Storage path is public.

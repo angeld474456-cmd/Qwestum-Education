@@ -714,11 +714,17 @@ Sprint 12.20.8-12.20.9B - Public Catalog Cover Delivery
 - The media route rechecks public eligibility and returns validated image bytes only. No raw Storage path, direct Storage URL, public bucket conversion, Storage-policy change, or client-side service-role access was introduced. Browser verification covered media headers, safe 404s, fallback recovery, unpublish withdrawal, republish restoration, and original-state restoration. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and build passed.
 - The local server-only `sb_secret_...` key is configured and verified without recording a value. Legacy JWT-based API keys remain temporarily active for the browser anon client; migration to `sb_publishable_...` remains separate controlled work.
 
+Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
+
+- Completed the accessible public catalog state pass: `/catalog` now distinguishes empty, filtered no-result, and nonzero-offset no-more-result states with targeted local navigation; list/detail/start loading, error, and unavailable states now use consistent safe status, busy, focus, retry, and reduced-motion behavior.
+- Manual browser verification and code review passed. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and `git diff --check` passed. Clean production builds remain externally blocked only by repeated Google Fonts Geist fetch failures, with no reported application, route-boundary, TypeScript, or lint defect.
+- No public API, DTO, cover delivery, auth, publication, Supabase, Storage, migration, package, deployment, or configuration boundary changed.
+
 Next:
 
-- Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX Planning.
-  - Planning-only: define a consistent, accessible public catalog experience for initial loading, empty catalog, no-filter-results, unavailable detail, and recoverable server failure. Inventory list/detail/start states; distinguish empty, invalid-filter, unavailable, and generic-failure outcomes; define retry, focus, live-region, and responsive behavior; then produce a narrow implementation, test, and manual-verification plan.
-  - No UI implementation, runtime cover/header work, publication-boundary change, migration, SQL, Storage, package, student-system, payment, or deployment action is in scope.
+- Sprint 12.20.11 - Production Build Reliability and Local Font Strategy Planning.
+  - Planning-only: inventory current `next/font` usage and the Geist dependency path; determine whether the repeated build failure is network/environmental or configuration-related; compare locally bundled files, an approved package-provided source, and documented build-network/cache requirements; then define provenance, licensing, cache, CI, accessibility, visual-regression, rollback, and verification requirements.
+  - No font implementation, font binaries, package/configuration/UI/deployment change, Supabase, Storage, SQL, migration, auth, publication, runtime, student-system, payment, commit, or push action is in scope.
 
 ## Suggested Future Milestones
 

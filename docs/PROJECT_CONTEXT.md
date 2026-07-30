@@ -696,6 +696,15 @@ The planned live-schema and public-read-boundary verification completed without 
 - Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and build passed. Controlled browser verification confirmed catalog/detail covers, public start continuity, safe media headers and 404s, stable fallback and recovery, unpublish withdrawal, republish restoration, and restoration of the original public state.
 - No cover object, cover path, quest metadata, task, Storage policy, bucket configuration, persistent attempt, payment, student system, or deployment capability was changed by this sprint.
 
+## Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
+
+- `/catalog` now distinguishes a completely empty catalog, filtered/search no-results, and no-more-results for a nonzero offset. Targeted Reset, Previous, and return-to-start catalog navigation preserve the normalized supported filters.
+- Loading UI now has visible progress text, polite announcements, busy semantics, decorative skeletons hidden from assistive technology, and reduced-motion handling. Detail has route-local loading and error boundaries; detail not-found and public start loading/error now follow the same accessible state conventions through `PublicCatalogState`.
+- Catalog query normalization remains silent for malformed, repeated, and out-of-range parameters. The cover fallback remains an independent stable 16:9 media fallback and never becomes a page-level error.
+- Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and `git diff --check` passed. Code review found no implementation blocker. Manual browser verification passed for normal catalog rendering, cards/covers, filters/reset, filtered and high-offset states, return navigation, parameter normalization, unavailable-detail focus, responsive layout, and cover fallback.
+- Production build was attempted repeatedly but remains externally blocked because `Geist` could not be fetched from `fonts.googleapis.com`. No TypeScript, Next.js route-boundary, lint, or application-code error was reported. Commit `033820e` is pushed and the branch is synchronized.
+- No API, DTO, auth, publication, Supabase, Storage, migration, package, deployment, or configuration change occurred in this sprint.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.

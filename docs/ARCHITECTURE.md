@@ -774,6 +774,16 @@ Sprint 12.20.9B supersedes the historical catalog fallback-only decision without
 
 The local server-only `sb_secret_...` key is configured and verified without any value being recorded in the repository. The browser remains on the legacy JWT-based anon key temporarily; a migration to `sb_publishable_...` is a separate controlled security task. Migration 016 introduced no bucket conversion, Storage-policy change, or public base-table access.
 
+## Current Public Catalog UX State Boundaries
+
+Sprint 12.20.10 keeps catalog query normalization server-side and silent: repeated values use the first value, text is trimmed and normalized, invalid grade/difficulty values are ignored, and offsets are safely clamped. The rendered list distinguishes an empty catalog, no matching filtered/search result, and a nonzero-offset page with no more results. Reset and pagination links use only reconstructed local `/catalog` URLs with allowlisted normalized query values.
+
+`app/catalog/loading.tsx` and the detail-local loading boundary provide visible polite progress text, `aria-busy`, assistive-technology-hidden decorative skeletons, and reduced-motion-safe animation classes. `app/catalog/error.tsx`, `app/catalog/[id]/error.tsx`, and the public start error boundary use Next.js retry recovery with fixed safe copy; they never render server error details. Detail not-found exposes a focusable heading and a local catalog return link.
+
+`PublicCatalogState` is the shared presentation-only client component for fixed empty, unavailable, and recoverable-error states. It accepts only caller-defined title, description, retry callback, and local navigation actions; it does not receive service errors, public DTO internals, cover paths, or media data. `PublicQuestCover` remains independent: media failure retains its stable 16:9 fallback and does not trigger a route error boundary.
+
+The production build is currently environment-sensitive because `next/font` fetches Geist from Google Fonts during a clean build. Sprint 12.20.11 is planning-only work to select a controlled, dependency-aware build-reliability strategy; no font, package, configuration, or deployment change is implied by this record.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:
