@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import PublicCatalogState from "@/components/catalog/PublicCatalogState";
 import PublicQuestCover from "@/components/catalog/PublicQuestCover";
 import type {
   PublicCatalogListQuery,
@@ -57,13 +58,72 @@ export default function PublicCatalogResults({
   query,
 }: PublicCatalogResultsProps) {
   if (result.quests.length === 0) {
+    if (result.offset > 0) {
+      const previousOffset = Math.max(0, result.offset - result.pageSize);
+      const paginationActions =
+        previousOffset === 0
+          ? [
+              {
+                href: buildCatalogHref(query, 0),
+                label: "\u0412 \u043d\u0430\u0447\u0430\u043b\u043e \u043a\u0430\u0442\u0430\u043b\u043e\u0433\u0430",
+                primary: true,
+              },
+            ]
+          : [
+              {
+                href: buildCatalogHref(query, previousOffset),
+                label: "\u041d\u0430\u0437\u0430\u0434",
+                primary: true,
+              },
+              {
+                href: buildCatalogHref(query, 0),
+                label: "\u0412 \u043d\u0430\u0447\u0430\u043b\u043e \u043a\u0430\u0442\u0430\u043b\u043e\u0433\u0430",
+              },
+            ];
+
+      return (
+        <PublicCatalogState
+          tone="empty"
+          headingLevel={2}
+          title={"\u041d\u0430 \u044d\u0442\u043e\u0439 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0435 \u043a\u0432\u0435\u0441\u0442\u043e\u0432 \u043d\u0435\u0442"}
+          description={"\u0412\u0435\u0440\u043d\u0438\u0442\u0435\u0441\u044c \u043d\u0430 \u043f\u0440\u0435\u0434\u044b\u0434\u0443\u0449\u0443\u044e \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0443 \u0438\u043b\u0438 \u0432 \u043d\u0430\u0447\u0430\u043b\u043e \u043a\u0430\u0442\u0430\u043b\u043e\u0433\u0430."}
+          actions={paginationActions}
+        />
+      );
+    }
+
+    const hasActiveFilters =
+      query.search !== null ||
+      query.subject !== null ||
+      query.grade !== null ||
+      query.difficulty !== null;
+
     return (
-      <section className="rounded-lg border border-slate-800 bg-[#111827] p-8 text-center">
-        <h2 className="text-2xl font-semibold text-white">Квесты не найдены</h2>
-        <p className="mt-3 text-slate-400">
-          Измените параметры поиска или сбросьте фильтры.
-        </p>
-      </section>
+      <PublicCatalogState
+        tone="empty"
+        headingLevel={2}
+        title={
+          hasActiveFilters
+            ? "\u041a\u0432\u0435\u0441\u0442\u044b \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u044b"
+            : "\u0412 \u043a\u0430\u0442\u0430\u043b\u043e\u0433\u0435 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442 \u043a\u0432\u0435\u0441\u0442\u043e\u0432"
+        }
+        description={
+          hasActiveFilters
+            ? "\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u0435 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b \u043f\u043e\u0438\u0441\u043a\u0430 \u0438\u043b\u0438 \u0441\u0431\u0440\u043e\u0441\u044c\u0442\u0435 \u0444\u0438\u043b\u044c\u0442\u0440\u044b."
+            : "\u041a\u043e\u0433\u0434\u0430 \u043f\u043e\u044f\u0432\u044f\u0442\u0441\u044f \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u044b\u0435 \u043a\u0432\u0435\u0441\u0442\u044b, \u043e\u043d\u0438 \u043f\u043e\u044f\u0432\u044f\u0442\u0441\u044f \u0437\u0434\u0435\u0441\u044c."
+        }
+        actions={
+          hasActiveFilters
+            ? [
+                {
+                  href: "/catalog",
+                  label: "\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0444\u0438\u043b\u044c\u0442\u0440\u044b",
+                  primary: true,
+                },
+              ]
+            : []
+        }
+      />
     );
   }
 

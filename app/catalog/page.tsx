@@ -62,24 +62,7 @@ function parseCatalogQuery(
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const query = parseCatalogQuery(await searchParams);
-  let result = null;
-
-  try {
-    result = await listPublicCatalogQuests(query);
-  } catch {
-    result = null;
-  }
-
-  if (!result) {
-    return (
-      <main className="min-h-screen bg-[#070B14] px-6 py-12 text-white">
-        <section className="mx-auto max-w-3xl rounded-lg border border-slate-800 bg-[#111827] p-8 text-center">
-          <h1 className="text-2xl font-semibold">Каталог временно недоступен</h1>
-          <p className="mt-3 text-slate-400">Попробуйте обновить страницу позже.</p>
-        </section>
-      </main>
-    );
-  }
+  const result = await listPublicCatalogQuests(query);
 
   return (
     <main className="min-h-screen bg-[#070B14] px-6 py-12 text-white">

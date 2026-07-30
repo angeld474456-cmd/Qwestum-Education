@@ -2,14 +2,13 @@
 
 import PublicCatalogState from "@/components/catalog/PublicCatalogState";
 
-type PublicQuestStartErrorProps = {
-  error: Error & { digest?: string };
+type CatalogQuestErrorProps = {
   unstable_retry: () => void;
 };
 
-export default function PublicQuestStartError({
+export default function CatalogQuestError({
   unstable_retry,
-}: PublicQuestStartErrorProps) {
+}: CatalogQuestErrorProps) {
   return (
     <main className="min-h-screen bg-[#070B14] px-6 py-12 text-white">
       <div className="mx-auto max-w-3xl">
