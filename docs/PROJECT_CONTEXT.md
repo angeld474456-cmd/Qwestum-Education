@@ -738,6 +738,19 @@ The planned live-schema and public-read-boundary verification completed without 
 - Only the environment variable names `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and `RATE_LIMIT_HMAC_SECRET` are referenced; no values are committed. Focused tests passed 3 identity, 5 limiter, and 10 route cases; the full suite passed 12 files and 138 tests, with lint and production build passing. Commit `0605136` is pushed.
 - Upstash and Vercel resources, preview/production environment configuration, WAF/rate rules, staging verification, and deployment remain incomplete. The code is not production-operational until those controls are separately configured and verified.
 
+## Sprint 12.20.16 - Platform Public GET Abuse Controls and Cache Policy Planning
+
+- Audited anonymous GET surfaces and selected Vercel platform/WAF protection over application Redis limits for general public GET traffic. Hard per-IP GET limits are intentionally deferred because school and classroom NAT could create false positives.
+- `/catalog` and `/catalog/[id]` remain dynamic and are not approved for shared CDN caching. `/catalog/[id]/start` remains no-store and publication-sensitive. The public cover route uses `private, max-age=60, must-revalidate` on success and `no-store` on errors; stale-while-revalidate is not approved for publication-sensitive responses.
+- Publication withdrawal targets are effectively zero stale window for runtime start/errors and no more than 30 seconds for any future shared catalog/detail/cover cache after preview validation. Global proxy/Supabase auth cost on public matched requests must be measured in preview. Vercel WAF/Firewall capabilities and plan entitlement still require account verification.
+
+## Sprint 12.20.17 - Public Debug Route Removal and Anonymous Surface Verification
+
+- Removed `app/test/page.tsx`; `/test` now receives normal not-found behavior. Added `tests/app/anonymous-surface.test.ts` to prevent public/debug routes from reintroducing raw Supabase row or error serialization.
+- Focused verification passed 2 tests; the full suite passed 13 files and 140 tests. Lint and build passed. Local smoke checks returned `/test` 404, `/catalog` 200, and a linked public quest detail 200. `proxy.ts` remained unchanged.
+- Commit `e49d6fd` (`Remove public debug route`) is pushed and `feature/next-work` is synchronized with origin. No provider, environment, deployment, Supabase, Storage, schema, or configuration action occurred.
+- Production prerequisites remain unresolved: no Upstash resource or preview/production limiter environment values; no Vercel project/environment, WAF/rate rules, or preview deployment; no deployed verification of the shared limiter or trusted `x-vercel-forwarded-for`; and no production Auth Site URL or redirect allowlist configuration.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.

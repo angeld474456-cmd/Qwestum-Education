@@ -738,11 +738,19 @@ Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
   - Both token buckets must allow before scoring: client capacity 75/refill 60 per minute and client-plus-quest capacity 60/refill 45 per minute. Analytics and ephemeral cache are disabled. Validation remains before limiting; fixed no-store `429` and `503` responses do not expose identity, provider, request, or answer data. Tests passed 12 files/138 tests; lint and build passed. Commit `0605136` is pushed.
   - Provider provisioning, environment configuration, Vercel WAF/rate rules, staging verification, and deployment remain incomplete.
 
+- Sprint 12.20.16 - Platform Public GET Abuse Controls and Cache Policy Planning.
+  - Completed planning: Vercel platform/WAF protection is preferred for anonymous GET traffic; hard per-IP GET limits are deferred for shared school/classroom NAT. Catalog/detail remain dynamic, start remains no-store, cover success remains private for 60 seconds, and publication-sensitive responses must not use stale-while-revalidate.
+  - Proxy/auth cost, Vercel WAF/Firewall capability and entitlement, and preview validation remain unresolved before configuration.
+
+- Sprint 12.20.17 - Public Debug Route Removal and Anonymous Surface Verification.
+  - Removed the reachable `/test` debug page. `/test` now returns normal not-found behavior; an anonymous-surface regression test prevents public/debug route and raw Supabase row/error serialization regressions.
+  - Focused tests, 13-file/140-test suite, lint, build, and local `/test`, catalog, and public-detail smoke checks passed. `proxy.ts` and public contracts were unchanged. Commit `e49d6fd` is pushed.
+
 Next:
 
-- Sprint 12.20.16 - Platform Public GET Abuse Controls and Cache Policy Planning.
-  - Planning-only: define platform protection and cache policy for anonymous GET traffic before the first preview deployment. Cover `/`, catalog/detail/start routes, public cover delivery, and any additional anonymous GET surface discovered; analyze Vercel Firewall/WAF/rate rules, bots, shared NAT, caching, negative responses, publication withdrawal freshness, application-level limits, preview/production sequence, rollback, and staging verification.
-  - No Vercel configuration, provider provisioning, deployment, application implementation, environment change, package change, Supabase, Storage, SQL, migration, RLS, auth, publication, student-system, payment, commit, or push action is in scope.
+- Sprint 12.20.18 - Controlled Upstash and Vercel Preview Provisioning.
+  - Approval-gated phases: read-only account/preflight and rollback preparation; preview-only Upstash provisioning and secure limiter configuration; Vercel preview project/environment setup; a preview deployment with limiter, trusted-header, auth, public-surface, `/test` 404, proxy-cost, and cache-header verification; then review only.
+  - Each provider provisioning, configuration, and deployment action requires separate explicit approval. No production promotion/domain/Auth Site URL change, legacy-key disablement, WAF enforcement, application change, migration, SQL, or live production action is in scope.
 
 ## Suggested Future Milestones
 

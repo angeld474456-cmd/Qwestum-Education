@@ -1,5 +1,15 @@
 # Changelog
 
+## Sprint 12.20.17 - Public Debug Route Removal and Anonymous Surface Verification
+
+- Removed the reachable `/test` debug page; `/test` now returns normal not-found behavior. Added anonymous-surface regression coverage against public/debug route and raw Supabase row/error serialization regressions.
+- Focused checks passed 2 tests; the full suite passed 13 files/140 tests, with lint and build passing. Local `/test`, catalog, and linked public-detail smoke checks returned the expected safe statuses. `proxy.ts` was unchanged. Commit `e49d6fd` was pushed.
+
+## Sprint 12.20.16 - Platform Public GET Abuse Controls and Cache Policy Planning
+
+- Completed planning: prefer Vercel platform/WAF protection for anonymous GET traffic and defer hard per-IP GET limits because of school/classroom NAT. Catalog/detail remain dynamic, start remains no-store, and cover success remains private for 60 seconds; no stale-while-revalidate is approved for publication-sensitive responses.
+- Vercel account/WAF verification, proxy/auth cost measurement, provider provisioning, secure environment configuration, preview deployment, and deployed limiter/trusted-header verification remain incomplete.
+
 ## Sprint 12.20.15A and 12.20.15B - Shared Public Submit Limiter
 
 - Selected and implemented a server-only Upstash Redis limiter for `POST /api/public/quests/[id]/submit` using `@upstash/redis` and `@upstash/ratelimit`. It trusts only Vercel `x-vercel-forwarded-for`, canonicalizes IPv4/IPv6 identity, uses opaque HMAC-SHA-256 keys, and fails closed for invalid identity, configuration, provider, and timeout conditions.
