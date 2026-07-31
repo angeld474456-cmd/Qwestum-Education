@@ -724,11 +724,20 @@ Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
   - Completed planning and Sprint 12.20.11A implementation. `next/font/google` Geist was replaced by the official locally bundled Vercel Geist variable font through `next/font/local`, with SIL Open Font License 1.1, recorded provenance/checksum, preserved `--font-sans`, `display: "swap"`, and variable weights `100 900`.
   - Production build, 9 test files/104 tests, lint, Cyrillic rendering, normal/bold weights, layout stability, and the absence of browser Google-font requests passed. A stale ignored `.next` cache was a resolved local development incident, not an application defect. No package, configuration, API, DTO, runtime, Supabase, Storage, SQL, migration, or deployment change occurred. Commit `96adcfb` is pushed.
 
+- Sprint 12.20.12 - Production Deployment Readiness Planning.
+  - Completed planning: Vercel is the primary target and a Node-compatible managed host such as Render is fallback. Production builds are healthy, but deployment remains blocked on launch controls. Required environment names only are `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; legacy anon-key migration remains separate.
+
+- Sprint 12.20.13 - Auth Callback Redirect Hardening.
+  - Completed safe local-path-only callback redirects. Invalid or external destinations fail closed to `/dashboard`; 23 focused tests, 127 full tests, lint, build, and manual verification passed. Commit `a268817` is pushed.
+
+- Sprint 12.20.14 - Public Endpoint Rate-Limit and Abuse-Control Planning.
+  - Completed planning: platform controls should protect anonymous GET traffic and a shared/distributed limiter should protect `POST /api/public/quests/[id]/submit`. In-memory production limiting is rejected. Proposed approximately 60-per-minute client and 45-per-minute client-plus-quest values are provisional pending provider and trusted client-identity selection.
+
 Next:
 
-- Sprint 12.20.12 - Production Deployment Readiness Planning.
-  - Planning-only: inventory the current deployment/CI build path, required public and server-only environment boundaries without recording values, platform/runtime compatibility, health and smoke checks, cache/asset behavior, rate-limit and abuse-control requirements, logging/observability, release sequencing, rollback, and post-deploy verification.
-  - No deployment, configuration or environment-file edit, secret provisioning, package change, application implementation, Supabase, Storage, SQL, migration, auth, publication, student-system, payment, commit, or push action is in scope. Any production change requires separate explicit approval.
+- Sprint 12.20.15A - Shared Submit Limiter Provider and Client Identity Selection.
+  - Planning-only: select a Vercel-compatible shared limiter backend and trusted client-identity strategy before implementation. Cover provider/API choice, package need, official Vercel IP behavior, local/preview mode, IPv4/IPv6 normalization, HMAC identity, TTL/state, failure behavior, final limits, environment names only, and test seams without live services.
+  - No limiter implementation, provider provisioning, Vercel configuration, environment change, package change, deployment, Supabase, Storage, SQL, migration, auth, publication, student-system, payment, commit, or push action is in scope.
 
 ## Suggested Future Milestones
 

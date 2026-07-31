@@ -1,5 +1,20 @@
 # Changelog
 
+## Sprint 12.20.14 - Public Endpoint Rate-Limit and Abuse-Control Planning
+
+- Identified `POST /api/public/quests/[id]/submit` as the highest-priority application abuse boundary despite its existing JSON/content-type, 32 KiB body, 100-answer, and exact-shape limits. Planned hybrid platform GET protection plus a shared/distributed submit limiter; in-memory production limiting is not acceptable.
+- Initial values near 60 requests per client per minute and 45 per client plus quest are provisional only. Provider, trusted Vercel client identity, IP normalization, HMAC keying, failure behavior, preview/local mode, retention, staging verification, and final limits remain planning work. No limiter was implemented.
+
+## Sprint 12.20.13 - Auth Callback Redirect Hardening
+
+- Hardened `GET /auth/callback` to accept validated same-origin local paths only. External, malformed, protocol-relative, raw or encoded backslash, control-character, and parser-normalization destinations now fall back to `/dashboard`.
+- Focused callback tests passed 23 cases; the full suite passed 127 tests; lint, build, and manual verification passed. Commit `a268817` was pushed.
+
+## Sprint 12.20.12 - Production Deployment Readiness Planning
+
+- Selected Vercel as the primary deployment recommendation, with a Node-compatible managed host such as Render as fallback. Production build health is verified, but deployment remains blocked until launch-readiness controls are completed.
+- Recorded required environment names only: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Legacy JWT-based anon-key migration remains separate controlled work.
+
 ## Sprint 12.20.11 - Production Build Reliability and Local Geist Font
 
 - Replaced `next/font/google` Geist with `next/font/local` and the official Vercel Geist variable font, preserving `--font-sans`, `display: "swap"`, and weights `100 900`. Added the licensed font, exact SIL Open Font License 1.1 text, and a provenance record for `vercel/geist-font` `v1.7.1` / `8b8b75fa63e339db10a3cd52fb28536615b5cc63` with SHA-256 `2FFEBE993E969069A9789D15164B7715D42491B5835516C5E3B935D5F81B05F1`.

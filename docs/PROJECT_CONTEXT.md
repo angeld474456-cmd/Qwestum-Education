@@ -713,6 +713,22 @@ The planned live-schema and public-read-boundary verification completed without 
 - A one-time local dev-server task-database error came from ignored stale `.next` Turbopack cache state. Stopping the dev server, deleting only ignored `.next`, and restarting resolved it; no source-code correction was required and it is not an application defect.
 - No package, configuration, API, DTO, auth, publication, Supabase, Storage, SQL, migration, deployment, or runtime behavior changed. Commit `96adcfb` is pushed and `feature/next-work` is synchronized with origin.
 
+## Sprint 12.20.12 - Production Deployment Readiness Planning
+
+- Planning selected Vercel as the primary production deployment target, with a Node-compatible managed host such as Render as a fallback. The production build is healthy, but production deployment remains blocked until launch-readiness controls are completed.
+- Required production environment names are `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`; no values are recorded. The legacy JWT-based anon-key migration remains separate controlled work and must not be disabled yet.
+
+## Sprint 12.20.13 - Auth Callback Redirect Hardening
+
+- `app/auth/callback/route.ts` now accepts only safe same-origin local paths. It fails closed for malformed, external, protocol-relative, raw or encoded backslash, control-character, and parser-normalization destinations, falling back to `/dashboard`.
+- Focused callback verification passed 23 tests; the full suite passed 127 tests; lint, build, and manual browser verification passed. Commit `a268817` (`Harden auth callback redirects`) is pushed and `feature/next-work` is synchronized with origin.
+
+## Sprint 12.20.14 - Public Endpoint Rate-Limit and Abuse-Control Planning
+
+- Public catalog, runtime, cover, and submit surfaces were inventoried. `POST /api/public/quests/[id]/submit` is the highest-priority application abuse boundary because it can invoke scoring after its existing JSON/content-type, 32 KiB body, 100-answer, and bounded-shape validation.
+- The recommended future model is hybrid: platform protection for volumetric anonymous GET traffic plus a privacy-preserving shared/distributed application limiter for submit. A production in-memory `Map` limiter is not acceptable. Generic throttling responses must not log request bodies, answers, cookies, tokens, or raw client identity.
+- Initial planning values only are approximately 60 submit requests per client per minute with burst tolerance and 45 per client plus quest; they must be finalized for shared school NAT. Provider, trusted Vercel client-IP source, IPv4/IPv6 normalization, HMAC keying, failure behavior, local/preview behavior, retention, and staging verification remain unresolved. No limiter is implementation-ready yet.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.

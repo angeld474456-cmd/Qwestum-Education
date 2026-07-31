@@ -784,6 +784,14 @@ Sprint 12.20.10 keeps catalog query normalization server-side and silent: repeat
 
 Sprint 12.20.11A removes the clean-build Google Fonts dependency. `app/layout.tsx` uses `next/font/local` for the official Vercel Geist variable WOFF2 at `app/fonts/GeistVF.woff2`, preserving `--font-sans`, `display: "swap"`, and the `100 900` variable weight range. The asset is the 69,760-byte `fonts/Geist/webfonts/Geist[wght].woff2` from `vercel/geist-font` release `v1.7.1`, immutable commit `8b8b75fa63e339db10a3cd52fb28536615b5cc63`, SHA-256 `2FFEBE993E969069A9789D15164B7715D42491B5835516C5E3B935D5F81B05F1`, under SIL Open Font License 1.1; repository-local `SOURCE.md` and `LICENSE.txt` retain provenance. Builds, Cyrillic rendering, and browser requests were verified without Google font hosts. A one-time stale ignored `.next` Turbopack cache was resolved by restarting after cache removal; it did not require an application change.
 
+## Deployment and Public Abuse-Control Planning
+
+Sprint 12.20.12 selected Vercel as the primary deployment target, with a Node-compatible managed host such as Render as fallback. Production builds are healthy, but deployment remains gated on launch controls. Only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are required production environment names; values are never documented. The legacy JWT-based anon-key migration remains separate controlled work.
+
+Sprint 12.20.13 hardened `GET /auth/callback`: `next` must remain a validated local same-origin path after careful decoding, and malformed or external destinations fall back to `/dashboard`. The callback continues to exchange valid codes through the existing SSR client and retains fixed safe failure redirects.
+
+Sprint 12.20.14 identified `POST /api/public/quests/[id]/submit` as the first application-level abuse boundary. Its existing 32 KiB JSON body limit, 100-answer maximum, UUID and exact-shape validation bound individual requests but do not bound request frequency or scoring RPC load. The planned architecture is platform protection for anonymous GET traffic plus a shared/distributed, server-only submit limiter. In-memory per-instance state is not production-safe. Initial values near 60 requests per client per minute and 45 per client plus quest are provisional and must tolerate shared school NAT; no provider, trusted Vercel client-IP source, IPv4/IPv6 normalization, HMAC keying, TTL, failure behavior, preview/local mode, retention, or test seam has been selected. A future limiter must return a fixed `429` response without exposing bodies, answers, cookies, tokens, raw identity, or limiter internals.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:
