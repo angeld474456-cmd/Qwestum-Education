@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.18 - Controlled Upstash and Vercel Preview Provisioning
+
+- Completed controlled Preview provisioning for Vercel project `qwestum-education`: the repository is connected, `main` remains the Production branch, `feature/next-work` has a Preview deployment, and a separate Preview Upstash Redis database serves the shared submit limiter. Approved Preview environment-variable names were configured without recording values.
+- Corrected Preview-only formatting issues and commit `147246d` (`Fix Vercel client IP header for submit limiter`) now trusts only `x-forwarded-for`. Final fresh Preview smoke verification passed for public catalog/detail/start, `/test` normal not-found behavior, and provider-backed public submit through a successful Text `not_scored` result. The full suite passed 13 files/140 tests; lint and build passed.
+- The initial Vercel CLI-created Production deployment is recorded only as a temporary provisioning artifact, not a production launch. No promotion, production domain rollout, production Supabase/Auth change, or production traffic approval occurred.
+
 ## Sprint 12.20.17 - Public Debug Route Removal and Anonymous Surface Verification
 
 - Removed the reachable `/test` debug page; `/test` now returns normal not-found behavior. Added anonymous-surface regression coverage against public/debug route and raw Supabase row/error serialization regressions.
@@ -12,9 +18,9 @@
 
 ## Sprint 12.20.15A and 12.20.15B - Shared Public Submit Limiter
 
-- Selected and implemented a server-only Upstash Redis limiter for `POST /api/public/quests/[id]/submit` using `@upstash/redis` and `@upstash/ratelimit`. It trusts only Vercel `x-vercel-forwarded-for`, canonicalizes IPv4/IPv6 identity, uses opaque HMAC-SHA-256 keys, and fails closed for invalid identity, configuration, provider, and timeout conditions.
+- Selected and implemented a server-only Upstash Redis limiter for `POST /api/public/quests/[id]/submit` using `@upstash/redis` and `@upstash/ratelimit`. Sprint 12.20.18 superseded the original trusted-header choice: it now trusts only Vercel `x-forwarded-for`, canonicalizes IPv4/IPv6 identity, uses opaque HMAC-SHA-256 keys, and fails closed for invalid identity, configuration, provider, and timeout conditions.
 - Both token buckets must allow before scoring: client capacity 75/refill 60 per minute and client-plus-quest capacity 60/refill 45 per minute. Fixed no-store `429` and `503` responses expose no identity, provider, request-body, or answer data. Focused tests passed 3 identity, 5 limiter, and 10 route cases; the full suite passed 12 files/138 tests with lint and build passing. Commit `0605136` was pushed.
-- Upstash/Vercel resources, environment configuration, WAF/rate rules, staging verification, and deployment remain incomplete; no values were committed.
+- Sprint 12.20.18 later completed separate Preview Upstash/Vercel provisioning and successful submit verification without committing values. Controlled `429` verification, Preview auth/teacher verification, WAF/rate rules, and all production controls remain incomplete.
 
 ## Sprint 12.20.14 - Public Endpoint Rate-Limit and Abuse-Control Planning
 

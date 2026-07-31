@@ -734,9 +734,9 @@ Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
   - Completed planning: platform controls should protect anonymous GET traffic and a shared/distributed limiter should protect `POST /api/public/quests/[id]/submit`. In-memory production limiting is rejected. Sprint 12.20.15A and 12.20.15B supersede the provisional provider, identity, and rate-value selection.
 
 - Sprint 12.20.15A and 12.20.15B - Shared Public Submit Limiter.
-  - Completed selection and implementation: Upstash Redis via `@upstash/redis` and `@upstash/ratelimit`; only Vercel `x-vercel-forwarded-for` is trusted; canonical IPv4/IPv6 identity becomes opaque HMAC-SHA-256 keys; missing or malformed identity/configuration/provider failures fail closed.
+  - Completed selection and implementation: Upstash Redis via `@upstash/redis` and `@upstash/ratelimit`; only Vercel `x-forwarded-for` is trusted; canonical IPv4/IPv6 identity becomes opaque HMAC-SHA-256 keys; missing or malformed identity/configuration/provider failures fail closed.
   - Both token buckets must allow before scoring: client capacity 75/refill 60 per minute and client-plus-quest capacity 60/refill 45 per minute. Analytics and ephemeral cache are disabled. Validation remains before limiting; fixed no-store `429` and `503` responses do not expose identity, provider, request, or answer data. Tests passed 12 files/138 tests; lint and build passed. Commit `0605136` is pushed.
-  - Provider provisioning, environment configuration, Vercel WAF/rate rules, staging verification, and deployment remain incomplete.
+  - Sprint 12.20.18 completed separate Preview provider provisioning and successful submit verification. Controlled `429` verification, Vercel WAF/rate rules, Preview auth/teacher verification, and all production controls remain incomplete.
 
 - Sprint 12.20.16 - Platform Public GET Abuse Controls and Cache Policy Planning.
   - Completed planning: Vercel platform/WAF protection is preferred for anonymous GET traffic; hard per-IP GET limits are deferred for shared school/classroom NAT. Catalog/detail remain dynamic, start remains no-store, cover success remains private for 60 seconds, and publication-sensitive responses must not use stale-while-revalidate.
@@ -746,11 +746,16 @@ Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
   - Removed the reachable `/test` debug page. `/test` now returns normal not-found behavior; an anonymous-surface regression test prevents public/debug route and raw Supabase row/error serialization regressions.
   - Focused tests, 13-file/140-test suite, lint, build, and local `/test`, catalog, and public-detail smoke checks passed. `proxy.ts` and public contracts were unchanged. Commit `e49d6fd` is pushed.
 
+- Sprint 12.20.18 - Controlled Upstash and Vercel Preview Provisioning.
+  - Completed controlled Preview setup for the `qwestum-education` Vercel project: the repository is connected, `main` remains the Production branch, `feature/next-work` has a Preview deployment, and a separate Preview Upstash Redis database serves the shared submit limiter. Preview configuration uses the approved Supabase, Upstash, and HMAC environment-variable names only; no values are recorded.
+  - Corrected early Preview formatting issues and the trusted client-IP source in commit `147246d` (`Fix Vercel client IP header for submit limiter`), which now accepts only `x-forwarded-for`. Final Preview smoke verification passed for public catalog/detail/start, `/test` not-found behavior, and a real provider-backed submit through its successful result. The Text result remained `not_scored`; no runtime error was observed. Tests passed 13 files/140 tests; lint and build passed.
+  - The initial Vercel CLI-created Production deployment is a temporary provisioning artifact, not a production release. No promotion, production domain rollout, production Supabase/Auth change, or production traffic approval exists.
+
 Next:
 
-- Sprint 12.20.18 - Controlled Upstash and Vercel Preview Provisioning.
-  - Approval-gated phases: read-only account/preflight and rollback preparation; preview-only Upstash provisioning and secure limiter configuration; Vercel preview project/environment setup; a preview deployment with limiter, trusted-header, auth, public-surface, `/test` 404, proxy-cost, and cache-header verification; then review only.
-  - Each provider provisioning, configuration, and deployment action requires separate explicit approval. No production promotion/domain/Auth Site URL change, legacy-key disablement, WAF enforcement, application change, migration, SQL, or live production action is in scope.
+- Sprint 12.20.19 - Preview Auth, Rate-Limit, and Deployment Safety Verification.
+  - Plan the safe disposition of the accidental Production deployment artifact; exact Supabase Auth Preview redirect allowlist; Preview magic-link/login and teacher/dashboard verification; controlled limiter `429` verification; and the remaining Preview deployment/security review.
+  - Each provider configuration or external verification action requires separate explicit approval. No production promotion, production domain rollout, production Auth Site URL change, legacy-key disablement, WAF enforcement, application change, migration, SQL, or live production action is in scope.
 
 ## Suggested Future Milestones
 
