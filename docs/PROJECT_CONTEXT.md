@@ -727,7 +727,16 @@ The planned live-schema and public-read-boundary verification completed without 
 
 - Public catalog, runtime, cover, and submit surfaces were inventoried. `POST /api/public/quests/[id]/submit` is the highest-priority application abuse boundary because it can invoke scoring after its existing JSON/content-type, 32 KiB body, 100-answer, and bounded-shape validation.
 - The recommended future model is hybrid: platform protection for volumetric anonymous GET traffic plus a privacy-preserving shared/distributed application limiter for submit. A production in-memory `Map` limiter is not acceptable. Generic throttling responses must not log request bodies, answers, cookies, tokens, or raw client identity.
-- Initial planning values only are approximately 60 submit requests per client per minute with burst tolerance and 45 per client plus quest; they must be finalized for shared school NAT. Provider, trusted Vercel client-IP source, IPv4/IPv6 normalization, HMAC keying, failure behavior, local/preview behavior, retention, and staging verification remain unresolved. No limiter is implementation-ready yet.
+- The originally provisional submit-limiter selection is superseded by Sprint 12.20.15A and Sprint 12.20.15B below.
+
+## Sprint 12.20.15A and 12.20.15B - Shared Public Submit Limiter
+
+- Sprint 12.20.15A completed the implementation selection: Upstash Redis with `@upstash/redis` and `@upstash/ratelimit`, Vercel's `x-vercel-forwarded-for` as the only trusted client-identity source, opaque HMAC-SHA-256 keys, fail-closed behavior, and token buckets suitable for shared school NAT.
+- Sprint 12.20.15B added server-only identity normalization and the shared limiter for `POST /api/public/quests/[id]/submit`. IPv4 and canonical IPv6 are supported; IPv4-mapped IPv6 becomes IPv4; missing, malformed, comma-separated, or zone-qualified values fail closed. Raw identity is never persisted, logged, returned, or sent in provider keys.
+- The client bucket has capacity 75 and refills 60 per minute. The client-plus-quest bucket has capacity 60 and refills 45 per minute. Both must allow before scoring. Analytics and ephemeral cache are disabled.
+- The route preserves UUID, content type, 32 KiB body, JSON, strict shape, and 100-answer validation before rate limiting. Invalid requests do not consume limiter capacity. A limit denial returns fixed `429` JSON with `Retry-After` and `Cache-Control: no-store`; unavailable identity, configuration, or provider returns fixed `503` JSON with `Retry-After: 60` and `Cache-Control: no-store`. Scoring does not run after either response.
+- Only the environment variable names `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, and `RATE_LIMIT_HMAC_SECRET` are referenced; no values are committed. Focused tests passed 3 identity, 5 limiter, and 10 route cases; the full suite passed 12 files and 138 tests, with lint and production build passing. Commit `0605136` is pushed.
+- Upstash and Vercel resources, preview/production environment configuration, WAF/rate rules, staging verification, and deployment remain incomplete. The code is not production-operational until those controls are separately configured and verified.
 
 ## Important Notes For Future Codex Chats
 

@@ -731,13 +731,18 @@ Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
   - Completed safe local-path-only callback redirects. Invalid or external destinations fail closed to `/dashboard`; 23 focused tests, 127 full tests, lint, build, and manual verification passed. Commit `a268817` is pushed.
 
 - Sprint 12.20.14 - Public Endpoint Rate-Limit and Abuse-Control Planning.
-  - Completed planning: platform controls should protect anonymous GET traffic and a shared/distributed limiter should protect `POST /api/public/quests/[id]/submit`. In-memory production limiting is rejected. Proposed approximately 60-per-minute client and 45-per-minute client-plus-quest values are provisional pending provider and trusted client-identity selection.
+  - Completed planning: platform controls should protect anonymous GET traffic and a shared/distributed limiter should protect `POST /api/public/quests/[id]/submit`. In-memory production limiting is rejected. Sprint 12.20.15A and 12.20.15B supersede the provisional provider, identity, and rate-value selection.
+
+- Sprint 12.20.15A and 12.20.15B - Shared Public Submit Limiter.
+  - Completed selection and implementation: Upstash Redis via `@upstash/redis` and `@upstash/ratelimit`; only Vercel `x-vercel-forwarded-for` is trusted; canonical IPv4/IPv6 identity becomes opaque HMAC-SHA-256 keys; missing or malformed identity/configuration/provider failures fail closed.
+  - Both token buckets must allow before scoring: client capacity 75/refill 60 per minute and client-plus-quest capacity 60/refill 45 per minute. Analytics and ephemeral cache are disabled. Validation remains before limiting; fixed no-store `429` and `503` responses do not expose identity, provider, request, or answer data. Tests passed 12 files/138 tests; lint and build passed. Commit `0605136` is pushed.
+  - Provider provisioning, environment configuration, Vercel WAF/rate rules, staging verification, and deployment remain incomplete.
 
 Next:
 
-- Sprint 12.20.15A - Shared Submit Limiter Provider and Client Identity Selection.
-  - Planning-only: select a Vercel-compatible shared limiter backend and trusted client-identity strategy before implementation. Cover provider/API choice, package need, official Vercel IP behavior, local/preview mode, IPv4/IPv6 normalization, HMAC identity, TTL/state, failure behavior, final limits, environment names only, and test seams without live services.
-  - No limiter implementation, provider provisioning, Vercel configuration, environment change, package change, deployment, Supabase, Storage, SQL, migration, auth, publication, student-system, payment, commit, or push action is in scope.
+- Sprint 12.20.16 - Platform Public GET Abuse Controls and Cache Policy Planning.
+  - Planning-only: define platform protection and cache policy for anonymous GET traffic before the first preview deployment. Cover `/`, catalog/detail/start routes, public cover delivery, and any additional anonymous GET surface discovered; analyze Vercel Firewall/WAF/rate rules, bots, shared NAT, caching, negative responses, publication withdrawal freshness, application-level limits, preview/production sequence, rollback, and staging verification.
+  - No Vercel configuration, provider provisioning, deployment, application implementation, environment change, package change, Supabase, Storage, SQL, migration, RLS, auth, publication, student-system, payment, commit, or push action is in scope.
 
 ## Suggested Future Milestones
 

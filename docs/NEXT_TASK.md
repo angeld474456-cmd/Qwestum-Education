@@ -6,22 +6,21 @@ Sprint 12: Public Catalog Launch Readiness
 
 ## Next Task
 
-Sprint 12.20.15A - Shared Submit Limiter Provider and Client Identity Selection
+Sprint 12.20.16 - Platform Public GET Abuse Controls and Cache Policy Planning
 
 Planning-only. Follow analysis -> architecture -> plan -> code after approval. Do not implement application code, tests, or live changes without separate explicit approval.
 
 ## Objective
 
-Select the concrete production-compatible shared limiter backend and trusted client-identity strategy for `POST /api/public/quests/[id]/submit` before implementation.
+Define the production platform protection and cache policy for anonymous GET traffic before creating the first preview deployment.
 
 ## Planning Topics
 
-- Compare currently supported Vercel-compatible shared rate-limit options and prefer minimal operational complexity.
-- Determine whether an SDK or package is necessary and identify the trusted Vercel client-IP behavior from official documentation.
-- Define local and preview behavior, IPv4/IPv6 normalization, privacy-preserving HMAC identity, TTL/state model, provider failure behavior, and final rate values.
-- Define environment-variable names only, test seams requiring no live external service, and the smallest implementation scope.
+- Inventory `/`, `/catalog`, `/catalog/[id]`, `/catalog/[id]/start`, `/api/public/quests/[id]/cover`, and any other anonymous GET surface.
+- Analyze Vercel Firewall/WAF/rate-rule capabilities, bot and volumetric protection, shared-school/NAT behavior, cover bandwidth protection, and whether application-level GET limits are also needed.
+- Define CDN and route cache behavior, dynamic versus cacheable responses, negative-response caching, publication-withdrawal freshness, preview versus production behavior, configuration sequence, rollback, and staging verification.
 
 ## Out Of Scope
 
-- Limiter implementation, provider provisioning, Vercel configuration, environment changes, package changes, UI redesign, deployment, and application code.
-- Supabase, Storage, SQL, migrations, auth, publication, runtime, student systems, persistent attempts, assignments, payments, commit, and push.
+- Vercel configuration, provider provisioning, deployment, application implementation, environment changes, package changes, UI redesign, and live changes.
+- Supabase, Storage, SQL, migrations, RLS, auth, publication, runtime, student systems, persistent attempts, assignments, payments, commit, and push.

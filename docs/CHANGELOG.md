@@ -1,9 +1,15 @@
 # Changelog
 
+## Sprint 12.20.15A and 12.20.15B - Shared Public Submit Limiter
+
+- Selected and implemented a server-only Upstash Redis limiter for `POST /api/public/quests/[id]/submit` using `@upstash/redis` and `@upstash/ratelimit`. It trusts only Vercel `x-vercel-forwarded-for`, canonicalizes IPv4/IPv6 identity, uses opaque HMAC-SHA-256 keys, and fails closed for invalid identity, configuration, provider, and timeout conditions.
+- Both token buckets must allow before scoring: client capacity 75/refill 60 per minute and client-plus-quest capacity 60/refill 45 per minute. Fixed no-store `429` and `503` responses expose no identity, provider, request-body, or answer data. Focused tests passed 3 identity, 5 limiter, and 10 route cases; the full suite passed 12 files/138 tests with lint and build passing. Commit `0605136` was pushed.
+- Upstash/Vercel resources, environment configuration, WAF/rate rules, staging verification, and deployment remain incomplete; no values were committed.
+
 ## Sprint 12.20.14 - Public Endpoint Rate-Limit and Abuse-Control Planning
 
 - Identified `POST /api/public/quests/[id]/submit` as the highest-priority application abuse boundary despite its existing JSON/content-type, 32 KiB body, 100-answer, and exact-shape limits. Planned hybrid platform GET protection plus a shared/distributed submit limiter; in-memory production limiting is not acceptable.
-- Initial values near 60 requests per client per minute and 45 per client plus quest are provisional only. Provider, trusted Vercel client identity, IP normalization, HMAC keying, failure behavior, preview/local mode, retention, staging verification, and final limits remain planning work. No limiter was implemented.
+- The provisional selection was completed and implemented by Sprint 12.20.15A and 12.20.15B above.
 
 ## Sprint 12.20.13 - Auth Callback Redirect Hardening
 
