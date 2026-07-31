@@ -782,7 +782,7 @@ Sprint 12.20.10 keeps catalog query normalization server-side and silent: repeat
 
 `PublicCatalogState` is the shared presentation-only client component for fixed empty, unavailable, and recoverable-error states. It accepts only caller-defined title, description, retry callback, and local navigation actions; it does not receive service errors, public DTO internals, cover paths, or media data. `PublicQuestCover` remains independent: media failure retains its stable 16:9 fallback and does not trigger a route error boundary.
 
-The production build is currently environment-sensitive because `next/font` fetches Geist from Google Fonts during a clean build. Sprint 12.20.11 is planning-only work to select a controlled, dependency-aware build-reliability strategy; no font, package, configuration, or deployment change is implied by this record.
+Sprint 12.20.11A removes the clean-build Google Fonts dependency. `app/layout.tsx` uses `next/font/local` for the official Vercel Geist variable WOFF2 at `app/fonts/GeistVF.woff2`, preserving `--font-sans`, `display: "swap"`, and the `100 900` variable weight range. The asset is the 69,760-byte `fonts/Geist/webfonts/Geist[wght].woff2` from `vercel/geist-font` release `v1.7.1`, immutable commit `8b8b75fa63e339db10a3cd52fb28536615b5cc63`, SHA-256 `2FFEBE993E969069A9789D15164B7715D42491B5835516C5E3B935D5F81B05F1`, under SIL Open Font License 1.1; repository-local `SOURCE.md` and `LICENSE.txt` retain provenance. Builds, Cyrillic rendering, and browser requests were verified without Google font hosts. A one-time stale ignored `.next` Turbopack cache was resolved by restarting after cache removal; it did not require an application change.
 
 ## Current Publication Architecture
 

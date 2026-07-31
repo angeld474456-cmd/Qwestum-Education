@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.11 - Production Build Reliability and Local Geist Font
+
+- Replaced `next/font/google` Geist with `next/font/local` and the official Vercel Geist variable font, preserving `--font-sans`, `display: "swap"`, and weights `100 900`. Added the licensed font, exact SIL Open Font License 1.1 text, and a provenance record for `vercel/geist-font` `v1.7.1` / `8b8b75fa63e339db10a3cd52fb28536615b5cc63` with SHA-256 `2FFEBE993E969069A9789D15164B7715D42491B5835516C5E3B935D5F81B05F1`.
+- Verified 9 test files / 104 tests, lint, and a production build without live Google Fonts access. Manual checks passed for public and teacher routes, Cyrillic normal/bold rendering, visual stability, and no browser Google-font requests.
+- A one-time ignored stale `.next` Turbopack cache issue was resolved locally by cache removal and dev-server restart; it required no source correction. No package, configuration, API, DTO, runtime, Supabase, Storage, SQL, migration, or deployment change occurred. Commit `96adcfb` was pushed.
+
 ## Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
 
 - Added distinct empty, filtered no-result, and nonzero-offset no-more-result catalog states with targeted local navigation; loading, detail not-found, detail error, and public start state UI now share safe accessible conventions through `PublicCatalogState`.

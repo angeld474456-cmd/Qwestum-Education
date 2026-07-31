@@ -717,14 +717,18 @@ Sprint 12.20.8-12.20.9B - Public Catalog Cover Delivery
 Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
 
 - Completed the accessible public catalog state pass: `/catalog` now distinguishes empty, filtered no-result, and nonzero-offset no-more-result states with targeted local navigation; list/detail/start loading, error, and unavailable states now use consistent safe status, busy, focus, retry, and reduced-motion behavior.
-- Manual browser verification and code review passed. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and `git diff --check` passed. Clean production builds remain externally blocked only by repeated Google Fonts Geist fetch failures, with no reported application, route-boundary, TypeScript, or lint defect.
+- Manual browser verification and code review passed. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and `git diff --check` passed. The original external Google Fonts Geist build blocker was resolved by Sprint 12.20.11A with a locally bundled official Geist variable font; no application, route-boundary, TypeScript, or lint defect was reported.
 - No public API, DTO, cover delivery, auth, publication, Supabase, Storage, migration, package, deployment, or configuration boundary changed.
+
+- Sprint 12.20.11 - Production Build Reliability and Local Font Strategy.
+  - Completed planning and Sprint 12.20.11A implementation. `next/font/google` Geist was replaced by the official locally bundled Vercel Geist variable font through `next/font/local`, with SIL Open Font License 1.1, recorded provenance/checksum, preserved `--font-sans`, `display: "swap"`, and variable weights `100 900`.
+  - Production build, 9 test files/104 tests, lint, Cyrillic rendering, normal/bold weights, layout stability, and the absence of browser Google-font requests passed. A stale ignored `.next` cache was a resolved local development incident, not an application defect. No package, configuration, API, DTO, runtime, Supabase, Storage, SQL, migration, or deployment change occurred. Commit `96adcfb` is pushed.
 
 Next:
 
-- Sprint 12.20.11 - Production Build Reliability and Local Font Strategy Planning.
-  - Planning-only: inventory current `next/font` usage and the Geist dependency path; determine whether the repeated build failure is network/environmental or configuration-related; compare locally bundled files, an approved package-provided source, and documented build-network/cache requirements; then define provenance, licensing, cache, CI, accessibility, visual-regression, rollback, and verification requirements.
-  - No font implementation, font binaries, package/configuration/UI/deployment change, Supabase, Storage, SQL, migration, auth, publication, runtime, student-system, payment, commit, or push action is in scope.
+- Sprint 12.20.12 - Production Deployment Readiness Planning.
+  - Planning-only: inventory the current deployment/CI build path, required public and server-only environment boundaries without recording values, platform/runtime compatibility, health and smoke checks, cache/asset behavior, rate-limit and abuse-control requirements, logging/observability, release sequencing, rollback, and post-deploy verification.
+  - No deployment, configuration or environment-file edit, secret provisioning, package change, application implementation, Supabase, Storage, SQL, migration, auth, publication, student-system, payment, commit, or push action is in scope. Any production change requires separate explicit approval.
 
 ## Suggested Future Milestones
 

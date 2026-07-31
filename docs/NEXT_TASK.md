@@ -6,24 +6,23 @@ Sprint 12: Public Catalog Launch Readiness
 
 ## Next Task
 
-Sprint 12.20.11 - Production Build Reliability and Local Font Strategy Planning
+Sprint 12.20.12 - Production Deployment Readiness Planning
 
 Planning-only. Follow analysis -> architecture -> plan -> code after approval. Do not implement application code, tests, or live changes without separate explicit approval.
 
 ## Objective
 
-Define a controlled approach that allows production builds to succeed without depending on live Google Fonts access.
+Define the smallest controlled path from the verified local application to deployment readiness without changing production infrastructure.
 
 ## Planning Topics
 
-- Inventory all current `next/font` usage and the Geist dependency path.
-- Determine whether the repeated failure is network/environmental or configuration-related.
-- Compare locally bundled font files, an approved package-provided font source, and documented build-network/cache requirements.
-- Analyze licensing and provenance.
-- Define cache, CI, accessibility, visual-regression, rollback, and verification requirements.
-- Produce a planning-only implementation recommendation.
+- Inventory the current deployment and CI build path, including the now-local font asset boundary.
+- Identify required public versus server-only environment boundaries without recording values.
+- Review platform/runtime compatibility, health and smoke checks, cache and static-asset behavior, and production build verification.
+- Define rate-limit and abuse-control requirements, safe logging/observability expectations, release sequencing, rollback, and post-deploy verification.
+- Produce one narrow planning-only recommendation with explicit approval gates for every production change.
 
 ## Out Of Scope
 
-- Font implementation, font binaries, package/configuration changes, UI redesign, and deployment.
+- Deployment implementation, configuration/environment changes, secret provisioning, package changes, UI redesign, and application code.
 - Supabase, Storage, SQL, migrations, auth, publication, runtime, student systems, persistent attempts, assignments, payments, commit, and push.

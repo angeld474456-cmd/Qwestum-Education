@@ -702,8 +702,16 @@ The planned live-schema and public-read-boundary verification completed without 
 - Loading UI now has visible progress text, polite announcements, busy semantics, decorative skeletons hidden from assistive technology, and reduced-motion handling. Detail has route-local loading and error boundaries; detail not-found and public start loading/error now follow the same accessible state conventions through `PublicCatalogState`.
 - Catalog query normalization remains silent for malformed, repeated, and out-of-range parameters. The cover fallback remains an independent stable 16:9 media fallback and never becomes a page-level error.
 - Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and `git diff --check` passed. Code review found no implementation blocker. Manual browser verification passed for normal catalog rendering, cards/covers, filters/reset, filtered and high-offset states, return navigation, parameter normalization, unavailable-detail focus, responsive layout, and cover fallback.
-- Production build was attempted repeatedly but remains externally blocked because `Geist` could not be fetched from `fonts.googleapis.com`. No TypeScript, Next.js route-boundary, lint, or application-code error was reported. Commit `033820e` is pushed and the branch is synchronized.
+- The original production-build retries were externally blocked because `Geist` could not be fetched from `fonts.googleapis.com`. Sprint 12.20.11A supersedes that resolved environment dependency with the official local Geist variable font; no TypeScript, Next.js route-boundary, lint, or application-code defect was found.
 - No API, DTO, auth, publication, Supabase, Storage, migration, package, deployment, or configuration change occurred in this sprint.
+
+## Sprint 12.20.11 - Production Build Reliability and Local Geist Font
+
+- Sprint 12.20.11 planning identified the live Google Fonts Geist fetch as the production-build reliability blocker. Sprint 12.20.11A replaced `next/font/google` with `next/font/local` in `app/layout.tsx` while preserving `--font-sans`, the existing HTML integration, `display: "swap"`, and the variable `100 900` weight range.
+- The locally bundled official Vercel Geist asset is `app/fonts/GeistVF.woff2`, sourced from `vercel/geist-font` release `v1.7.1` at immutable commit `8b8b75fa63e339db10a3cd52fb28536615b5cc63`: original `fonts/Geist/webfonts/Geist[wght].woff2`, 69,760 bytes, SHA-256 `2FFEBE993E969069A9789D15164B7715D42491B5835516C5E3B935D5F81B05F1`, licensed under SIL Open Font License 1.1. `app/fonts/SOURCE.md` and `app/fonts/LICENSE.txt` preserve provenance and license text.
+- Production builds now complete without live Google Fonts access. Automated verification passed: 9 test files, 104 tests passed, 0 failed; lint and production build passed. Manual verification passed for `/`, `/catalog`, public detail, `/dashboard/quests`, Russian/Cyrillic text, normal and bold weights, no visible typography/layout regression, and no browser requests to Google font hosts.
+- A one-time local dev-server task-database error came from ignored stale `.next` Turbopack cache state. Stopping the dev server, deleting only ignored `.next`, and restarting resolved it; no source-code correction was required and it is not an application defect.
+- No package, configuration, API, DTO, auth, publication, Supabase, Storage, SQL, migration, deployment, or runtime behavior changed. Commit `96adcfb` is pushed and `feature/next-work` is synchronized with origin.
 
 ## Important Notes For Future Codex Chats
 
