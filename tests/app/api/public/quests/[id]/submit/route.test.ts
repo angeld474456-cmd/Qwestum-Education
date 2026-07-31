@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   foreignOptionId,
@@ -11,10 +11,14 @@ import {
 
 const mocks = vi.hoisted(() => ({
   scorePublicRuntimeQuest: vi.fn(),
+  checkPublicSubmitRateLimit: vi.fn(),
 }));
 
 vi.mock("@/services/public-runtime.server", () => ({
   scorePublicRuntimeQuest: mocks.scorePublicRuntimeQuest,
+}));
+vi.mock("@/lib/rate-limit/submit-rate-limit.server", () => ({
+  checkPublicSubmitRateLimit: mocks.checkPublicSubmitRateLimit,
 }));
 
 import { POST } from "@/app/api/public/quests/[id]/submit/route";
@@ -41,6 +45,11 @@ async function expectError(response: Response, status: number, message: string) 
 }
 
 describe("public runtime submit route", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.checkPublicSubmitRateLimit.mockResolvedValue({ status: "allowed" });
+  });
+
   it("returns a sanitized score result and rejects injected top-level fields", async () => {
     mocks.scorePublicRuntimeQuest.mockResolvedValue(publicRuntimeResult);
 
@@ -101,6 +110,7 @@ describe("public runtime submit route", () => {
       413,
       "Запрос слишком большой"
     );
+    expect(mocks.checkPublicSubmitRateLimit).not.toHaveBeenCalled();
   });
 
   it("rejects missing, malformed, duplicate, and oversized answer collections", async () => {
@@ -129,6 +139,7 @@ describe("public runtime submit route", () => {
       );
     }
     expect(mocks.scorePublicRuntimeQuest).not.toHaveBeenCalled();
+    expect(mocks.checkPublicSubmitRateLimit).not.toHaveBeenCalled();
   });
 
   it("normalizes null and whitespace choices to task-only answers", async () => {
@@ -195,5 +206,45 @@ describe("public runtime submit route", () => {
       500,
       "Не удалось проверить ответы. Попробуйте ещё раз"
     );
+  });
+
+  it("returns a generic 429 without scoring when the client limit is exceeded", async () => {
+    mocks.checkPublicSubmitRateLimit.mockResolvedValue({
+      status: "limited",
+      retryAfterSeconds: 4.2,
+    });
+
+    const response = await POST(jsonRequest(validSubmission), context());
+
+    await expectError(response, 429, "Too many requests. Please try again later.");
+    expect(response.headers.get("retry-after")).toBe("5");
+    expect(mocks.scorePublicRuntimeQuest).not.toHaveBeenCalled();
+  });
+
+  it("returns a generic 429 without scoring when the client and quest limit is exceeded", async () => {
+    mocks.checkPublicSubmitRateLimit.mockResolvedValue({
+      status: "limited",
+      retryAfterSeconds: 1,
+    });
+
+    const response = await POST(jsonRequest(validSubmission), context());
+
+    await expectError(response, 429, "Too many requests. Please try again later.");
+    expect(response.headers.get("retry-after")).toBe("1");
+    expect(mocks.scorePublicRuntimeQuest).not.toHaveBeenCalled();
+  });
+
+  it("returns a generic 503 without scoring when the limiter is unavailable", async () => {
+    mocks.checkPublicSubmitRateLimit.mockResolvedValue({ status: "unavailable" });
+
+    const response = await POST(jsonRequest(validSubmission), context());
+
+    await expectError(
+      response,
+      503,
+      "Service temporarily unavailable. Please try again later."
+    );
+    expect(response.headers.get("retry-after")).toBe("60");
+    expect(mocks.scorePublicRuntimeQuest).not.toHaveBeenCalled();
   });
 });

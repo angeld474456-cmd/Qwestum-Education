@@ -1,4 +1,5 @@
 import { scorePublicRuntimeQuest } from "@/services/public-runtime.server";
+import { checkPublicSubmitRateLimit } from "@/lib/rate-limit/submit-rate-limit.server";
 import type {
   PublicRuntimeSubmission,
   PublicRuntimeSubmissionAnswer,
@@ -21,6 +22,8 @@ const messages = {
     "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044f \u0442\u043e\u043b\u044c\u043a\u043e JSON",
   temporaryFailure:
     "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043e\u0442\u0432\u0435\u0442\u044b. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0451 \u0440\u0430\u0437",
+  rateLimited: "Too many requests. Please try again later.",
+  limiterUnavailable: "Service temporarily unavailable. Please try again later.",
 } as const;
 
 type RouteContext = {
@@ -31,17 +34,26 @@ type RouteContext = {
 
 type PlainObject = Record<string, unknown>;
 
-function jsonResponse(body: object, status: number) {
+function jsonResponse(body: object, status: number, headers?: HeadersInit) {
   return Response.json(body, {
     status,
     headers: {
       "Cache-Control": "no-store",
+      ...headers,
     },
   });
 }
 
 function errorResponse(message: string, status: number) {
   return jsonResponse({ error: message }, status);
+}
+
+function retryErrorResponse(message: string, status: number, retryAfter: number) {
+  return jsonResponse(
+    { error: message },
+    status,
+    { "Retry-After": Math.max(1, Math.ceil(retryAfter)).toString() }
+  );
 }
 
 function isPlainObject(value: unknown): value is PlainObject {
@@ -192,6 +204,20 @@ export async function POST(request: Request, context: RouteContext) {
 
   if (!submission) {
     return errorResponse(messages.invalidRequest, 400);
+  }
+
+  const rateLimit = await checkPublicSubmitRateLimit(request, id);
+
+  if (rateLimit.status === "limited") {
+    return retryErrorResponse(
+      messages.rateLimited,
+      429,
+      rateLimit.retryAfterSeconds
+    );
+  }
+
+  if (rateLimit.status === "unavailable") {
+    return retryErrorResponse(messages.limiterUnavailable, 503, 60);
   }
 
   try {
