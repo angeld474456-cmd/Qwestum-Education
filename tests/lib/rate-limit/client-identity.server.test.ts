@@ -8,7 +8,7 @@ function requestWithIdentity(value?: string) {
   const headers = new Headers();
 
   if (value !== undefined) {
-    headers.set("x-vercel-forwarded-for", value);
+    headers.set("x-forwarded-for", value);
   }
 
   return new Request("https://app.example/api/public/quests/id/submit", {
@@ -48,10 +48,16 @@ describe("trusted Vercel client identity", () => {
     expect(getTrustedClientIdentity(requestWithIdentity("fe80::1%eth0"))).toBeNull();
     expect(getTrustedClientIdentity(requestWithIdentity("not-an-ip"))).toBeNull();
 
-    const forwardedOnly = new Request(
+    const vercelForwardedOnly = new Request(
       "https://app.example/api/public/quests/id/submit",
-      { headers: { "x-forwarded-for": "203.0.113.7" } }
+      { headers: { "x-vercel-forwarded-for": "203.0.113.7" } }
     );
-    expect(getTrustedClientIdentity(forwardedOnly)).toBeNull();
+    expect(getTrustedClientIdentity(vercelForwardedOnly)).toBeNull();
+
+    const realIpOnly = new Request(
+      "https://app.example/api/public/quests/id/submit",
+      { headers: { "x-real-ip": "203.0.113.7" } }
+    );
+    expect(getTrustedClientIdentity(realIpOnly)).toBeNull();
   });
 });

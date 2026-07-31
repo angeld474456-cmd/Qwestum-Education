@@ -2,7 +2,7 @@ import "server-only";
 
 import { isIP } from "node:net";
 
-const trustedClientIpHeader = "x-vercel-forwarded-for";
+const trustedClientIpHeader = "x-forwarded-for";
 
 function normalizeIpv4(value: string) {
   const parts = value.split(".");
