@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.20 - Pre-Production Readiness Planning
+
+- Completed as **PASS - PRE-PRODUCTION READINESS PLAN DEFINED**. Continued MVP development is approved; Production promotion is not approved. Mandatory pre-production gates remain controlled authorized Preview `429` evidence, Vercel Production artifact/domain/protection inventory, Production Supabase Auth redirect review, exact rollback deployment identification, and an explicitly approved final promotion smoke plan.
+- The accidental initial Production deployment remains a provisioning artifact and should stay untouched until a separately approved release decision. The preferred `429` method is sequential ordinary requests from an already authorized Preview browser DevTools context, stopping at the first `429` without identity manipulation, header spoofing, Redis access, or protection changes.
+- Proxy/auth cost review is P1: broadly matched public routes currently incur `auth.getUser()` work. Current dynamic/no-store behavior is correctness-safe and conservative. Provider Firewall/WAF capability review and a documented baseline protection decision remain required before launch; expired magic-link messaging is safe P1 polish.
+
 ## Sprint 12.20.19 - Preview Auth, Rate-Limit, and Deployment Safety Verification
 
 - Completed as PASS WITH DEFERRED LIVE 429 EVIDENCE. Preview magic-link/callback, authenticated dashboard and teacher workspace, logout, and protected-route enforcement passed. Public routes remain anonymous; unsafe callback destinations still fall back to `/dashboard`.

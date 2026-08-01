@@ -757,11 +757,16 @@ Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
   - Browser Preview submit reached the application with both a successful `200` and a fail-closed `503`. Live `429` evidence is deferred: external Vercel Preview protection intercepted Codex execution-context public GETs and submit before application handling, while browser access was authorized. This is not a limiter defect and must remain a pre-production verification requirement; do not weaken Preview protection solely to obtain it.
   - No production promotion, cleanup, deletion, aliasing, rollback, provider mutation, or deployment change occurred. The accidental initial Production deployment remains a provisioning artifact, not a release. The expired magic-link message is a non-blocking future UX follow-up.
 
+Sprint 12.20.20 - Pre-Production Readiness Planning
+
+- Completed as **PASS - PRE-PRODUCTION READINESS PLAN DEFINED**. Continued MVP development is approved; Production promotion remains separately gated by authorized Preview `429` evidence, Vercel Production inventory/protection review, Production Auth review, exact rollback deployment, and an approved final smoke plan.
+- The accidental initial Production deployment remains a provisioning artifact. It must not be deleted, reassigned, rolled back, or promoted without explicit approval after domain/alias inspection.
+
 Next:
 
-- Sprint 12.20.20 - Pre-Production Readiness Planning.
-  - Planning-only handoff: define the controlled pre-production checklist, including an authorized-context method for the deferred shared-limiter `429` evidence, production-artifact disposition, rollback, cache/proxy review, and remaining Vercel WAF/Firewall assessment.
-  - No application implementation, provider configuration, Preview-protection weakening, production promotion, domain/Auth Site URL change, migration, SQL, or live production action is in scope without separate explicit approval.
+- Core MVP Next Milestone Planning.
+  - Planning-only handoff: choose one smallest supported core-MVP milestone through analysis -> architecture -> plan before implementation approval, while preserving all P0 pre-production gates for a later intentional launch.
+  - No provider configuration, deployment change, Production promotion, migration, SQL, or implementation is in scope.
 
 ## Suggested Future Milestones
 

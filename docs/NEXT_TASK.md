@@ -2,26 +2,25 @@
 
 ## Milestone
 
-Sprint 12: Public Catalog Launch Readiness
+Core MVP Planning
 
 ## Next Task
 
-Sprint 12.20.20 - Pre-Production Readiness Planning
+Core MVP Next Milestone Planning
 
-Planning only. No production action, provider configuration change, or deployment modification is approved.
+Planning only. Follow analysis -> architecture -> plan; implement only after explicit approval.
 
 ## Objective
 
-Define the smallest controlled pre-production readiness plan from the completed Preview evidence and the remaining explicit launch gates.
+Select the next smallest coherent core-MVP milestone from the completed public catalog, runtime, teacher, and Preview work without guessing a large feature implementation.
 
 ## Planning Topics
 
-- Convert verified Preview Auth, teacher/dashboard, logout, public runtime, and provider-backed submit evidence into an exact pre-production checklist.
-- Define a safe, separately approved method to obtain live shared-limiter `429` evidence from an authorized Preview context without weakening Deployment Protection.
-- Plan the safe disposition of the accidental initial Production deployment artifact, production gating, rollback, cache/proxy review, and Vercel WAF/Firewall assessment.
-- Identify any remaining authentication UX follow-up, including the expired-link message, without implementing it in this planning sprint.
+- Inventory remaining core-MVP capabilities and their established security, data, and ownership dependencies.
+- Choose one narrow next milestone and define its architecture, implementation scope, tests, and manual verification before code changes.
+- Preserve the separate P0 pre-production checklist for an intentional Production launch.
 
 ## Out Of Scope
 
-- Application implementation, tests, packages, UI redesign, migrations, SQL, Storage, RLS, publication, runtime, student systems, persistent attempts, assignments, payments, production promotion, production-domain rollout, production Auth Site URL changes, WAF enforcement, commit, and push.
+- Application implementation, tests, packages, migrations, SQL, provider configuration, production promotion, deployment changes, commit, and push.
 - Do not record or expose environment values, keys, tokens, cookies, JWTs, raw identities, limiter keys, or private paths.
