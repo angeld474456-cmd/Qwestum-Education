@@ -780,6 +780,16 @@ Build, lint, `git diff --check`, and 14 test files/144 tests passed. Manual brow
 
 The first-launch Model A remains anonymous public catalog, anonymous public quest detail, anonymous public runtime/play, and authenticated teacher creation, editing, and publication. Student Identity remains deferred because the required live profiles/roles/RLS/provisioning inventory is not available through an approved read-only Supabase mechanism; that is not an implementation task. The P0 pre-production gates above remain required only before an intentional Production launch.
 
+## Teacher Quest Library Text Search
+
+Teacher Quest Library Text Search closed the selected P1 teacher-productivity milestone in commit `4d930ac` (`Add teacher quest library search`). The server-rendered `/dashboard/quests` page filters only the existing `getOwnedQuests()` owner-scoped result; it adds no client Supabase read, new API route, pagination, or sorting.
+
+The URL-driven `q` parameter is absent for missing, blank, or malformed values; otherwise it trims outer whitespace, collapses internal whitespace, and performs case-insensitive substring matching against title or nullable description only. It does not search task content, owner IDs, or other private fields. Search combines with the existing Category/Tag filters through AND semantics.
+
+`lib/teacher-quest-library-filters.ts` contains the pure normalization and matching logic, with focused Node tests in `tests/lib/teacher-quest-library-filters.test.ts`. Reset navigates exactly to `/dashboard/quests`, clearing `q`, category, and tag; the filter form remounts from URL-derived state so uncontrolled fields cannot retain stale visible values. Focused tests, 15 test files/147 tests, lint, build, `git diff --check`, and manual browser verification passed.
+
+No migration, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, provider, deployment, or public teacher-search route was added. Model A remains unchanged, Student Identity remains deferred pending the approved read-only live inventory, and the P0 pre-production launch gates above remain preserved.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.

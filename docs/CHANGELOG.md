@@ -1,5 +1,10 @@
 # Changelog
 
+## Teacher Quest Library Text Search
+
+- Completed as PASS in commit `4d930ac` (`Add teacher quest library search`). `/dashboard/quests` now accepts a normalized URL-driven `q` parameter that searches only the existing owner-scoped quest list by title or description, case-insensitively, and combines with Category/Tag filters using AND semantics.
+- Reset returns exactly to `/dashboard/quests`, clearing `q`, category, and tag; the form remounts from URL-derived state so uncontrolled fields cannot retain stale visual values. Focused tests, 15 test files/147 tests, lint, build, `git diff --check`, and manual browser verification passed. No route, API, database, Storage, provider, or deployment change was made.
+
 ## Public Quest Sharing UX
 
 - Completed as PASS in commit `4cf5922` (`Add public quest sharing`). Confirmed Published teacher quests and valid public detail pages provide a keyboard-accessible Copy public link control for the same-origin canonical `/catalog/{questId}` URL; Draft or unpublished quests do not expose it, and `/catalog/{questId}/start` is never shared.

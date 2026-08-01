@@ -814,6 +814,12 @@ Sprint 12.20.20 completed the pre-production plan as **PASS - PRE-PRODUCTION REA
 
 `QuestPublicationReadiness` renders the teacher control only from its confirmed local Published state; it hides it for Draft/unpublished state immediately after a confirmed Unpublish. `PublicQuestDetail` renders the same component only after its existing public-detail server boundary has resolved an eligible quest, so no sharing control appears on not-found, unavailable, or runtime/start routes. The control is a semantic keyboard-accessible button with polite feedback. It introduces no route, API, database, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, deployment, provider, social, analytics, QR, short-link, or invite boundary.
 
+## Teacher Quest Library Search Boundary
+
+`/dashboard/quests` remains a server-rendered authenticated teacher page. Its `q` search parameter is normalized by `lib/teacher-quest-library-filters.ts`: the first string value is trimmed and whitespace-normalized; missing, blank, or malformed values become absent. The helper matches only an already owner-scoped quest's title or nullable description with case-insensitive substring semantics, then applies the existing Category/Tag filters with AND semantics. It does not query task content, owner IDs, or other private fields.
+
+The existing `getOwnedQuests()` read, no-client-Supabase boundary, no pagination, and no sorting remain unchanged. `tests/lib/teacher-quest-library-filters.test.ts` covers normalization, title/description matching, null descriptions, and conjunction with category/tag filtering. Reset uses the clean `/dashboard/quests` route and the filter form remounts from URL-derived state so `q`, category, and tag are all cleared without stale uncontrolled-field values. No public route, API, database, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, provider, or deployment boundary was introduced.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

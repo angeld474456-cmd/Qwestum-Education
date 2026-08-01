@@ -767,6 +767,11 @@ Public Quest Sharing UX
 - Completed as PASS in commit `4cf5922`. Confirmed Published teacher quests and valid public quest details can copy only the same-origin canonical `/catalog/{questId}` URL; Draft/unpublished quests do not expose sharing, and public runtime `/start` is never a target.
 - Fixed polite success/failure feedback is keyboard accessible and exposes no clipboard exception or private quest data. Build, lint, `git diff --check`, 14 test files/144 tests, and manual browser verification passed. No route, API, database, provider, deployment, or configuration change occurred.
 
+Teacher Quest Library Text Search
+
+- Completed as PASS in commit `4d930ac`. The existing authenticated owner-scoped library now supports a normalized URL-driven `q` search over quest title or description, with case-insensitive substring matching and AND semantics alongside the existing Category/Tag filters.
+- Reset navigates exactly to `/dashboard/quests`, clears all three filters, and remounts URL-derived uncontrolled controls to prevent stale visual values. Focused tests, 15 test files/147 tests, lint, build, `git diff --check`, and manual browser verification passed. No route, API, database, provider, deployment, or configuration change occurred.
+
 Next:
 
 - Core MVP Next Milestone Planning.
