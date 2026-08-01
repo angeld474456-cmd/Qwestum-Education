@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.19 - Preview Auth, Rate-Limit, and Deployment Safety Verification
+
+- Completed as PASS WITH DEFERRED LIVE 429 EVIDENCE. Preview magic-link/callback, authenticated dashboard and teacher workspace, logout, and protected-route enforcement passed. Public routes remain anonymous; unsafe callback destinations still fall back to `/dashboard`.
+- Shared submit limiter review and focused verification passed: validation runs before limiting, limiting before scoring, `429` and fail-closed `503` remain generic no-store responses with `Retry-After`, and scoring does not run after either limiter outcome. Focused tests passed 3 files/18 tests. Browser Preview submit produced both successful `200` and fail-closed `503` observations.
+- Live `429` evidence is deferred to the pre-production checklist because external Vercel Preview protection intercepted Codex execution-context requests before application handling. No Preview protection was weakened, and no Production promotion or provider/deployment mutation occurred. The expired magic-link message is a non-blocking future UX follow-up.
+
 ## Sprint 12.20.18 - Controlled Upstash and Vercel Preview Provisioning
 
 - Completed controlled Preview provisioning for Vercel project `qwestum-education`: the repository is connected, `main` remains the Production branch, `feature/next-work` has a Preview deployment, and a separate Preview Upstash Redis database serves the shared submit limiter. Approved Preview environment-variable names were configured without recording values.

@@ -751,11 +751,17 @@ Sprint 12.20.10 - Public Catalog Empty, Loading, and Error UX
   - Corrected early Preview formatting issues and the trusted client-IP source in commit `147246d` (`Fix Vercel client IP header for submit limiter`), which now accepts only `x-forwarded-for`. Final Preview smoke verification passed for public catalog/detail/start, `/test` not-found behavior, and a real provider-backed submit through its successful result. The Text result remained `not_scored`; no runtime error was observed. Tests passed 13 files/140 tests; lint and build passed.
   - The initial Vercel CLI-created Production deployment is a temporary provisioning artifact, not a production release. No promotion, production domain rollout, production Supabase/Auth change, or production traffic approval exists.
 
+- Sprint 12.20.19 - Preview Auth, Rate-Limit, and Deployment Safety Verification.
+  - Completed as PASS WITH DEFERRED LIVE 429 EVIDENCE. Preview magic-link/callback, authenticated dashboard and teacher workspace, logout, and renewed protected-route enforcement passed. The callback uses the current origin and only accepts validated same-origin local destinations; public routes remain anonymous.
+  - Public submit implementation and focused evidence passed: validation precedes the shared limiter, limiting precedes scoring, fixed no-store `429`/`503` responses include `Retry-After`, and scoring is skipped when the limiter is limited or unavailable. The sole trusted identity header remains `x-forwarded-for`; focused tests passed 3 files/18 tests.
+  - Browser Preview submit reached the application with both a successful `200` and a fail-closed `503`. Live `429` evidence is deferred: external Vercel Preview protection intercepted Codex execution-context public GETs and submit before application handling, while browser access was authorized. This is not a limiter defect and must remain a pre-production verification requirement; do not weaken Preview protection solely to obtain it.
+  - No production promotion, cleanup, deletion, aliasing, rollback, provider mutation, or deployment change occurred. The accidental initial Production deployment remains a provisioning artifact, not a release. The expired magic-link message is a non-blocking future UX follow-up.
+
 Next:
 
-- Sprint 12.20.19 - Preview Auth, Rate-Limit, and Deployment Safety Verification.
-  - Plan the safe disposition of the accidental Production deployment artifact; exact Supabase Auth Preview redirect allowlist; Preview magic-link/login and teacher/dashboard verification; controlled limiter `429` verification; and the remaining Preview deployment/security review.
-  - Each provider configuration or external verification action requires separate explicit approval. No production promotion, production domain rollout, production Auth Site URL change, legacy-key disablement, WAF enforcement, application change, migration, SQL, or live production action is in scope.
+- Sprint 12.20.20 - Pre-Production Readiness Planning.
+  - Planning-only handoff: define the controlled pre-production checklist, including an authorized-context method for the deferred shared-limiter `429` evidence, production-artifact disposition, rollback, cache/proxy review, and remaining Vercel WAF/Firewall assessment.
+  - No application implementation, provider configuration, Preview-protection weakening, production promotion, domain/Auth Site URL change, migration, SQL, or live production action is in scope without separate explicit approval.
 
 ## Suggested Future Milestones
 

@@ -6,21 +6,20 @@ Sprint 12: Public Catalog Launch Readiness
 
 ## Next Task
 
-Sprint 12.20.19 - Preview Auth, Rate-Limit, and Deployment Safety Verification
+Sprint 12.20.20 - Pre-Production Readiness Planning
 
-Planning and controlled verification only. Any provider change, including production-artifact cleanup, Auth redirect configuration, or production promotion, requires separate explicit approval.
+Planning only. No production action, provider configuration change, or deployment modification is approved.
 
 ## Objective
 
-Close the remaining Preview authentication, limiter, and deployment-safety evidence gaps without promoting the application to production.
+Define the smallest controlled pre-production readiness plan from the completed Preview evidence and the remaining explicit launch gates.
 
 ## Planning Topics
 
-- Decide the safe disposition of the accidental initial Vercel Production deployment artifact without treating it as a release or changing production traffic without approval.
-- Determine the exact Supabase Auth Preview redirect allowlist required for the existing Preview deployment, then separately approve any provider configuration action.
-- Verify Preview magic-link/login and callback behavior, authenticated teacher/dashboard flows, and session-expiry behavior without recording credentials or session data.
-- Run a controlled shared-limiter `429` verification and confirm safe throttling, no scoring after denial, and no provider or identity leakage.
-- Complete the remaining Preview deployment and security review: proxy/auth cost, cache behavior, Vercel WAF/Firewall capability, rollback, and production gating.
+- Convert verified Preview Auth, teacher/dashboard, logout, public runtime, and provider-backed submit evidence into an exact pre-production checklist.
+- Define a safe, separately approved method to obtain live shared-limiter `429` evidence from an authorized Preview context without weakening Deployment Protection.
+- Plan the safe disposition of the accidental initial Production deployment artifact, production gating, rollback, cache/proxy review, and Vercel WAF/Firewall assessment.
+- Identify any remaining authentication UX follow-up, including the expired-link message, without implementing it in this planning sprint.
 
 ## Out Of Scope
 
