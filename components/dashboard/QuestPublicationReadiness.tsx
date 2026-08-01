@@ -7,6 +7,8 @@ import {
   redirectToSessionExpiredLogin,
   SESSION_EXPIRED_MESSAGE,
 } from "@/lib/auth/session-expired.client";
+import PublicQuestShareButton from "@/components/catalog/PublicQuestShareButton";
+import { shouldShowPublicQuestShare } from "@/lib/public-quest-share";
 
 type QuestPublicationReadinessProps = {
   questId: string;
@@ -479,15 +481,26 @@ export default function QuestPublicationReadiness({
             Status: {isPublic ? "Published" : "Draft"}
           </p>
         </div>
-        <button
-          ref={checkButtonRef}
-          type="button"
-          onClick={checkReadiness}
-          disabled={checking || mutating}
-          className="rounded-xl border border-cyan-400/50 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/10 focus:outline-none focus:ring-2 focus:ring-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {readinessButtonLabel}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {shouldShowPublicQuestShare(isPublic) ? (
+            <PublicQuestShareButton
+              questId={questId}
+              label="Copy public link"
+              copiedMessage="Public link copied."
+              failedMessage="Could not copy the public link."
+              announceFeedback={false}
+            />
+          ) : null}
+          <button
+            ref={checkButtonRef}
+            type="button"
+            onClick={checkReadiness}
+            disabled={checking || mutating}
+            className="rounded-xl border border-cyan-400/50 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-500/10 focus:outline-none focus:ring-2 focus:ring-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {readinessButtonLabel}
+          </button>
+        </div>
       </div>
 
       <div aria-live="polite" className="mt-4 space-y-4">

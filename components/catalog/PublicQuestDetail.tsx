@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import PublicQuestCover from "@/components/catalog/PublicQuestCover";
+import PublicQuestShareButton from "@/components/catalog/PublicQuestShareButton";
 import type { PublicCatalogQuest } from "@/types/public-catalog";
 
 type PublicQuestDetailProps = {
@@ -50,12 +51,20 @@ export default function PublicQuestDetail({ quest }: PublicQuestDetailProps) {
         <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-300">
           {quest.description ?? "Описание не добавлено."}
         </p>
-        <Link
-          href={`/catalog/${quest.id}/start`}
-          className="mt-6 inline-flex rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 focus-visible:ring-2 focus-visible:ring-violet-400"
-        >
-          {"\u041d\u0430\u0447\u0430\u0442\u044c \u043a\u0432\u0435\u0441\u0442"}
-        </Link>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Link
+            href={`/catalog/${quest.id}/start`}
+            className="inline-flex rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 focus-visible:ring-2 focus-visible:ring-violet-400"
+          >
+            {"\u041d\u0430\u0447\u0430\u0442\u044c \u043a\u0432\u0435\u0441\u0442"}
+          </Link>
+          <PublicQuestShareButton
+            questId={quest.id}
+            label="Скопировать ссылку"
+            copiedMessage="Ссылка скопирована."
+            failedMessage="Не удалось скопировать ссылку."
+          />
+        </div>
       </div>
 
       <dl className="grid gap-4 sm:grid-cols-2">
