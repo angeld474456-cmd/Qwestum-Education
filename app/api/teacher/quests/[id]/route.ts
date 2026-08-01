@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { deleteOwnedQuest } from "@/services/teacher-quest-deletion.server";
 import { isQuestLanguageCode } from "@/services/quest-language";
 
 const allowedDifficulties = new Set([1, 2, 3]);
@@ -578,4 +579,31 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   return NextResponse.json({
     quest: data,
   });
+}
+
+export async function DELETE(_request: Request, { params }: RouteContext) {
+  const { id } = await params;
+
+  if (!uuidPattern.test(id)) {
+    return NextResponse.json({ error: "Invalid quest id." }, { status: 400 });
+  }
+
+  const result = await deleteOwnedQuest(id);
+
+  if (result.status === "ok") {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  if (result.status === "unauthorized") {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (result.status === "not_found") {
+    return NextResponse.json({ error: "Quest not found." }, { status: 404 });
+  }
+
+  return NextResponse.json(
+    { error: "Unable to delete quest." },
+    { status: 500 }
+  );
 }

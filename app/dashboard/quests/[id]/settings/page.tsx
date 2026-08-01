@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import QuestCoverImageManager from "@/components/dashboard/QuestCoverImageManager";
+import QuestDeleteButton from "@/components/dashboard/QuestDeleteButton";
 import QuestSettingsForm from "@/components/dashboard/QuestSettingsForm";
 import QuestWorkspaceNav from "@/components/dashboard/QuestWorkspaceNav";
 import { getSafeQuestCoverImagePublicUrl } from "@/lib/storage/quest-cover.server";
@@ -96,6 +97,12 @@ export default async function TeacherQuestSettingsPage({
         quest={quest}
         subjects={subjects}
         taskCount={taskCount ?? 0}
+      />
+
+      <QuestDeleteButton
+        questId={quest.id}
+        questTitle={quest.title}
+        isPublic={quest.is_public}
       />
     </section>
   );

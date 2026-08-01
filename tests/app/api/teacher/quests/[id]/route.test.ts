@@ -5,13 +5,17 @@ const ownerId = "22222222-2222-4222-8222-222222222222";
 const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   createClient: vi.fn(),
+  deleteOwnedQuest: vi.fn(),
   from: vi.fn(),
   rpc: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
+vi.mock("@/services/teacher-quest-deletion.server", () => ({
+  deleteOwnedQuest: mocks.deleteOwnedQuest,
+}));
 
-import { PATCH } from "@/app/api/teacher/quests/[id]/route";
+import { DELETE, PATCH } from "@/app/api/teacher/quests/[id]/route";
 
 const context = { params: Promise.resolve({ id: questId }) };
 const metadataBody = {
@@ -179,5 +183,46 @@ describe("quest settings PATCH", () => {
     const body = await response.json();
     expect(body).toEqual({ error: "Unable to save quest settings." });
     expect(JSON.stringify(body)).not.toMatch(/RAW_DB_MESSAGE|RAW_DB_DETAIL/);
+  });
+});
+
+describe("quest deletion DELETE", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns 400 for a malformed UUID without calling the deletion service", async () => {
+    const response = await DELETE(new Request("http://example.test"), {
+      params: Promise.resolve({ id: "not-a-uuid" }),
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: "Invalid quest id." });
+    expect(mocks.deleteOwnedQuest).not.toHaveBeenCalled();
+  });
+
+  it("returns 204 after one successful deletion service call", async () => {
+    mocks.deleteOwnedQuest.mockResolvedValue({ status: "ok" });
+
+    const response = await DELETE(new Request("http://example.test"), context);
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe("");
+    expect(mocks.deleteOwnedQuest).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteOwnedQuest).toHaveBeenCalledWith(questId);
+  });
+
+  it("maps safe deletion failures without exposing raw details", async () => {
+    const cases = [
+      ["unauthorized", 401, { error: "Unauthorized." }],
+      ["not_found", 404, { error: "Quest not found." }],
+      ["error", 500, { error: "Unable to delete quest." }],
+    ] as const;
+
+    for (const [status, code, expectedBody] of cases) {
+      mocks.deleteOwnedQuest.mockResolvedValue({ status });
+      const response = await DELETE(new Request("http://example.test"), context);
+      expect(response.status).toBe(code);
+      const body = await response.json();
+      expect(body).toEqual(expectedBody);
+      expect(JSON.stringify(body)).not.toMatch(/RAW_DATABASE|author_id|owner|image_url/);
+    }
   });
 });
