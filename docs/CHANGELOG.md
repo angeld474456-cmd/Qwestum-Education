@@ -1,5 +1,10 @@
 # Changelog
 
+## Public Quest Sharing UX
+
+- Completed as PASS in commit `4cf5922` (`Add public quest sharing`). Confirmed Published teacher quests and valid public detail pages provide a keyboard-accessible Copy public link control for the same-origin canonical `/catalog/{questId}` URL; Draft or unpublished quests do not expose it, and `/catalog/{questId}/start` is never shared.
+- Copy feedback is fixed and polite; browser or clipboard errors are not exposed. No social integration, QR code, analytics, short-link, invite, route, API, database, Storage, provider, or deployment change was made. Build, lint, `git diff --check`, and 14 test files/144 tests passed; manual browser verification passed.
+
 ## Sprint 12.20.20 - Pre-Production Readiness Planning
 
 - Completed as **PASS - PRE-PRODUCTION READINESS PLAN DEFINED**. Continued MVP development is approved; Production promotion is not approved. Mandatory pre-production gates remain controlled authorized Preview `429` evidence, Vercel Production artifact/domain/protection inventory, Production Supabase Auth redirect review, exact rollback deployment identification, and an explicitly approved final promotion smoke plan.

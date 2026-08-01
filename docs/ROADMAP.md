@@ -762,6 +762,11 @@ Sprint 12.20.20 - Pre-Production Readiness Planning
 - Completed as **PASS - PRE-PRODUCTION READINESS PLAN DEFINED**. Continued MVP development is approved; Production promotion remains separately gated by authorized Preview `429` evidence, Vercel Production inventory/protection review, Production Auth review, exact rollback deployment, and an approved final smoke plan.
 - The accidental initial Production deployment remains a provisioning artifact. It must not be deleted, reassigned, rolled back, or promoted without explicit approval after domain/alias inspection.
 
+Public Quest Sharing UX
+
+- Completed as PASS in commit `4cf5922`. Confirmed Published teacher quests and valid public quest details can copy only the same-origin canonical `/catalog/{questId}` URL; Draft/unpublished quests do not expose sharing, and public runtime `/start` is never a target.
+- Fixed polite success/failure feedback is keyboard accessible and exposes no clipboard exception or private quest data. Build, lint, `git diff --check`, 14 test files/144 tests, and manual browser verification passed. No route, API, database, provider, deployment, or configuration change occurred.
+
 Next:
 
 - Core MVP Next Milestone Planning.

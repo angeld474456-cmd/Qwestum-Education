@@ -770,6 +770,16 @@ The planned live-schema and public-read-boundary verification completed without 
 - `proxy.ts` currently matches nearly all non-static routes, so anonymous public routes and APIs incur `updateSession()` / Supabase `auth.getUser()` work. This is P1 latency/cost review, not a current security blocker; any matcher narrowing needs a separately tested implementation sprint. Public runtime start is force-dynamic and submit responses use `Cache-Control: no-store`; this conservative cache posture is correctness-safe. Application-level dual fail-closed Upstash submit limiting does not replace provider-level volumetric protection, so a documented Vercel Firewall/WAF baseline is required before launch. Expired magic-link feedback remains safe P1 polish.
 - Development direction returns to neutral **Core MVP Next Milestone Planning**. Do not force `429` evidence through protected Codex execution; retain the P0 checklist for the point when intentional Production promotion approaches.
 
+## Public Quest Sharing UX
+
+Public Quest Sharing UX closed the selected P1 Model A launch-quality gap in commit `4cf5922` (`Add public quest sharing`). `PublicQuestShareButton` builds an absolute same-origin URL from the current browser origin and the trusted quest ID, with `/catalog/{questId}` as the sole canonical target. It never shares `/catalog/{questId}/start` or accepts a URL from props or query parameters.
+
+The control appears only when `QuestPublicationReadiness` holds confirmed local Published state, so Draft/unpublished teacher quests do not appear shareable and the control disappears after confirmed Unpublish. A valid public detail page uses the same control. Fixed safe success/failure feedback is keyboard accessible and politely announced; raw clipboard exceptions are withheld. The URL and UI expose no owner data, Storage paths, task IDs, answers, scoring details, or private routes. No social-network integration, QR code, analytics, short-link service, or invite system was added.
+
+Build, lint, `git diff --check`, and 14 test files/144 tests passed. Manual browser verification confirmed the canonical copied URL, its absence of `/start`, public-detail equivalence, post-Unpublish removal, and keyboard operation. This changed no route, API, database, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, deployment, or provider setting.
+
+The first-launch Model A remains anonymous public catalog, anonymous public quest detail, anonymous public runtime/play, and authenticated teacher creation, editing, and publication. Student Identity remains deferred because the required live profiles/roles/RLS/provisioning inventory is not available through an approved read-only Supabase mechanism; that is not an implementation task. The P0 pre-production gates above remain required only before an intentional Production launch.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.

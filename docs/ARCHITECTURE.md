@@ -808,6 +808,12 @@ Live shared-limiter `429` evidence remains deferred to pre-production verificati
 
 Sprint 12.20.20 completed the pre-production plan as **PASS - PRE-PRODUCTION READINESS PLAN DEFINED**. Production promotion remains unapproved pending: one controlled authorized Preview `429`, read-only Vercel Production artifact/domain/protection and Firewall/WAF capability inventory, Production Supabase Auth callback/redirect review, an exact known-good deployment rollback reference, and an explicitly approved final smoke plan. The preferred `429` verification uses ordinary sequential requests from an already authorized Preview browser DevTools context and stops on the first `429`; it does not alter protection, identity, headers, or Redis. The broad proxy matcher means anonymous public routes and APIs currently incur `auth.getUser()` work; this is a P1 latency/cost review, not a current security defect. Current force-dynamic/no-store behavior is correctness-safe and conservative. Future matcher narrowing requires a separately tested implementation sprint.
 
+## Public Quest Sharing Boundary
+
+`PublicQuestShareButton` is the single client-side presentation boundary for Public Quest Sharing UX. It receives only a trusted quest ID, constructs an absolute same-origin URL from `window.location.origin`, and copies only `/catalog/{questId}` through the browser Clipboard API. It accepts no caller-provided destination, never targets `/catalog/{questId}/start`, and returns fixed success/failure feedback without serializing browser exceptions.
+
+`QuestPublicationReadiness` renders the teacher control only from its confirmed local Published state; it hides it for Draft/unpublished state immediately after a confirmed Unpublish. `PublicQuestDetail` renders the same component only after its existing public-detail server boundary has resolved an eligible quest, so no sharing control appears on not-found, unavailable, or runtime/start routes. The control is a semantic keyboard-accessible button with polite feedback. It introduces no route, API, database, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, deployment, provider, social, analytics, QR, short-link, or invite boundary.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:
