@@ -2,6 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 
 import Card from "@/components/ui/Card";
+import {
+  getTeacherQuestLibraryCategory,
+  getTeacherQuestLibraryFilterKey,
+  getTeacherQuestLibrarySearchParam,
+  getTeacherQuestLibraryTags,
+  matchesTeacherQuestLibraryFilters,
+  normalizeTeacherQuestLibraryFilterValue,
+} from "@/lib/teacher-quest-library-filters";
 import { getSafeQuestCoverImagePublicUrl } from "@/lib/storage/quest-cover.server";
 import {
   getTeacherSubjects,
@@ -11,11 +19,11 @@ import { getQuestLanguageLabel } from "@/services/quest-language";
 import {
   getOwnedQuests,
   getOwnedQuestTaskSummary,
-  type TeacherQuest,
 } from "@/services/teacher-quest.server";
 
 type TeacherQuestLibraryPageProps = {
   searchParams?: Promise<{
+    q?: string | string[];
     category?: string | string[];
     tag?: string | string[];
   }>;
@@ -63,46 +71,15 @@ function formatSubject(subject: TeacherSubject | undefined) {
   return `${subject.name} · ${subject.grade} класс`;
 }
 
-function normalizeFilterValue(value: string) {
-  return value.trim().replace(/\s+/g, " ");
-}
-
-function getFirstSearchParam(value: string | string[] | undefined) {
-  const firstValue = Array.isArray(value) ? value[0] : value;
-
-  if (!firstValue) return "";
-
-  return normalizeFilterValue(firstValue);
-}
-
-function getQuestTags(quest: TeacherQuest) {
-  return Array.isArray(quest.tags)
-    ? quest.tags
-        .filter((tag): tag is string => typeof tag === "string")
-        .map(normalizeFilterValue)
-        .filter(Boolean)
-    : [];
-}
-
-function getQuestCategory(quest: TeacherQuest) {
-  if (typeof quest.category !== "string") return null;
-
-  return normalizeFilterValue(quest.category) || null;
-}
-
-function getFilterKey(value: string) {
-  return value.toLocaleLowerCase("en");
-}
-
 function getUniqueSortedValues(values: string[]) {
   const valuesByKey = new Map<string, string>();
 
   for (const value of values) {
-    const normalizedValue = normalizeFilterValue(value);
+    const normalizedValue = normalizeTeacherQuestLibraryFilterValue(value);
 
     if (!normalizedValue) continue;
 
-    const key = getFilterKey(normalizedValue);
+    const key = getTeacherQuestLibraryFilterKey(normalizedValue);
 
     if (!valuesByKey.has(key)) {
       valuesByKey.set(key, normalizedValue);
@@ -114,33 +91,6 @@ function getUniqueSortedValues(values: string[]) {
   );
 }
 
-function questMatchesFilters(
-  quest: TeacherQuest,
-  activeCategory: string,
-  activeTag: string
-) {
-  const categoryKey = activeCategory ? getFilterKey(activeCategory) : "";
-  const tagKey = activeTag ? getFilterKey(activeTag) : "";
-
-  if (categoryKey) {
-    const questCategory = getQuestCategory(quest);
-
-    if (!questCategory || getFilterKey(questCategory) !== categoryKey) {
-      return false;
-    }
-  }
-
-  if (tagKey) {
-    const questTagKeys = getQuestTags(quest).map(getFilterKey);
-
-    if (!questTagKeys.includes(tagKey)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 export default async function TeacherQuestLibraryPage({
   searchParams,
 }: TeacherQuestLibraryPageProps) {
@@ -150,15 +100,24 @@ export default async function TeacherQuestLibraryPage({
     getTeacherSubjects(),
   ]);
   const resolvedSearchParams = (await searchParams) ?? {};
-  const activeCategory = getFirstSearchParam(resolvedSearchParams.category);
-  const activeTag = getFirstSearchParam(resolvedSearchParams.tag);
-  const hasActiveFilters = Boolean(activeCategory || activeTag);
-  const categoryOptions = getUniqueSortedValues(
-    quests.map(getQuestCategory).filter((value): value is string => Boolean(value))
+  const activeSearch = getTeacherQuestLibrarySearchParam(resolvedSearchParams.q);
+  const activeCategory = getTeacherQuestLibrarySearchParam(
+    resolvedSearchParams.category
   );
-  const tagOptions = getUniqueSortedValues(quests.flatMap(getQuestTags));
+  const activeTag = getTeacherQuestLibrarySearchParam(resolvedSearchParams.tag);
+  const hasActiveFilters = Boolean(activeSearch || activeCategory || activeTag);
+  const categoryOptions = getUniqueSortedValues(
+    quests
+      .map(getTeacherQuestLibraryCategory)
+      .filter((value): value is string => Boolean(value))
+  );
+  const tagOptions = getUniqueSortedValues(quests.flatMap(getTeacherQuestLibraryTags));
   const filteredQuests = quests.filter((quest) =>
-    questMatchesFilters(quest, activeCategory, activeTag)
+    matchesTeacherQuestLibraryFilters(quest, {
+      search: activeSearch,
+      category: activeCategory,
+      tag: activeTag,
+    })
   );
 
   const subjectsById = new Map(
@@ -268,10 +227,27 @@ export default async function TeacherQuestLibraryPage({
           </div>
 
           <form
+            key={`${activeSearch}\u0000${activeCategory}\u0000${activeTag}`}
             action="/dashboard/quests"
             className="rounded-xl border border-slate-800 bg-[#111827] p-5"
           >
-            <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto_auto] md:items-end">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1.4fr)_1fr_1fr_auto_auto] md:items-end">
+              <div>
+                <label
+                  htmlFor="quest-search"
+                  className="text-sm font-semibold text-slate-200"
+                >
+                  {"\u041f\u043e\u0438\u0441\u043a"}
+                </label>
+                <input
+                  id="quest-search"
+                  name="q"
+                  type="search"
+                  defaultValue={activeSearch}
+                  placeholder={"\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0438\u043b\u0438 \u043e\u043f\u0438\u0441\u0430\u043d\u0438\u0435"}
+                  className="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/30"
+                />
+              </div>
               <div>
                 <label
                   htmlFor="quest-category-filter"
@@ -287,7 +263,10 @@ export default async function TeacherQuestLibraryPage({
                 >
                   <option value="">Все категории</option>
                   {categoryOptions.map((category) => (
-                    <option key={getFilterKey(category)} value={category}>
+                    <option
+                      key={getTeacherQuestLibraryFilterKey(category)}
+                      value={category}
+                    >
                       {category}
                     </option>
                   ))}
@@ -309,7 +288,10 @@ export default async function TeacherQuestLibraryPage({
                 >
                   <option value="">Все теги</option>
                   {tagOptions.map((tag) => (
-                    <option key={getFilterKey(tag)} value={tag}>
+                    <option
+                      key={getTeacherQuestLibraryFilterKey(tag)}
+                      value={tag}
+                    >
                       {tag}
                     </option>
                   ))}
@@ -372,8 +354,8 @@ export default async function TeacherQuestLibraryPage({
                 ? formatSubject(subjectsById.get(quest.subject_id))
                 : null;
               const languageLabel = getQuestLanguageLabel(quest.language_code);
-              const categoryLabel = getQuestCategory(quest);
-              const tagLabels = getQuestTags(quest);
+              const categoryLabel = getTeacherQuestLibraryCategory(quest);
+              const tagLabels = getTeacherQuestLibraryTags(quest);
 
               return (
                 <Card key={quest.id}>
@@ -461,7 +443,7 @@ export default async function TeacherQuestLibraryPage({
                               ) : null}
                               {tagLabels.map((tag) => (
                                 <span
-                                  key={`${quest.id}-${getFilterKey(tag)}`}
+                                  key={`${quest.id}-${getTeacherQuestLibraryFilterKey(tag)}`}
                                   className="rounded-full bg-slate-800 px-3 py-1 font-semibold text-slate-200"
                                 >
                                   {tag}
