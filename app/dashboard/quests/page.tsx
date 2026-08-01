@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import QuestDuplicateButton from "@/components/dashboard/QuestDuplicateButton";
 import Card from "@/components/ui/Card";
 import {
   getTeacherQuestLibraryCategory,
@@ -483,6 +484,8 @@ export default async function TeacherQuestLibraryPage({
                       >
                         Тестирование
                       </Link>
+
+                      <QuestDuplicateButton questId={quest.id} />
                     </div>
                   </div>
                 </Card>
