@@ -106,7 +106,7 @@ function mapRuntimeTask(value: unknown): PublicRuntimeTask | null {
     };
   }
 
-  if (value.task_type !== "single_choice") return null;
+  if (value.task_type !== "single_choice" && value.task_type !== "multiple_choice") return null;
 
   if (
     !Array.isArray(value.options) ||
@@ -127,7 +127,7 @@ function mapRuntimeTask(value: unknown): PublicRuntimeTask | null {
 
   return {
     id: value.id,
-    taskType: "single_choice",
+    taskType: value.task_type,
     title: value.title,
     description: value.description,
     options: mappedOptions,
@@ -270,14 +270,18 @@ function validateSubmission(
       rawAnswer,
       "selectedOptionId"
     );
+    const hasSelectedOptionIds = Object.prototype.hasOwnProperty.call(rawAnswer, "selectedOptionIds");
     const selectedOptionId = rawAnswer.selectedOptionId;
+    const selectedOptionIds = rawAnswer.selectedOptionIds;
 
     if (
       !hasOnlyKeys(
         rawAnswer,
-        hasSelectedOptionId ? ["taskId", "selectedOptionId"] : ["taskId"]
+        hasSelectedOptionId ? ["taskId", "selectedOptionId"] : hasSelectedOptionIds ? ["taskId", "selectedOptionIds"] : ["taskId"]
       ) ||
       (hasSelectedOptionId && typeof selectedOptionId !== "string") ||
+      (hasSelectedOptionIds && (!Array.isArray(selectedOptionIds) || selectedOptionIds.some((id) => typeof id !== "string" || !/\S/.test(id) || id.length > 128) || new Set(selectedOptionIds).size !== selectedOptionIds.length)) ||
+      (hasSelectedOptionId && hasSelectedOptionIds) ||
       taskIds.has(taskId)
     ) {
       runtimeError("Public runtime submission is invalid.");
@@ -290,7 +294,9 @@ function validateSubmission(
             taskId,
             selectedOptionId: selectedOptionId as string,
           }
-        : { taskId }
+        : hasSelectedOptionIds && (selectedOptionIds as string[]).length > 0
+          ? { taskId, selectedOptionIds: selectedOptionIds as string[] }
+          : { taskId }
     );
   }
 

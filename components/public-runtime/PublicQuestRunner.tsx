@@ -71,7 +71,7 @@ function isValidQuest(quest: PublicRuntimeQuest) {
     if (task.taskType === "text") continue;
 
     if (
-      task.taskType !== "single_choice" ||
+      (task.taskType !== "single_choice" && task.taskType !== "multiple_choice") ||
       !Array.isArray(task.options) ||
       task.options.length < 2 ||
       task.options.length > MAX_TASKS
@@ -171,6 +171,7 @@ function mapResult(value: unknown, quest: PublicRuntimeQuest): PublicRuntimeResu
 export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [selectedOptionIds, setSelectedOptionIds] = useState<Record<string, string>>({});
+  const [selectedMultipleChoiceOptionIds, setSelectedMultipleChoiceOptionIds] = useState<Record<string, string[]>>({});
   const [status, setStatus] = useState<RunnerStatus>("active");
   const [result, setResult] = useState<PublicRuntimeResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -234,6 +235,14 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
     }));
   }
 
+  function toggleOption(optionId: string) {
+    if (isSubmitting || currentTask.taskType !== "multiple_choice") return;
+    setSelectedMultipleChoiceOptionIds((current) => {
+      const selected = current[currentTask.id] ?? [];
+      return { ...current, [currentTask.id]: selected.includes(optionId) ? selected.filter((id) => id !== optionId) : [...selected, optionId] };
+    });
+  }
+
   function resetRunner() {
     requestIdRef.current += 1;
     abortControllerRef.current?.abort();
@@ -241,6 +250,7 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
     submissionInFlightRef.current = false;
     setCurrentTaskIndex(0);
     setSelectedOptionIds({});
+    setSelectedMultipleChoiceOptionIds({});
     setStatus("active");
     setResult(null);
     setErrorMessage(null);
@@ -260,9 +270,12 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
     const submission: PublicRuntimeSubmission = {
       answers: quest.tasks.map((task) => {
         const selectedOptionId = selectedOptionIds[task.id];
+        const selectedOptionIdsForTask = selectedMultipleChoiceOptionIds[task.id];
 
         return task.taskType === "single_choice" && selectedOptionId
           ? { taskId: task.id, selectedOptionId }
+          : task.taskType === "multiple_choice" && selectedOptionIdsForTask && selectedOptionIdsForTask.length > 0
+            ? { taskId: task.id, selectedOptionIds: selectedOptionIdsForTask }
           : { taskId: task.id };
         }),
     };
@@ -343,8 +356,10 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
         <PublicTaskRenderer
           task={currentTask}
           selectedOptionId={selectedOptionIds[currentTask.id]}
+          selectedOptionIds={selectedMultipleChoiceOptionIds[currentTask.id] ?? []}
           disabled={isSubmitting}
           onSelectOption={selectOption}
+          onToggleOption={toggleOption}
         />
       </section>
 

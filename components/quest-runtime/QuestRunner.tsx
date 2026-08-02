@@ -5,6 +5,7 @@ import {
   SingleChoiceRuntimeOption,
 } from "@/components/tasks/runtime/SingleChoiceTaskRenderer";
 import { QuestTask } from "@/services/quest.service";
+import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
 import QuestFinishScreen from "./QuestFinishScreen";
 import ProgressBar from "./ProgressBar";
 import { RuntimeProvider, useRuntimeContext } from "./RuntimeContext";
@@ -76,6 +77,11 @@ function QuestRunnerContent() {
   }
 
   const singleChoiceContent = getSingleChoiceContent(currentTask);
+  const multipleChoiceContent = parseMultipleChoiceContent(currentTask.content) ?? {
+    options: [],
+    correctOptionIds: [],
+  };
+  const currentAnswer = answers[currentTask.id];
 
   return (
     <div className="space-y-6">
@@ -90,10 +96,15 @@ function QuestRunnerContent() {
         imageUrl={currentTask.image_url}
         options={singleChoiceContent.options}
         correctOptionId={singleChoiceContent.correctOptionId}
-        answer={answers[currentTask.id] ?? ""}
+        correctOptionIds={multipleChoiceContent.correctOptionIds}
+        answer={typeof currentAnswer === "string" ? currentAnswer : ""}
+        multipleChoiceAnswer={Array.isArray(currentAnswer) ? currentAnswer : []}
         onTextAnswerChange={(answer) => setAnswer(currentTask.id, answer)}
         onSingleChoiceAnswerChange={(optionId) =>
           setAnswer(currentTask.id, optionId)
+        }
+        onMultipleChoiceAnswerChange={(optionIds) =>
+          setAnswer(currentTask.id, optionIds)
         }
       />
 

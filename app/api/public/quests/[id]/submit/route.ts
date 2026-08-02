@@ -126,12 +126,18 @@ function parseSubmission(value: unknown): PublicRuntimeSubmission | null {
     }
 
     const hasSelectedOptionId = hasOwn(answer, "selectedOptionId");
+    const hasSelectedOptionIds = hasOwn(answer, "selectedOptionIds");
 
     if (
       !hasExactKeys(
         answer,
-        hasSelectedOptionId ? ["taskId", "selectedOptionId"] : ["taskId"]
+        hasSelectedOptionId
+          ? ["taskId", "selectedOptionId"]
+          : hasSelectedOptionIds
+            ? ["taskId", "selectedOptionIds"]
+            : ["taskId"]
       ) ||
+      (hasSelectedOptionId && hasSelectedOptionIds) ||
       taskIds.has(answer.taskId)
     ) {
       return null;
@@ -143,6 +149,30 @@ function parseSubmission(value: unknown): PublicRuntimeSubmission | null {
       typeof answer.selectedOptionId !== "string"
     ) {
       return null;
+    }
+
+    if (hasSelectedOptionIds) {
+      if (
+        !Array.isArray(answer.selectedOptionIds) ||
+        answer.selectedOptionIds.length > MAX_ANSWERS ||
+        answer.selectedOptionIds.some(
+          (optionId) =>
+            typeof optionId !== "string" ||
+            isAllWhitespace(optionId) ||
+            optionId.length > 128
+        ) ||
+        new Set(answer.selectedOptionIds).size !== answer.selectedOptionIds.length
+      ) {
+        return null;
+      }
+
+      taskIds.add(answer.taskId);
+      answers.push(
+        answer.selectedOptionIds.length > 0
+          ? { taskId: answer.taskId, selectedOptionIds: answer.selectedOptionIds }
+          : { taskId: answer.taskId }
+      );
+      continue;
     }
 
     taskIds.add(answer.taskId);

@@ -6,7 +6,7 @@ import {
   parsePositiveSafeInteger,
 } from "@/lib/task-points";
 
-type TaskType = "text" | "single_choice";
+type TaskType = "text" | "single_choice" | "multiple_choice";
 
 interface TaskFormProps {
   onSave: (task: {
@@ -16,6 +16,7 @@ interface TaskFormProps {
     hint: string;
     points: number;
     taskType: TaskType;
+    content?: Record<string, unknown>;
   }) => Promise<boolean>;
 }
 
@@ -48,6 +49,14 @@ export default function TaskForm({ onSave }: TaskFormProps) {
 
     setPointsError(false);
 
+    const content = taskType === "multiple_choice"
+      ? {
+          options: [
+            { id: crypto.randomUUID(), text: "Option 1" },
+            { id: crypto.randomUUID(), text: "Option 2" },
+          ],
+        }
+      : undefined;
     const created = await onSave({
       title,
       description,
@@ -55,6 +64,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
       hint,
       points: parsedPoints,
       taskType,
+      ...(content ? { content: { ...content, correctOptionIds: content.options.map((option) => (option as { id: string }).id) } } : {}),
     });
 
     if (!created) return;
@@ -169,6 +179,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
           >
             <option value="text">Текстовое задание</option>
             <option value="single_choice">Выбор одного ответа</option>
+            <option value="multiple_choice">Multiple Choice</option>
           </select>
         </div>
 

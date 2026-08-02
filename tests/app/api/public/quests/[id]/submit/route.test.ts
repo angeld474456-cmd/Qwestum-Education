@@ -171,6 +171,38 @@ describe("public runtime submit route", () => {
     expect(mocks.scorePublicRuntimeQuest).toHaveBeenCalledWith(runtimeQuestId, submission);
   });
 
+  it("accepts valid multiple-choice selections without deciding correctness", async () => {
+    mocks.scorePublicRuntimeQuest.mockResolvedValue(publicRuntimeResult);
+    const submission = {
+      answers: [{ taskId: runtimeQuestId, selectedOptionIds: ["second", "first"] }],
+    };
+
+    const response = await POST(jsonRequest(submission), context());
+
+    expect(response.status).toBe(200);
+    expect(mocks.scorePublicRuntimeQuest).toHaveBeenCalledWith(runtimeQuestId, submission);
+  });
+
+  it("rejects malformed multiple-choice answer shapes before the limiter", async () => {
+    const invalidSubmissions = [
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: "first" }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: null }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: { id: "first" } }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: [1] }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: [""] }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: [" "] }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: ["x".repeat(129)] }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: ["first", "first"] }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionIds: Array.from({ length: 101 }, (_, index) => String(index)) }] },
+      { answers: [{ taskId: runtimeQuestId, selectedOptionId: "first", selectedOptionIds: ["first", "second"] }] },
+    ];
+
+    for (const submission of invalidSubmissions) {
+      await expectError(await POST(jsonRequest(submission), context()), 400, "\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0439 \u0437\u0430\u043f\u0440\u043e\u0441");
+    }
+    expect(mocks.checkPublicSubmitRateLimit).not.toHaveBeenCalled();
+  });
+
   it("maps unavailable exact-set, option, and publication outcomes to generic 404", async () => {
     mocks.scorePublicRuntimeQuest.mockResolvedValue(null);
     const submissions = [

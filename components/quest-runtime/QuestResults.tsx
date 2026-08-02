@@ -4,8 +4,8 @@ import { useRuntimeContext } from "./RuntimeContext";
 
 export default function QuestResults() {
   const { answers, totalTasks } = useRuntimeContext();
-  const answeredTasks = Object.values(answers).filter(
-    (answer) => answer.trim().length > 0
+  const answeredTasks = Object.values(answers).filter((answer) =>
+    Array.isArray(answer) ? answer.length > 0 : answer.trim().length > 0
   ).length;
   const completionPercent =
     totalTasks > 0 ? Math.round((answeredTasks / totalTasks) * 100) : 0;

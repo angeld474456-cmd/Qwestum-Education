@@ -3,7 +3,8 @@
 import { createContext, ReactNode, useContext, useState } from "react";
 import { QuestTask } from "@/services/quest.service";
 
-export type RuntimeAnswers = Record<string, string>;
+export type RuntimeAnswer = string | string[];
+export type RuntimeAnswers = Record<string, RuntimeAnswer>;
 export type RuntimeStatus = "start" | "playing" | "finished";
 
 interface RuntimeContextValue {
@@ -16,7 +17,7 @@ interface RuntimeContextValue {
   canGoNext: boolean;
   canGoPrevious: boolean;
   progressPercent: number;
-  setAnswer: (taskId: string, answer: string) => void;
+  setAnswer: (taskId: string, answer: RuntimeAnswer) => void;
   startQuest: () => void;
   finishQuest: () => void;
   restartQuest: () => void;
@@ -46,7 +47,7 @@ export function RuntimeProvider({
   const progressPercent =
     totalTasks > 0 ? ((currentIndex + 1) / totalTasks) * 100 : 0;
 
-  function setAnswer(taskId: string, answer: string) {
+  function setAnswer(taskId: string, answer: RuntimeAnswer) {
     setAnswers((currentAnswers) => ({
       ...currentAnswers,
       [taskId]: answer,

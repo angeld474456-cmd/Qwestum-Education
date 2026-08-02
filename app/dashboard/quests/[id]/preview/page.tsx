@@ -19,6 +19,7 @@ import {
   getOwnedQuestTasks,
   type TeacherQuestTask,
 } from "@/services/teacher-quest.server";
+import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
 
 type PreviewPageProps = {
   params: Promise<{
@@ -239,6 +240,10 @@ export default async function TeacherQuestPreviewPage({
         <div className="space-y-6">
           {tasks.map((task, index) => {
             const singleChoiceContent = getSingleChoiceContent(task);
+            const multipleChoiceContent = parseMultipleChoiceContent(task.content) ?? {
+              options: [],
+              correctOptionIds: [],
+            };
 
             return (
               <Card key={task.id}>
@@ -253,6 +258,7 @@ export default async function TeacherQuestPreviewPage({
                   imageUrl={task.image_url}
                   options={singleChoiceContent.options}
                   correctOptionId={singleChoiceContent.correctOptionId}
+                  correctOptionIds={multipleChoiceContent.correctOptionIds}
                 />
               </Card>
             );

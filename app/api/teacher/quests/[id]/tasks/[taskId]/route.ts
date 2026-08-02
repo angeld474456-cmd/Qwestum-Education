@@ -5,6 +5,7 @@ import {
   questImageBucketName,
 } from "@/lib/storage/quest-image.server";
 import { createClient } from "@/lib/supabase/server";
+import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -27,6 +28,7 @@ type UpdateTaskPayload = {
 type OwnedTaskImage = {
   id: string;
   image_url: string | null;
+  task_type: string;
 };
 
 async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>, questId: string) {
@@ -189,11 +191,12 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   let previousImageUrl: string | null = null;
   const isImageUrlUpdate = "image_url" in parsed.data;
+  const isContentUpdate = "content" in parsed.data;
 
-  if (isImageUrlUpdate) {
+  if (isImageUrlUpdate || isContentUpdate) {
     const { data: currentTask, error: currentTaskError } = await supabase
       .from("quest_tasks")
-      .select("id, image_url")
+      .select("id, image_url, task_type")
       .eq("id", taskId)
       .eq("quest_id", id)
       .maybeSingle<OwnedTaskImage>();
@@ -212,6 +215,17 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     if (!currentTask) {
       return NextResponse.json({ error: "Task not found." }, { status: 404 });
+    }
+
+    if (
+      isContentUpdate &&
+      currentTask.task_type === "multiple_choice" &&
+      !parseMultipleChoiceContent(parsed.data.content)
+    ) {
+      return NextResponse.json(
+        { error: "Multiple Choice content is invalid." },
+        { status: 400 }
+      );
     }
 
     previousImageUrl = currentTask.image_url;

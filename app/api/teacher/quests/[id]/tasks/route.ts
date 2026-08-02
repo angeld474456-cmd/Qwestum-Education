@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
 
-const allowedTaskTypes = new Set(["text", "single_choice"]);
+const allowedTaskTypes = new Set(["text", "single_choice", "multiple_choice"]);
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -19,6 +20,7 @@ type CreateTaskPayload = {
   hint?: unknown;
   points?: unknown;
   task_type?: unknown;
+  content?: unknown;
 };
 
 async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>, questId: string) {
@@ -91,6 +93,15 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
     };
   }
 
+  const content =
+    body.task_type === "multiple_choice"
+      ? parseMultipleChoiceContent(body.content)
+      : undefined;
+
+  if (body.task_type === "multiple_choice" && !content) {
+    return { error: "Multiple Choice content is invalid." };
+  }
+
   return {
     data: {
       title,
@@ -99,6 +110,7 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
       hint,
       points,
       task_type: body.task_type,
+      ...(content ? { content } : {}),
     },
   };
 }
@@ -219,6 +231,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       audio_url: "",
       points: parsed.data.points,
       task_type: parsed.data.task_type,
+      ...(parsed.data.content ? { content: parsed.data.content } : {}),
       sort_order: (count ?? 0) + 1,
     })
     .select("*")
