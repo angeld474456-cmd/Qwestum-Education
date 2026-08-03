@@ -3,7 +3,7 @@ import { blankTitleQuest, choiceTask, duplicateOptionIdsQuest, foreignCorrectOpt
 const m=vi.hoisted(()=>({createClient:vi.fn(),auth:vi.fn(),from:vi.fn(),rpc:vi.fn()}));
 vi.mock("server-only",()=>({})); vi.mock("@/lib/supabase/server",()=>({createClient:m.createClient}));
 import { getOwnedQuestPublicationReadiness, setOwnedQuestPublicationState } from "@/services/teacher-publication.server";
-function client(quest:unknown,tasks:unknown,error=false){let n=0;const q={select:vi.fn().mockReturnThis(),eq:vi.fn().mockReturnThis(),maybeSingle:vi.fn(async()=>n++?{data:tasks,error:error?{}:null}:{data:quest,error:error?{}:null}),order:vi.fn(async()=>({data:tasks,error:null}))};m.auth.mockResolvedValue({data:{user:{id:"owner"}}});m.from.mockReturnValue(q);m.createClient.mockResolvedValue({auth:{getUser:m.auth},from:m.from});}
+function client(quest:unknown,tasks:unknown,error=false){let n=0;const q={select:vi.fn().mockReturnThis(),eq:vi.fn().mockReturnThis(),maybeSingle:vi.fn(async()=>n++?{data:tasks,error:error?{}:null}:{data:quest,error:error?{}:null}),order:vi.fn()};q.order.mockReturnValueOnce(q).mockResolvedValueOnce({data:tasks,error:null});m.auth.mockResolvedValue({data:{user:{id:"owner"}}});m.from.mockReturnValue(q);m.createClient.mockResolvedValue({auth:{getUser:m.auth},from:m.from});}
 function publicationClient(data: unknown, error: unknown = null, user: unknown = { id: "owner" }) {
   m.auth.mockResolvedValue({ data: { user } });
   m.rpc.mockResolvedValue({ data, error });

@@ -134,7 +134,8 @@ export async function getOwnedQuestTasks(
     .from("quest_tasks")
     .select("*")
     .eq("quest_id", questId)
-    .order("sort_order");
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("id", { ascending: true });
 
   if (error) {
     throw error;

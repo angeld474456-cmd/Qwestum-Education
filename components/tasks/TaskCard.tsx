@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 
 import { QuestTask } from "@/services/quest.service";
 import { getTaskTypeLabel } from "@/components/tasks/editor/TextTaskEditor";
@@ -11,6 +12,11 @@ interface TaskCardProps {
   isSelected: boolean;
   onSelect: () => void;
   onDelete: (id: string) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
+  reorderBusy: boolean;
   onRegisterPencil: (
     taskId: string,
     element: HTMLButtonElement,
@@ -24,6 +30,11 @@ export default function TaskCard({
   isSelected,
   onSelect,
   onDelete,
+  onMoveUp,
+  onMoveDown,
+  canMoveUp,
+  canMoveDown,
+  reorderBusy,
   onRegisterPencil,
 }: TaskCardProps) {
   const pencilElementRef = useRef<HTMLButtonElement | null>(null);
@@ -77,6 +88,36 @@ export default function TaskCard({
         </div>
 
         <div className="flex gap-3">
+
+          <div className="flex gap-2" aria-label="Task order controls">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMoveUp();
+              }}
+              disabled={!canMoveUp || reorderBusy}
+              className="rounded-lg bg-slate-700 p-2 transition hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={`Move task ${index + 1} up`}
+              title="Move task up"
+            >
+              <ArrowUp aria-hidden="true" size={18} />
+            </button>
+
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onMoveDown();
+              }}
+              disabled={!canMoveDown || reorderBusy}
+              className="rounded-lg bg-slate-700 p-2 transition hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={`Move task ${index + 1} down`}
+              title="Move task down"
+            >
+              <ArrowDown aria-hidden="true" size={18} />
+            </button>
+          </div>
 
           <button
             type="button"

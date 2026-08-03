@@ -31,6 +31,7 @@ type QuestTasksClientProps = {
 type TasksResponse = {
   tasks?: QuestTask[];
   task?: QuestTask;
+  taskIds?: string[];
   error?: string;
 };
 
@@ -54,6 +55,7 @@ export default function QuestTasksClient({
   const taskPencilRefs = useRef(new Map<string, HTMLButtonElement>());
   const taskListHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const pendingFocusTargetRef = useRef<PendingFocusTarget | null>(null);
+  const reorderInFlightRef = useRef(false);
   const [focusSignal, setFocusSignal] = useState(0);
 
   useEffect(() => {
@@ -230,6 +232,81 @@ export default function QuestTasksClient({
       setErrorMessage("Не удалось создать задание.");
       return false;
     } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleMoveTask(taskId: string, direction: "up" | "down") {
+    if (busy || reorderInFlightRef.current) return;
+
+    const taskIndex = tasks.findIndex((task) => task.id === taskId);
+    const destinationIndex = direction === "up" ? taskIndex - 1 : taskIndex + 1;
+
+    if (taskIndex < 0 || destinationIndex < 0 || destinationIndex >= tasks.length) {
+      return;
+    }
+
+    const nextTaskIds = tasks.map((task) => task.id);
+    [nextTaskIds[taskIndex], nextTaskIds[destinationIndex]] = [
+      nextTaskIds[destinationIndex],
+      nextTaskIds[taskIndex],
+    ];
+
+    reorderInFlightRef.current = true;
+    setBusy(true);
+    setErrorMessage("");
+    setStatusMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/teacher/quests/${questId}/tasks/order`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ taskIds: nextTaskIds }),
+        }
+      );
+
+      if (isSessionExpiredResponse(response)) {
+        setErrorMessage(SESSION_EXPIRED_MESSAGE);
+        redirectToSessionExpiredLogin();
+        return;
+      }
+
+      const result = (await response.json()) as TasksResponse;
+
+      if (
+        !response.ok ||
+        !Array.isArray(result.taskIds) ||
+        result.taskIds.length !== nextTaskIds.length ||
+        result.taskIds.some((id, index) => id !== nextTaskIds[index])
+      ) {
+        setErrorMessage(
+          "Не удалось изменить порядок заданий. Обновите страницу и попробуйте снова."
+        );
+        return;
+      }
+
+      const taskById = new Map(tasks.map((task) => [task.id, task]));
+      const reorderedTasks = result.taskIds.map((id) => taskById.get(id));
+
+      if (reorderedTasks.some((task) => !task)) {
+        setErrorMessage(
+          "Не удалось изменить порядок заданий. Обновите страницу и попробуйте снова."
+        );
+        return;
+      }
+
+      setTasks(reorderedTasks as QuestTask[]);
+      setStatusMessage("Порядок заданий сохранён.");
+    } catch {
+      setErrorMessage(
+        "Не удалось изменить порядок заданий. Обновите страницу и попробуйте снова."
+      );
+    } finally {
+      reorderInFlightRef.current = false;
       setBusy(false);
     }
   }
@@ -523,6 +600,8 @@ export default function QuestTasksClient({
                 selectedTaskId={selectedTask?.id ?? null}
                 onSelectTask={handleSelectTask}
                 onDelete={handleDeleteTask}
+                onMoveTask={handleMoveTask}
+                reorderBusy={busy}
                 onRegisterTaskPencil={registerTaskPencil}
               />
             )}

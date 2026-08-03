@@ -144,7 +144,8 @@ export async function GET(_request: Request, { params }: RouteContext) {
     .from("quest_tasks")
     .select("*")
     .eq("quest_id", id)
-    .order("sort_order");
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("id", { ascending: true });
 
   if (error) {
     console.error(error);
