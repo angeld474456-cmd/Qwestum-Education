@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.20.23 - Multiple Choice Task Type
+
+- Added teacher-authored `multiple_choice` tasks with ordered `{ id, text }` options and `correctOptionIds`, shared fail-closed validation, readiness support, teacher Preview/Play selection, public checkbox rendering, and structural `selectedOptionIds` submit validation.
+- Migration 019 is live and metadata-verified. Its authoritative public runtime scorer uses exact-set comparison: reordered exact selections are correct; missing or extra selections are incorrect; empty selections are unanswered; no partial credit is awarded.
+- Verified 19 test files / 181 tests, lint, build, and `git diff --check`; local teacher/public browser checks passed. Controlled Preview verification confirmed exact-correct, missing-option incorrect, and empty unanswered results through the deployed submit path without public answer-key exposure.
+- Localhost scoring can fail closed with the existing limiter `503` before the RPC when trusted identity or limiter prerequisites are unavailable; this is infrastructure context, not a Multiple Choice defect. Dedicated task-route Supabase-chain mocks and dedicated MC readiness fixtures remain accepted non-blocking coverage gaps.
+
 ## Teacher Quest Library Text Search
 
 - Completed as PASS in commit `4d930ac` (`Add teacher quest library search`). `/dashboard/quests` now accepts a normalized URL-driven `q` parameter that searches only the existing owner-scoped quest list by title or description, case-insensitively, and combines with Category/Tag filters using AND semantics.

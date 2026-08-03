@@ -852,6 +852,14 @@ No migration, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, provider, depl
 - Live read-only smoke checks confirmed one eligible anonymous fetch row, missing-UUID zero rows, approved observed fetch/task fields only, one valid exact-task-ID unanswered scoring result, unknown-task zero rows, and zero rows for an over-32-KiB payload. Direct anonymous REST requests for `quests` and `quest_tasks` exposed no data. No rollback or migration repair occurred.
 - Verification remains partial. The available CLI dump path requires Docker Desktop, so independent live inspection of function owner/volatility/SECURITY DEFINER/search path/ACLs, RLS, Storage, indexes, and catalog-RPC grants was not completed. No eligible public Single Choice runtime quest was available without mutation, so correct/incorrect, whitespace-only selection, and foreign-option cases were not live exercised. Draft, taskless, malformed/unsupported, deterministic-ordering, and true over-100-answer cases also remain unverified; the reviewed migration source is the basis for their intended behavior.
 
+## Sprint 12.20.23 - Multiple Choice Task Type
+
+- Completed in `d9698bc` (`Add multiple choice task support`). `multiple_choice` task content stores ordered `options: [{ id, text }]` and teacher/server-only `correctOptionIds`. Shared fail-closed validation is used by teacher CREATE, PATCH, and publication readiness.
+- Migration 019 is live and metadata-verified. The authoritative `public.score_public_runtime_quest(...)` scorer uses exact set equality: order does not matter, missing or extra choices are incorrect, empty is unanswered, and no partial credit is awarded.
+- Public runtime exposes only task identity, title, description, and options; it never exposes `correctOptionIds`, raw content, or answer-key data. Teacher Preview may display correct choices; Teacher Play/Test remains selection and completion/progress only.
+- Automated verification passed 19 files / 181 tests, lint, build, and `git diff --check`. Manual teacher/public checks passed. Controlled Preview verification confirmed exact correct, missing-option incorrect, and empty unanswered through the public submit path with no limiter `503` or answer-key leak.
+- A localhost limiter `503` can occur before scoring when trusted identity or Upstash prerequisites are absent. This is infrastructure context, not an open Multiple Choice defect. Dedicated task-route Supabase-chain mocks and dedicated MC readiness fixtures remain accepted non-blocking gaps.
+
 ## Sprint 12.19.7 - Public Runtime Application Integration
 
 - The public runtime application layer is implemented at `/catalog/[id]/start`. It provides anonymous, temporary browser-local play only: `types/public-runtime.ts` defines sanitized application DTOs, and `services/public-runtime.server.ts` is the server-only boundary to `public.get_public_runtime_quest(uuid)` and `public.score_public_runtime_quest(uuid, jsonb)`.

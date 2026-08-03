@@ -462,6 +462,11 @@ Completed:
   - Recent fixes remained unchanged: pencil button, delete event isolation, card selection, selected styling, points editing/persistence, correct-answer persistence, editor save behavior, image controls, Preview, localized copy, and last-Public-task guard.
   - Unchanged scope: no route/API changes, schema/migration/RLS/policy/index changes, task content/type changes, create/save/autosave changes, Storage changes, runtime/student changes, publication safety changes, or deletion-guard changes.
 
+Sprint 12.20.23 - Multiple Choice Task Type
+
+- Completed: owner authoring, shared validation, readiness, teacher preview/play selection, public checkbox runtime, and authoritative exact-set/no-partial-credit scoring through live Migration 019.
+- Verified by 19 files / 181 tests, lint, build, local browser checks, and controlled Preview exact-correct, missing-option, and empty-answer scoring. Public DTOs omit answer keys. Local limiter `503` is an infrastructure diagnostic only; route-mock/readiness-fixture gaps are accepted non-blocking coverage work.
+
 Next:
 
 - Sprint 12.18.29 - Teacher Task Workspace Remaining UX Prioritization.
