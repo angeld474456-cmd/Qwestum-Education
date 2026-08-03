@@ -860,6 +860,13 @@ No migration, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, provider, depl
 - Automated verification passed 19 files / 181 tests, lint, build, and `git diff --check`. Manual teacher/public checks passed. Controlled Preview verification confirmed exact correct, missing-option incorrect, and empty unanswered through the public submit path with no limiter `503` or answer-key leak.
 - A localhost limiter `503` can occur before scoring when trusted identity or Upstash prerequisites are absent. This is infrastructure context, not an open Multiple Choice defect. Dedicated task-route Supabase-chain mocks and dedicated MC readiness fixtures remain accepted non-blocking gaps.
 
+## Sprint 12.20.24 - Teacher Task Ordering
+
+- Completed in `5d830cf` (`Add owner-safe teacher task ordering`). Migration 020 is live and metadata-verified. `public.reorder_owned_quest_tasks(uuid, uuid[])` is an authenticated owner-only, atomic full-list reorder boundary: it locks the parent quest and current child tasks, validates exact membership, and normalizes `sort_order` contiguously to `1..N`.
+- Teacher workspace, Preview/Play shared reads, publication readiness, and public runtime use deterministic `sort_order ASC NULLS LAST, id ASC` ordering. The teacher UI provides accessible Move Up/Move Down controls, sends the complete task-ID list pessimistically, uses a synchronous rapid-click guard, and retains selected-task identity after a confirmed reorder.
+- Focused ordering tests passed 2 files / 8 tests; the full suite passed 21 files / 189 tests; lint, build, and `git diff --check` passed. Browser verification confirmed persistence, boundary controls, selection stability, Preview/Play/Public Start consistency, and one reorder under rapid double-click.
+- No public DTO, task content, media, answer-key, or scoring contract changed. Current task creation's count-plus-one race remains outside reorder scope; no reorder control DOM harness exists, but manual interaction verification passed. No unique `(quest_id, sort_order)` constraint or index was added because neither is required for current correctness or scale.
+
 ## Sprint 12.19.7 - Public Runtime Application Integration
 
 - The public runtime application layer is implemented at `/catalog/[id]/start`. It provides anonymous, temporary browser-local play only: `types/public-runtime.ts` defines sanitized application DTOs, and `services/public-runtime.server.ts` is the server-only boundary to `public.get_public_runtime_quest(uuid)` and `public.score_public_runtime_quest(uuid, jsonb)`.

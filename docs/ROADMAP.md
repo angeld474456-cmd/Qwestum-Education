@@ -467,13 +467,16 @@ Sprint 12.20.23 - Multiple Choice Task Type
 - Completed: owner authoring, shared validation, readiness, teacher preview/play selection, public checkbox runtime, and authoritative exact-set/no-partial-credit scoring through live Migration 019.
 - Verified by 19 files / 181 tests, lint, build, local browser checks, and controlled Preview exact-correct, missing-option, and empty-answer scoring. Public DTOs omit answer keys. Local limiter `503` is an infrastructure diagnostic only; route-mock/readiness-fixture gaps are accepted non-blocking coverage work.
 
+Sprint 12.20.24 - Teacher Task Ordering
+
+- Completed: live Migration 020 provides authenticated owner-safe atomic full-list task ordering through `public.reorder_owned_quest_tasks(uuid, uuid[])`; parent and child locks, exact membership validation, and contiguous `1..N` normalization prevent partial or stale reorders.
+- Teacher Move Up/Move Down controls persist pessimistically with a synchronous rapid-click guard and preserve selected-task identity. Teacher and public reads use `sort_order ASC NULLS LAST, id ASC`; focused 2-file/8-test and full 21-file/189-test verification, lint, build, and browser checks passed.
+- No public DTO, content, media, answer-key, scoring, index, or unique-order constraint changed. The existing create count-plus-one race and absent DOM control harness remain non-blocking notes; manual interaction verification passed.
+
 Next:
 
-- Sprint 12.18.29 - Teacher Task Workspace Remaining UX Prioritization.
-  - Reassess remaining P2 findings.
-  - Review clickable task-card semantic keyboard behavior, selected-card state beyond color alone, unsaved-change indication, required-field clarity, and inline validation.
-  - Prioritize only launch-relevant improvements and avoid redesigning stable workspace behavior.
-  - Planning only until architecture approval.
+- Core MVP Next Milestone Planning.
+  - Planning-only handoff: select the next smallest coherent MVP milestone before implementation approval while preserving the separate P0 pre-production gates.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.

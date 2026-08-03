@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.24 - Teacher Task Ordering
+
+- Added live Migration 020 and the owner-safe atomic `public.reorder_owned_quest_tasks(uuid, uuid[])` boundary. It locks the owned quest and tasks, validates the full unique task membership, and normalizes `sort_order` to contiguous `1..N` values.
+- Added accessible teacher Move Up/Move Down controls with pessimistic persistence, synchronous rapid-click protection, selected-task stability, and deterministic `sort_order ASC NULLS LAST, id ASC` task reads across teacher/public flows.
+- Verified by focused 2-file/8-test and full 21-file/189-test suites, lint, build, `git diff --check`, and browser checks for persistence, boundaries, selection, Preview/Play/Public Start order, and rapid clicks. No public DTO, content, media, answer-key, or scoring contract changed.
+
 ## Sprint 12.20.23 - Multiple Choice Task Type
 
 - Added teacher-authored `multiple_choice` tasks with ordered `{ id, text }` options and `correctOptionIds`, shared fail-closed validation, readiness support, teacher Preview/Play selection, public checkbox rendering, and structural `selectedOptionIds` submit validation.

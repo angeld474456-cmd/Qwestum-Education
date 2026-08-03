@@ -826,6 +826,14 @@ Migration 019 makes `public.score_public_runtime_quest(uuid, jsonb)` the sole co
 
 The existing `getOwnedQuests()` read, no-client-Supabase boundary, no pagination, and no sorting remain unchanged. `tests/lib/teacher-quest-library-filters.test.ts` covers normalization, title/description matching, null descriptions, and conjunction with category/tag filtering. Reset uses the clean `/dashboard/quests` route and the filter form remounts from URL-derived state so `q`, category, and tag are all cleared without stale uncontrolled-field values. No public route, API, database, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, provider, or deployment boundary was introduced.
 
+## Teacher Task Ordering Boundary
+
+Migration 020 provides `public.reorder_owned_quest_tasks(uuid, uuid[])` as the authenticated owner-only atomic reorder authority. It locks the owned parent quest, locks its current tasks, requires the complete unique membership list, then writes contiguous `sort_order` values `1..N`. The function returns zero rows for missing, foreign, stale, or malformed membership; no service role, direct browser write, task content, media, or answer data participates.
+
+`PATCH /api/teacher/quests/[id]/tasks/order` accepts only a bounded complete `{ taskIds }` list. Its server-only service validates the returned IDs and `1..N` sort-order sequence before returning an allowlisted `{ taskIds }` response. `QuestTasksClient` uses accessible Move Up/Move Down buttons with a synchronous in-flight guard and pessimistic local update, retaining the selected task by ID. Teacher workspace, Preview/Play, publication readiness, and public runtime order tasks by `sort_order ASC NULLS LAST, id ASC`.
+
+No unique `(quest_id, sort_order)` constraint or ordering index was introduced: the lock-and-complete-list RPC is the current correctness boundary, and the expected task volume does not justify an index. The existing creation count-plus-one race is outside this reorder boundary.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:
