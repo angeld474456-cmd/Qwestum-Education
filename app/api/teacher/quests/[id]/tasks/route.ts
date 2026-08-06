@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
+import { createOwnedQuestTask } from "@/services/teacher-task-creation.server";
 
 const allowedTaskTypes = new Set(["text", "single_choice", "multiple_choice"]);
 const uuidPattern =
@@ -188,65 +189,35 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const ownedQuest = await getOwnedQuest(supabase, id);
+  const result = await createOwnedQuestTask({
+    questId: id,
+    title: parsed.data.title,
+    description: parsed.data.description,
+    answer: parsed.data.answer,
+    hint: parsed.data.hint,
+    points: parsed.data.points,
+    taskType: parsed.data.task_type,
+    content: parsed.data.content ?? null,
+  });
 
-  if (ownedQuest.status === "unauthorized") {
+  if (result.status === "ok") {
+    return NextResponse.json({ task: result.task });
+  }
+
+  if (result.status === "unauthorized") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  if (ownedQuest.status === "not_found") {
+  if (result.status === "not_found") {
     return NextResponse.json({ error: "Quest not found." }, { status: 404 });
   }
 
-  if (ownedQuest.status === "error") {
-    return NextResponse.json(
-      { error: "Unable to create task." },
-      { status: 500 }
-    );
+  if (result.status === "task_limit_reached") {
+    return NextResponse.json({ error: "Task limit reached." }, { status: 409 });
   }
 
-  const { count, error: countError } = await supabase
-    .from("quest_tasks")
-    .select("id", { count: "exact", head: true })
-    .eq("quest_id", id);
-
-  if (countError) {
-    console.error(countError);
-    return NextResponse.json(
-      { error: "Unable to create task." },
-      { status: 500 }
-    );
-  }
-
-  const { data, error } = await supabase
-    .from("quest_tasks")
-    .insert({
-      quest_id: id,
-      title: parsed.data.title,
-      description: parsed.data.description,
-      answer: parsed.data.answer,
-      hint: parsed.data.hint,
-      image_url: "",
-      video_url: "",
-      audio_url: "",
-      points: parsed.data.points,
-      task_type: parsed.data.task_type,
-      ...(parsed.data.content ? { content: parsed.data.content } : {}),
-      sort_order: (count ?? 0) + 1,
-    })
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Unable to create task." },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({
-    task: data,
-  });
+  return NextResponse.json(
+    { error: "Unable to create task." },
+    { status: 500 }
+  );
 }
