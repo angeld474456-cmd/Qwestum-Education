@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.20.25 - Teacher Task Creation Ordering Concurrency Hardening
+
+- Replaced the teacher task-create route's race-prone count-plus-one/direct-insert path with the server-only `create_owned_quest_task` boundary backed by live, metadata-verified Migration 021. The authenticated owner-only RPC locks the owned parent quest first, then its child tasks, which serializes concurrent creates and remains compatible with Migration 020 reorders.
+- The RPC enforces the authoritative 100-task cap, accepts no client-controlled owner, media, or sort position, and returns fixed outcome rows for the application boundary: owner-safe not-found, deterministic task-limit `409`, and generic handling for malformed, unknown, multi-row, or database-error outcomes.
+- Legacy nullable ordering is normalized only when needed, preserving `sort_order ASC NULLS LAST, id ASC`; an `INT_MAX` maximum follows the same normalization path before arithmetic. Otherwise it appends at `MAX(sort_order) + 1`, so every newly created task reads last.
+- Verified by focused 2-file/9-test and full 23-file/198-test suites, lint, build, and `git diff --check`. Browser verification passed for all three task types, refresh and reorder persistence, and two-tab creation; controlled read-only evidence showed sequential positions 7 and 8. No public runtime, catalog, scoring, RLS, Storage, Auth, or provider boundary changed.
+
 ## Sprint 12.20.24 - Teacher Task Ordering
 
 - Added live Migration 020 and the owner-safe atomic `public.reorder_owned_quest_tasks(uuid, uuid[])` boundary. It locks the owned quest and tasks, validates the full unique task membership, and normalizes `sort_order` to contiguous `1..N` values.

@@ -471,7 +471,15 @@ Sprint 12.20.24 - Teacher Task Ordering
 
 - Completed: live Migration 020 provides authenticated owner-safe atomic full-list task ordering through `public.reorder_owned_quest_tasks(uuid, uuid[])`; parent and child locks, exact membership validation, and contiguous `1..N` normalization prevent partial or stale reorders.
 - Teacher Move Up/Move Down controls persist pessimistically with a synchronous rapid-click guard and preserve selected-task identity. Teacher and public reads use `sort_order ASC NULLS LAST, id ASC`; focused 2-file/8-test and full 21-file/189-test verification, lint, build, and browser checks passed.
-- No public DTO, content, media, answer-key, scoring, index, or unique-order constraint changed. The existing create count-plus-one race and absent DOM control harness remain non-blocking notes; manual interaction verification passed.
+- No public DTO, content, media, answer-key, scoring, index, or unique-order constraint changed. At the close of this sprint, the route-side create count-plus-one race and absent DOM control harness were non-blocking notes; Sprint 12.20.25 resolves the create race below, while the manual interaction verification remains valid.
+
+Sprint 12.20.25 - Teacher Task Creation Ordering Concurrency Hardening
+
+- Completed: live, metadata-verified Migration 021 provides `public.create_owned_quest_task(...)` as the authenticated owner-only atomic task-create boundary. It locks the owned parent quest before child tasks, serializing create/create and remaining compatible with Migration 020 reorder locking.
+- The route now delegates through `services/teacher-task-creation.server.ts`; its former route-side count-plus-one calculation and direct `quest_tasks` insert are removed. Zero RPC rows remain owner-safe not-found, `task_limit_reached` is a fixed deterministic `409`, and malformed or unexpected RPC output is a generic `500`.
+- The authoritative cap is 100 tasks. Legacy NULL positions are normalized in current deterministic read order (`sort_order ASC NULLS LAST, id ASC`) before appending; the same path prevents `INT_MAX` overflow. Ordinary numeric gaps, duplicates, and negative positions are not rewritten.
+- Focused 2-file/9-test and full 23-file/198-test suites, lint, build, and `git diff --check` passed. Manual checks covered Text, Single Choice, and Multiple Choice append behavior, refresh/reorder persistence, and concurrent two-tab creation; read-only evidence recorded sequential positions 7 and 8.
+- No public runtime, catalog, scoring, RLS, Storage, Auth, provider, index, or unique-order constraint changed. Direct authenticated base-table task insertion, retry/idempotency semantics, and an ordering index remain separate scope.
 
 Next:
 

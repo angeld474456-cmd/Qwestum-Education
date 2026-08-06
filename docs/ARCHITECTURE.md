@@ -832,7 +832,17 @@ Migration 020 provides `public.reorder_owned_quest_tasks(uuid, uuid[])` as the a
 
 `PATCH /api/teacher/quests/[id]/tasks/order` accepts only a bounded complete `{ taskIds }` list. Its server-only service validates the returned IDs and `1..N` sort-order sequence before returning an allowlisted `{ taskIds }` response. `QuestTasksClient` uses accessible Move Up/Move Down buttons with a synchronous in-flight guard and pessimistic local update, retaining the selected task by ID. Teacher workspace, Preview/Play, publication readiness, and public runtime order tasks by `sort_order ASC NULLS LAST, id ASC`.
 
-No unique `(quest_id, sort_order)` constraint or ordering index was introduced: the lock-and-complete-list RPC is the current correctness boundary, and the expected task volume does not justify an index. The existing creation count-plus-one race is outside this reorder boundary.
+No unique `(quest_id, sort_order)` constraint or ordering index was introduced: the lock-and-complete-list RPC is the current correctness boundary, and the expected task volume does not justify an index. Sprint 12.20.25 supersedes the former route-side creation count-plus-one path with the compatible atomic create boundary below.
+
+## Atomic Teacher Task Creation Boundary
+
+Migration 021 provides `public.create_owned_quest_task(p_quest_id uuid, p_title text, p_description text, p_answer text, p_hint text, p_points integer, p_task_type text, p_content jsonb)` as the authenticated owner-only task-creation authority. It uses `SECURITY DEFINER` with a fixed search path, locks the owned parent quest `FOR UPDATE` first, then locks child task rows. That parent-first order serializes concurrent creates and is compatible with the Migration 020 reorder boundary.
+
+The server-only `services/teacher-task-creation.server.ts` maps its explicit RPC outcome DTO into the teacher route's fixed contracts: zero rows are owner-safe not-found, an all-null `task_limit_reached` outcome becomes a deterministic `409`, and RPC errors or malformed, unknown, or multi-row output become generic internal errors. The route no longer computes task counts or inserts `quest_tasks` directly, and neither owner identity, media URLs, nor `sort_order` are client-controlled.
+
+The RPC counts children under the parent lock and applies the 100-task cap before normalization, arithmetic, or insert. If legacy rows contain a NULL position, it first normalizes the deterministic visible order `sort_order ASC NULLS LAST, id ASC` to contiguous `1..N`; if the numeric maximum is `INT_MAX`, it uses the same normalization to avoid overflow. Otherwise, including ordinary gaps, duplicate numeric positions, or negative positions, it allocates `MAX(sort_order) + 1`. New tasks therefore append last without changing ordinary legacy numeric values.
+
+The existing direct authenticated base-table `quest_tasks` INSERT policy, retry/idempotency duplicate semantics, a unique `(quest_id, sort_order)` constraint, and an ordering index are separate scope. No public runtime, catalog, scoring, RLS, Storage, Auth, or provider boundary changed.
 
 ## Current Publication Architecture
 
