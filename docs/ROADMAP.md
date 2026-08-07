@@ -488,6 +488,13 @@ Sprint 12.20.26 - Teacher Task Creation Boundary Enforcement
 - Text, Single Choice, and Multiple Choice creation passed after the policy change. The full 23-file/198-test suite, lint, build, and `git diff --check` passed. No public runtime, catalog, scoring, Storage, Auth, provider, index, or unique-order constraint changed.
 - Broader teacher write-boundary unification and create retry/idempotency remain separate scope.
 
+Sprint 12.20.27 - Owner-Safe Teacher Task Deletion Boundary
+
+- Completed: live, metadata-verified Migration 023 establishes `public.delete_owned_quest_task(p_quest_id uuid, p_task_id uuid)` as the authenticated owner-safe atomic task-deletion boundary. It derives ownership from `auth.uid()`, locks the parent quest before child work, enforces membership, and keeps the final-Public-task guard inside the serialized RPC.
+- The route-side public-task count-then-delete race is removed. Parent-first locking remains compatible with Migration 020 reorder and Migration 021 create; manual two-tab deletion against a two-task Public quest left exactly one task. Strict service result validation maps zero rows to owner-safe not-found, the exact last-Public-task outcome to the existing fixed conflict response, and malformed or failed RPC output to a generic failure.
+- Live, policy-verified Migration 024 drops only the direct authenticated `Teachers can delete tasks for own quests` policy. `public.quest_tasks` remains RLS-enabled with SELECT and UPDATE present and INSERT and DELETE absent. Canonical image cleanup runs only after confirmed deletion and remains one-shot best-effort: returned or thrown Storage failures preserve successful deletion with `storageDeleted: false`.
+- Focused 2-file/16-test and full 25-file/214-test suites, lint, build, and `git diff --check` passed. Browser verification passed for Draft deletion, non-final Public deletion, final-Public-task blocking, and concurrent deletion. PATCH/image mutation hardening, optimistic concurrency/versioning, tolerated sort-order gaps after deletion, and orphan Storage cleanup tooling remain separate scope; no public runtime, catalog, scoring, Storage policy, Auth, or provider change was made.
+
 Next:
 
 - Core MVP Next Milestone Planning.

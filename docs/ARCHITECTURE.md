@@ -846,6 +846,14 @@ Migration 022 removes the legacy authenticated `Teachers can insert tasks for ow
 
 Broader teacher write-boundary unification, retry/idempotency duplicate semantics, a unique `(quest_id, sort_order)` constraint, and an ordering index are separate scope. No public runtime, catalog, scoring, Storage, Auth, or provider boundary changed.
 
+## Atomic Teacher Task Deletion Boundary
+
+Migration 023 provides `public.delete_owned_quest_task(p_quest_id uuid, p_task_id uuid)` as the authenticated owner-safe atomic task-deletion authority. It derives the owner from `auth.uid()`, locks the owned parent quest `FOR UPDATE` before the target child task, verifies membership, and keeps the final-Public-task guard within that serialized operation. This replaces the former route-side count-then-delete sequence, which could race concurrent deletes of a two-task Public quest. Its parent-first lock order is compatible with Migration 020 reorder and Migration 021 creation.
+
+The server-only deletion service calls the RPC exactly once with only `p_quest_id` and `p_task_id`, then accepts only exact outcome shapes: zero rows for owner-safe not-found, the all-null `last_public_task` conflict, or a matching deleted task ID with an optional server-held image URL. Migration 024 removes the direct authenticated `Teachers can delete tasks for own quests` policy. RLS remains enabled with SELECT and UPDATE present, and INSERT and DELETE absent; direct browser base-table deletion is no longer an available path.
+
+The DELETE route performs canonical, one-shot Storage image cleanup only after confirmed database deletion. Cleanup is best-effort: returned Storage errors and thrown exceptions result in the successful delete contract with `storageDeleted: false`, never a post-delete `500`. Delete leaves tolerated `sort_order` gaps; it does not renumber tasks. PATCH/image mutation boundary hardening, optimistic concurrency/versioning, and orphan Storage cleanup tooling remain separate scope. No public runtime, catalog, scoring, public DTO, or provider boundary changed.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

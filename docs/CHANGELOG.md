@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.20.27 - Owner-Safe Teacher Task Deletion Boundary
+
+- Added live, metadata-verified Migration 023 and the server-only `delete_owned_quest_task(p_quest_id, p_task_id)` path. The authenticated owner-safe RPC locks the parent quest before child work, validates membership, and makes the final-Public-task guard authoritative under the same lock, removing the prior route-side count-then-delete race.
+- Added live, policy-verified Migration 024, which removes only `Teachers can delete tasks for own quests`. `public.quest_tasks` remains RLS-enabled with SELECT and UPDATE policies present and direct authenticated INSERT and DELETE policies absent. The deletion service calls the RPC once with only IDs and strictly validates its fixed outcomes.
+- Hardened post-delete canonical image cleanup: it starts only after confirmed database deletion and is one-shot best-effort, so returned Storage errors and thrown cleanup exceptions preserve the successful response with `storageDeleted: false` rather than returning a misleading `500`.
+- Verified by focused 2-file/16-test and full 25-file/214-test suites, lint, build, and `git diff --check`; browser checks passed for Draft/non-final-Public deletion, final-Public-task blocking, and two-tab concurrent deletion of a two-task Public quest, leaving exactly one task. No PATCH, image route, public runtime, catalog, scoring, Storage policy, Auth, or provider boundary changed.
+
 ## Sprint 12.20.26 - Teacher Task Creation Boundary Enforcement
 
 - Added live, policy-verified Migration 022, which removes only the legacy authenticated `public.quest_tasks` INSERT policy, `Teachers can insert tasks for own quests`. RLS remains enabled; the existing SELECT, UPDATE, and DELETE policies remain unchanged, and no replacement direct INSERT policy exists.
