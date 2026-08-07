@@ -6,6 +6,7 @@ import {
 } from "@/lib/storage/quest-image.server";
 import { createClient } from "@/lib/supabase/server";
 import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
+import { deleteOwnedQuestTask } from "@/services/teacher-task-deletion.server";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -290,131 +291,61 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
-  const supabase = await createClient();
-  const ownedQuest = await getOwnedQuest(supabase, id);
+  const result = await deleteOwnedQuestTask(id, taskId);
 
-  if (ownedQuest.status === "unauthorized") {
+  if (result.status === "unauthorized") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  if (ownedQuest.status === "not_found") {
+  if (result.status === "not_found") {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
-  if (ownedQuest.status === "error") {
+  if (result.status === "last_public_task") {
+    return NextResponse.json(
+      {
+        error:
+          "\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0441\u043d\u0438\u043c\u0438\u0442\u0435 \u043a\u0432\u0435\u0441\u0442 \u0441 \u043f\u0443\u0431\u043b\u0438\u043a\u0430\u0446\u0438\u0438, \u0437\u0430\u0442\u0435\u043c \u0443\u0434\u0430\u043b\u0438\u0442\u0435 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0435\u0435 \u0437\u0430\u0434\u0430\u043d\u0438\u0435.",
+      },
+      { status: 400 }
+    );
+  }
+
+
+  if (result.status === "error") {
     return NextResponse.json(
       { error: "Unable to delete task." },
       { status: 500 }
     );
   }
 
-  if (ownedQuest.isPublic) {
-    const { data: currentTask, error: currentTaskError } = await supabase
-      .from("quest_tasks")
-      .select("id")
-      .eq("id", taskId)
-      .eq("quest_id", id)
-      .maybeSingle();
+  let storageDeleted = false;
 
-    if (currentTaskError) {
-      console.error("Task lookup failed before public task deletion.", {
-        questId: id,
-        taskId,
-        error: currentTaskError.message,
-      });
-      return NextResponse.json(
-        { error: "Unable to delete task." },
-        { status: 500 }
+  if (result.imageUrl) {
+    try {
+      const supabase = await createClient();
+      const objectPath = getSafeQuestImageObjectPath(
+        result.imageUrl,
+        result.userId,
+        id,
+        taskId
       );
-    }
 
-    if (!currentTask) {
-      return NextResponse.json({ error: "Task not found." }, { status: 404 });
-    }
+      if (objectPath) {
+        const { error: cleanupError } = await supabase.storage
+          .from(questImageBucketName)
+          .remove([objectPath]);
 
-    const { count, error: taskCountError } = await supabase
-      .from("quest_tasks")
-      .select("id", { count: "exact", head: true })
-      .eq("quest_id", id);
-
-    if (taskCountError) {
-      console.error("Task count lookup failed before public task deletion.", {
-        questId: id,
-        taskId,
-        error: taskCountError.message,
-      });
-      return NextResponse.json(
-        { error: "Unable to delete task." },
-        { status: 500 }
-      );
-    }
-
-    if ((count ?? 0) <= 1) {
-      return NextResponse.json(
-        {
-          error:
-            "Сначала снимите квест с публикации, затем удалите последнее задание.",
-        },
-        { status: 400 }
-      );
-    }
-  }
-
-  const { data, error } = await supabase
-    .from("quest_tasks")
-    .delete()
-    .eq("id", taskId)
-    .eq("quest_id", id)
-    .select("id, image_url")
-    .maybeSingle<OwnedTaskImage>();
-
-  if (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Unable to delete task." },
-      { status: 500 }
-    );
-  }
-
-  if (!data) {
-    return NextResponse.json({ error: "Task not found." }, { status: 404 });
-  }
-
-  if (data.image_url) {
-    const objectPath = getSafeQuestImageObjectPath(
-      data.image_url,
-      ownedQuest.userId,
-      id,
-      taskId
-    );
-
-    if (objectPath) {
-      const { error: cleanupError } = await supabase.storage
-        .from(questImageBucketName)
-        .remove([objectPath]);
-
-      if (cleanupError) {
-        console.warn("Quest image cleanup failed after task deletion.", {
-          questId: id,
-          taskId,
-          error: cleanupError.message,
-        });
-
-        return NextResponse.json({
-          ok: true,
-          storageDeleted: false,
-        });
+        storageDeleted = !cleanupError;
       }
-
-      return NextResponse.json({
-        ok: true,
-        storageDeleted: true,
-      });
+    } catch {
+      // The database deletion is already final; cleanup remains best-effort.
+      storageDeleted = false;
     }
   }
 
   return NextResponse.json({
     ok: true,
-    storageDeleted: false,
+    storageDeleted,
   });
 }
