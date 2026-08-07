@@ -854,6 +854,14 @@ The server-only deletion service calls the RPC exactly once with only `p_quest_i
 
 The DELETE route performs canonical, one-shot Storage image cleanup only after confirmed database deletion. Cleanup is best-effort: returned Storage errors and thrown exceptions result in the successful delete contract with `storageDeleted: false`, never a post-delete `500`. Delete leaves tolerated `sort_order` gaps; it does not renumber tasks. PATCH/image mutation boundary hardening, optimistic concurrency/versioning, and orphan Storage cleanup tooling remain separate scope. No public runtime, catalog, scoring, public DTO, or provider boundary changed.
 
+## Atomic Teacher Task Metadata and Content Update Boundary
+
+Migration 025 provides `public.update_owned_quest_task_content(p_quest_id uuid, p_task_id uuid, p_title text, p_description text, p_points integer, p_content jsonb)` as the authenticated owner-safe authority for teacher task metadata and content updates. It locks the owned parent quest `FOR UPDATE` before the target child task, preserving the parent-first lock order used by Migration 020 reorder, Migration 021 creation, and Migration 023 deletion. The RPC derives ownership from `auth.uid()`, accepts no task type, quest reassignment, sort position, or media field, and returns the full existing task DTO for PATCH compatibility.
+
+`PATCH /api/teacher/quests/[id]/tasks/[taskId]` delegates metadata/content changes once through `services/teacher-task-update.server.ts`. The route validates title (maximum 500 characters), description (maximum 10,000 characters), positive safe-integer points, content shape, and Multiple Choice content before the RPC. Zero rows remain owner-safe not-found; malformed, multi-row, or provider output becomes a generic failure. A mixed metadata plus `image_url` payload receives fixed HTTP 400 and performs no write.
+
+Image writes intentionally remain outside this RPC boundary: image-only PATCH and compare-and-clear image removal still use the existing direct owner-scoped UPDATE policy. Image replacement cleanup starts only after the database update and is best-effort; returned Storage errors and thrown exceptions cannot turn a committed image update into HTTP 500. A future image set/clear RPC migration must replace both image paths before the direct UPDATE policy can be removed. Optimistic concurrency/versioning and published quests edited into runtime-ineligible states remain separate scope; public DTOs, runtime, catalog, scoring, Auth, and provider boundaries are unchanged.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

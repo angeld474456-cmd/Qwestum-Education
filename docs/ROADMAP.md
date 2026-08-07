@@ -495,6 +495,13 @@ Sprint 12.20.27 - Owner-Safe Teacher Task Deletion Boundary
 - Live, policy-verified Migration 024 drops only the direct authenticated `Teachers can delete tasks for own quests` policy. `public.quest_tasks` remains RLS-enabled with SELECT and UPDATE present and INSERT and DELETE absent. Canonical image cleanup runs only after confirmed deletion and remains one-shot best-effort: returned or thrown Storage failures preserve successful deletion with `storageDeleted: false`.
 - Focused 2-file/16-test and full 25-file/214-test suites, lint, build, and `git diff --check` passed. Browser verification passed for Draft deletion, non-final Public deletion, final-Public-task blocking, and concurrent deletion. PATCH/image mutation hardening, optimistic concurrency/versioning, tolerated sort-order gaps after deletion, and orphan Storage cleanup tooling remain separate scope; no public runtime, catalog, scoring, Storage policy, Auth, or provider change was made.
 
+Sprint 12.20.28A - Teacher Task Metadata/Content Update Boundary
+
+- Completed: live, metadata-verified Migration 025 establishes `public.update_owned_quest_task_content(p_quest_id uuid, p_task_id uuid, p_title text, p_description text, p_points integer, p_content jsonb)` as the authenticated owner-safe metadata/content update boundary. It locks the owned parent before the target task and is compatible with Migration 020 reorder, Migration 021 create, and Migration 023 delete.
+- The teacher PATCH route delegates once through `services/teacher-task-update.server.ts`, with title maximum 500, description maximum 10,000, positive safe-integer points, content, and Multiple Choice validation before the RPC. The RPC accepts no owner, task type, quest reassignment, sort order, or media input; zero rows are owner-safe 404 and malformed, multi-row, or provider output is generic 500. Mixed metadata and image input returns fixed 400 without a write.
+- Image-only PATCH and image compare-and-clear remain direct, so the direct authenticated UPDATE policy remains intentionally present. Replacement cleanup remains best-effort after the database commit, including thrown Storage exceptions. Focused 2-file/19-test and full 26-file/224-test suites, lint, build, `git diff --check`, and Text/Single Choice/Multiple Choice plus image browser checks passed.
+- Next: migrate image set and clear paths to dedicated owner-safe database mutation boundaries; remove the direct UPDATE policy only after both image write paths no longer rely on it. Optimistic concurrency/versioning and publication eligibility after edits remain separate scope.
+
 Next:
 
 - Core MVP Next Milestone Planning.
