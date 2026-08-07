@@ -7,6 +7,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
 import { deleteOwnedQuestTask } from "@/services/teacher-task-deletion.server";
+import { updateOwnedQuestTask } from "@/services/teacher-task-update.server";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -30,6 +31,10 @@ type OwnedTaskImage = {
   id: string;
   image_url: string | null;
   task_type: string;
+  title: string;
+  description: string | null;
+  points: number;
+  content: Record<string, unknown> | null;
 };
 
 async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>, questId: string) {
@@ -70,31 +75,51 @@ async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>,
   };
 }
 
-function parseUpdateTaskPayload(body: UpdateTaskPayload) {
+function parseUpdateTaskPayload(body: unknown) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return { error: "Invalid request." };
+  }
+
+  const payload = body as UpdateTaskPayload;
+  const metadataKeys = ["title", "description", "points", "content"] as const;
+  const hasMetadata = metadataKeys.some((key) => key in payload);
+  const hasImageUrl = "image_url" in payload;
+
+  if (hasMetadata && hasImageUrl) {
+    return { error: "Image updates must be sent separately." };
+  }
+
   const updates: Record<string, unknown> = {};
 
-  if ("title" in body) {
-    if (typeof body.title !== "string" || !body.title.trim()) {
+  if ("title" in payload) {
+    if (
+      typeof payload.title !== "string" ||
+      !payload.title.trim() ||
+      payload.title.length > 500
+    ) {
       return {
         error: "Title is required.",
       };
     }
 
-    updates.title = body.title.trim();
+    updates.title = payload.title.trim();
   }
 
-  if ("description" in body) {
-    if (typeof body.description !== "string") {
+  if ("description" in payload) {
+    if (
+      typeof payload.description !== "string" ||
+      payload.description.length > 10000
+    ) {
       return {
         error: "Description must be text.",
       };
     }
 
-    updates.description = body.description.trim();
+    updates.description = payload.description.trim();
   }
 
-  if ("points" in body) {
-    const points = body.points;
+  if ("points" in payload) {
+    const points = payload.points;
 
     if (
       typeof points !== "number" ||
@@ -110,27 +135,27 @@ function parseUpdateTaskPayload(body: UpdateTaskPayload) {
     updates.points = points;
   }
 
-  if ("content" in body) {
+  if ("content" in payload) {
     if (
-      body.content !== null &&
-      (typeof body.content !== "object" || Array.isArray(body.content))
+      payload.content !== null &&
+      (typeof payload.content !== "object" || Array.isArray(payload.content))
     ) {
       return {
         error: "Content must be an object or null.",
       };
     }
 
-    updates.content = body.content;
+    updates.content = payload.content;
   }
 
-  if ("image_url" in body) {
-    if (typeof body.image_url !== "string" && body.image_url !== null) {
+  if (hasImageUrl) {
+    if (typeof payload.image_url !== "string" && payload.image_url !== null) {
       return {
         error: "Image URL must be text or null.",
       };
     }
 
-    updates.image_url = body.image_url;
+    updates.image_url = payload.image_url;
   }
 
   if (Object.keys(updates).length === 0) {
@@ -139,9 +164,9 @@ function parseUpdateTaskPayload(body: UpdateTaskPayload) {
     };
   }
 
-  return {
-    data: updates,
-  };
+  return hasImageUrl
+    ? { kind: "image" as const, data: updates }
+    : { kind: "metadata" as const, data: updates };
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
@@ -151,7 +176,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
-  let body: UpdateTaskPayload;
+  let body: unknown;
 
   try {
     body = await request.json();
@@ -190,14 +215,13 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     );
   }
 
-  let previousImageUrl: string | null = null;
-  const isImageUrlUpdate = "image_url" in parsed.data;
-  const isContentUpdate = "content" in parsed.data;
+  const isImageUrlUpdate = parsed.kind === "image";
+  const isContentUpdate = parsed.kind === "metadata" && "content" in parsed.data;
 
-  if (isImageUrlUpdate || isContentUpdate) {
+  if (isImageUrlUpdate || parsed.kind === "metadata") {
     const { data: currentTask, error: currentTaskError } = await supabase
       .from("quest_tasks")
-      .select("id, image_url, task_type")
+      .select("id, image_url, task_type, title, description, points, content")
       .eq("id", taskId)
       .eq("quest_id", id)
       .maybeSingle<OwnedTaskImage>();
@@ -218,70 +242,104 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: "Task not found." }, { status: 404 });
     }
 
-    if (
-      isContentUpdate &&
-      currentTask.task_type === "multiple_choice" &&
-      !parseMultipleChoiceContent(parsed.data.content)
-    ) {
+    const content = isContentUpdate ? parsed.data.content : currentTask.content;
+
+    if (currentTask.task_type === "multiple_choice" && !parseMultipleChoiceContent(content)) {
       return NextResponse.json(
         { error: "Multiple Choice content is invalid." },
         { status: 400 }
       );
     }
 
-    previousImageUrl = currentTask.image_url;
-  }
+    if (parsed.kind === "metadata") {
+      const result = await updateOwnedQuestTask({
+        questId: id,
+        taskId,
+        title: typeof parsed.data.title === "string" ? parsed.data.title : currentTask.title,
+        description:
+          typeof parsed.data.description === "string"
+            ? parsed.data.description
+            : currentTask.description ?? "",
+        points: typeof parsed.data.points === "number" ? parsed.data.points : currentTask.points,
+        content: content as Record<string, unknown> | null,
+      });
 
-  const { data, error } = await supabase
-    .from("quest_tasks")
-    .update(parsed.data)
-    .eq("id", taskId)
-    .eq("quest_id", id)
-    .select("*")
-    .maybeSingle();
+      if (result.status === "unauthorized") {
+        return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+      }
 
-  if (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Unable to save task." },
-      { status: 500 }
-    );
-  }
+      if (result.status === "not_found") {
+        return NextResponse.json({ error: "Task not found." }, { status: 404 });
+      }
 
-  if (!data) {
-    return NextResponse.json({ error: "Task not found." }, { status: 404 });
-  }
+      if (result.status === "error") {
+        return NextResponse.json(
+          { error: "Unable to save task." },
+          { status: 500 }
+        );
+      }
 
-  if (
-    isImageUrlUpdate &&
-    previousImageUrl &&
-    previousImageUrl !== data.image_url
-  ) {
-    const previousObjectPath = getSafeQuestImageObjectPath(
-      previousImageUrl,
-      ownedQuest.userId,
-      id,
-      taskId
-    );
+      if (result.status !== "updated") {
+        return NextResponse.json(
+          { error: "Unable to save task." },
+          { status: 500 }
+        );
+      }
 
-    if (previousObjectPath) {
-      const { error: cleanupError } = await supabase.storage
-        .from(questImageBucketName)
-        .remove([previousObjectPath]);
+      return NextResponse.json({ task: result.task });
+    }
 
-      if (cleanupError) {
-        console.warn("Quest image cleanup failed after replacement.", {
-          questId: id,
-          taskId,
-          error: cleanupError.message,
-        });
+    const previousImageUrl = currentTask.image_url;
+
+    const { data, error } = await supabase
+      .from("quest_tasks")
+      .update(parsed.data)
+      .eq("id", taskId)
+      .eq("quest_id", id)
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      console.error(error);
+      return NextResponse.json(
+        { error: "Unable to save task." },
+        { status: 500 }
+      );
+    }
+
+    if (!data) {
+      return NextResponse.json({ error: "Task not found." }, { status: 404 });
+    }
+
+    if (previousImageUrl && previousImageUrl !== data.image_url) {
+      try {
+        const previousObjectPath = getSafeQuestImageObjectPath(
+          previousImageUrl,
+          ownedQuest.userId,
+          id,
+          taskId
+        );
+
+        if (previousObjectPath) {
+          const { error: cleanupError } = await supabase.storage
+            .from(questImageBucketName)
+            .remove([previousObjectPath]);
+
+          if (cleanupError) {
+            console.warn("Quest image cleanup failed after replacement.", {
+              questId: id,
+              taskId,
+              error: cleanupError.message,
+            });
+          }
+        }
+      } catch {
+        // The image reference is already persisted; cleanup remains best-effort.
       }
     }
-  }
 
-  return NextResponse.json({
-    task: data,
-  });
+    return NextResponse.json({ task: data });
+  }
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
