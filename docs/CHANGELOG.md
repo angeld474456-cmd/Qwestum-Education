@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.26 - Teacher Task Creation Boundary Enforcement
+
+- Added live, policy-verified Migration 022, which removes only the legacy authenticated `public.quest_tasks` INSERT policy, `Teachers can insert tasks for own quests`. RLS remains enabled; the existing SELECT, UPDATE, and DELETE policies remain unchanged, and no replacement direct INSERT policy exists.
+- Task creation is now enforced through the authenticated owner-safe `public.create_owned_quest_task(...)` boundary from Migration 021. Its internal `auth.uid()` check, task cap, and append ordering remain authoritative; Migration 020 reorder and existing teacher PATCH/DELETE behavior are unchanged.
+- Post-migration Text, Single Choice, and Multiple Choice UI creation passed. The full 23-file/198-test suite, lint, build, and `git diff --check` passed. No public runtime, catalog, scoring, Storage, Auth, or provider boundary changed.
+
 ## Sprint 12.20.25 - Teacher Task Creation Ordering Concurrency Hardening
 
 - Replaced the teacher task-create route's race-prone count-plus-one/direct-insert path with the server-only `create_owned_quest_task` boundary backed by live, metadata-verified Migration 021. The authenticated owner-only RPC locks the owned parent quest first, then its child tasks, which serializes concurrent creates and remains compatible with Migration 020 reorders.

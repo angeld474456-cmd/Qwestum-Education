@@ -479,7 +479,14 @@ Sprint 12.20.25 - Teacher Task Creation Ordering Concurrency Hardening
 - The route now delegates through `services/teacher-task-creation.server.ts`; its former route-side count-plus-one calculation and direct `quest_tasks` insert are removed. Zero RPC rows remain owner-safe not-found, `task_limit_reached` is a fixed deterministic `409`, and malformed or unexpected RPC output is a generic `500`.
 - The authoritative cap is 100 tasks. Legacy NULL positions are normalized in current deterministic read order (`sort_order ASC NULLS LAST, id ASC`) before appending; the same path prevents `INT_MAX` overflow. Ordinary numeric gaps, duplicates, and negative positions are not rewritten.
 - Focused 2-file/9-test and full 23-file/198-test suites, lint, build, and `git diff --check` passed. Manual checks covered Text, Single Choice, and Multiple Choice append behavior, refresh/reorder persistence, and concurrent two-tab creation; read-only evidence recorded sequential positions 7 and 8.
-- No public runtime, catalog, scoring, RLS, Storage, Auth, provider, index, or unique-order constraint changed. Direct authenticated base-table task insertion, retry/idempotency semantics, and an ordering index remain separate scope.
+- No public runtime, catalog, scoring, RLS, Storage, Auth, provider, index, or unique-order constraint changed. At the close of this sprint, direct authenticated base-table task insertion, retry/idempotency semantics, and an ordering index remained separate scope; Sprint 12.20.26 closes the direct INSERT bypass below.
+
+Sprint 12.20.26 - Teacher Task Creation Boundary Enforcement
+
+- Completed: live, policy-verified Migration 022 drops only `Teachers can insert tasks for own quests` from `public.quest_tasks`. RLS remains enabled; existing SELECT, UPDATE, and DELETE policies remain, and no direct authenticated INSERT replacement was added.
+- Normal teacher creation remains exclusively on the Migration 021 `public.create_owned_quest_task(...)` RPC, preserving its internal owner check, authoritative cap, and append ordering. Migration 020 reorder and existing teacher PATCH/DELETE owner-scoped base-table policies are unchanged.
+- Text, Single Choice, and Multiple Choice creation passed after the policy change. The full 23-file/198-test suite, lint, build, and `git diff --check` passed. No public runtime, catalog, scoring, Storage, Auth, provider, index, or unique-order constraint changed.
+- Broader teacher write-boundary unification and create retry/idempotency remain separate scope.
 
 Next:
 

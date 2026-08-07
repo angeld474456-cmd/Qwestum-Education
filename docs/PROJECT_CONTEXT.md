@@ -874,7 +874,15 @@ No migration, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, provider, depl
 - The RPC enforces the authoritative 100-task cap before mutation. For legacy NULL positions, it normalizes the current visible order `sort_order ASC NULLS LAST, id ASC` to contiguous positions before appending. It also normalizes before arithmetic when the current maximum is `INT_MAX`, avoiding overflow; ordinary non-NULL gaps, duplicates, and negative values remain untouched and append at `MAX(sort_order) + 1`.
 - Exact outcomes are allowlisted: zero rows become owner-safe not-found, `task_limit_reached` becomes a fixed HTTP `409`, and malformed, unknown, multi-row, or failed RPC results become a generic `500`. Public runtime, catalog, scoring, RLS, Storage, Auth, and provider boundaries are unchanged.
 - Focused verification passed 2 files / 9 tests and the full suite passed 23 files / 198 tests; lint, build, and `git diff --check` passed. Manual browser checks passed for all supported task types, refresh/reorder persistence, and two-tab concurrent creation. Controlled read-only evidence recorded distinct sequential positions 7 and 8.
-- The direct authenticated base-table `quest_tasks` INSERT policy, a unique `(quest_id, sort_order)` constraint, an ordering index, and retry/idempotency duplicate semantics remain intentionally outside this sprint.
+- At this sprint's completion, the direct authenticated base-table `quest_tasks` INSERT policy, a unique `(quest_id, sort_order)` constraint, an ordering index, and retry/idempotency duplicate semantics remained outside scope. Sprint 12.20.26 removes the direct INSERT policy; the remaining items remain separate scope.
+
+## Sprint 12.20.26 - Teacher Task Creation Boundary Enforcement
+
+- Completed in `a4ba237` (`Enforce teacher task creation boundary`). Migration 022 is live and policy-verified. It removes only the legacy authenticated `public.quest_tasks` INSERT policy named `Teachers can insert tasks for own quests`; no replacement direct INSERT policy was added.
+- RLS remains enabled. Existing owner-scoped SELECT, UPDATE, and DELETE task policies remain unchanged, so teacher PATCH/DELETE continue on their established boundaries. Migration 020 reorder is unchanged.
+- Creation now must use the Migration 021 `public.create_owned_quest_task(...)` boundary. Its `SECURITY DEFINER` owner, authenticated-only EXECUTE grant, internal `auth.uid()` ownership check, task cap, and append-order allocation remain authoritative.
+- Post-migration browser checks passed for Text, Single Choice, and Multiple Choice creation. The full suite passed 23 files / 198 tests; lint, build, and `git diff --check` passed. No public runtime, catalog, scoring, Storage, Auth, or provider boundary changed.
+- Broader teacher write-boundary unification, create retry/idempotency semantics, a unique `(quest_id, sort_order)` constraint, and an ordering index remain separate scope.
 
 ## Sprint 12.19.7 - Public Runtime Application Integration
 

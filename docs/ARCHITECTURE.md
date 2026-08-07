@@ -842,7 +842,9 @@ The server-only `services/teacher-task-creation.server.ts` maps its explicit RPC
 
 The RPC counts children under the parent lock and applies the 100-task cap before normalization, arithmetic, or insert. If legacy rows contain a NULL position, it first normalizes the deterministic visible order `sort_order ASC NULLS LAST, id ASC` to contiguous `1..N`; if the numeric maximum is `INT_MAX`, it uses the same normalization to avoid overflow. Otherwise, including ordinary gaps, duplicate numeric positions, or negative positions, it allocates `MAX(sort_order) + 1`. New tasks therefore append last without changing ordinary legacy numeric values.
 
-The existing direct authenticated base-table `quest_tasks` INSERT policy, retry/idempotency duplicate semantics, a unique `(quest_id, sort_order)` constraint, and an ordering index are separate scope. No public runtime, catalog, scoring, RLS, Storage, Auth, or provider boundary changed.
+Migration 022 removes the legacy authenticated `Teachers can insert tasks for own quests` policy from `public.quest_tasks`, making this RPC the required task-creation boundary. RLS remains enabled and the existing SELECT, UPDATE, and DELETE policies remain unchanged; no replacement direct INSERT policy or grant was added. This does not alter Migration 020 reorder, the existing teacher PATCH/DELETE routes, or the RPC's `SECURITY DEFINER` ownership and authenticated-only execution model.
+
+Broader teacher write-boundary unification, retry/idempotency duplicate semantics, a unique `(quest_id, sort_order)` constraint, and an ordering index are separate scope. No public runtime, catalog, scoring, Storage, Auth, or provider boundary changed.
 
 ## Current Publication Architecture
 
