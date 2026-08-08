@@ -379,7 +379,8 @@ export default function QuestTasksClient({
       const { imageUrl, error } = await uploadQuestImage(
         questId,
         taskId,
-        file
+        file,
+        selectedTask?.id === taskId ? selectedTask.image_url : null
       );
 
       if (error || !imageUrl) {
@@ -387,37 +388,15 @@ export default function QuestTasksClient({
         return;
       }
 
-      const response = await fetch(
-        `/api/teacher/quests/${questId}/tasks/${taskId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            image_url: imageUrl,
-          }),
-        }
-      );
-
-      if (isSessionExpiredResponse(response)) {
-        setErrorMessage(SESSION_EXPIRED_MESSAGE);
-        redirectToSessionExpiredLogin();
-        return;
-      }
-
-      const result = (await response.json()) as TasksResponse;
-
-      if (!response.ok || !result.task) {
-        setErrorMessage(result.error ?? "Не удалось сохранить изображение.");
-        return;
-      }
-
       const nextTasks = tasks.map((task) =>
-        task.id === result.task?.id ? result.task : task
+        task.id === taskId ? { ...task, image_url: imageUrl } : task
       );
       setTasks(nextTasks);
-      setSelectedTask(result.task);
+      setSelectedTask((currentTask) =>
+        currentTask?.id === taskId
+          ? { ...currentTask, image_url: imageUrl }
+          : currentTask
+      );
       setStatusMessage("Изображение загружено.");
     } catch (error) {
       if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
@@ -441,7 +420,18 @@ export default function QuestTasksClient({
     setStatusMessage("");
 
     try {
-      const { error } = await removeQuestImage(questId, taskId);
+      const task = tasks.find((currentTask) => currentTask.id === taskId);
+
+      if (!task?.image_url) {
+        setErrorMessage("Не удалось удалить изображение.");
+        return;
+      }
+
+      const { error } = await removeQuestImage(
+        questId,
+        taskId,
+        task.image_url
+      );
 
       if (error) {
         setErrorMessage(error);

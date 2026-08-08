@@ -29,7 +29,6 @@ type UpdateTaskPayload = {
 
 type OwnedTaskImage = {
   id: string;
-  image_url: string | null;
   task_type: string;
   title: string;
   description: string | null;
@@ -86,6 +85,10 @@ function parseUpdateTaskPayload(body: unknown) {
   const hasImageUrl = "image_url" in payload;
 
   if (hasMetadata && hasImageUrl) {
+    return { error: "Image updates must be sent separately." };
+  }
+
+  if (hasImageUrl) {
     return { error: "Image updates must be sent separately." };
   }
 
@@ -148,25 +151,13 @@ function parseUpdateTaskPayload(body: unknown) {
     updates.content = payload.content;
   }
 
-  if (hasImageUrl) {
-    if (typeof payload.image_url !== "string" && payload.image_url !== null) {
-      return {
-        error: "Image URL must be text or null.",
-      };
-    }
-
-    updates.image_url = payload.image_url;
-  }
-
   if (Object.keys(updates).length === 0) {
     return {
       error: "No editable fields provided.",
     };
   }
 
-  return hasImageUrl
-    ? { kind: "image" as const, data: updates }
-    : { kind: "metadata" as const, data: updates };
+  return { kind: "metadata" as const, data: updates };
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
@@ -215,13 +206,12 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     );
   }
 
-  const isImageUrlUpdate = parsed.kind === "image";
-  const isContentUpdate = parsed.kind === "metadata" && "content" in parsed.data;
+  const isContentUpdate = "content" in parsed.data;
 
-  if (isImageUrlUpdate || parsed.kind === "metadata") {
+  if (parsed.kind === "metadata") {
     const { data: currentTask, error: currentTaskError } = await supabase
       .from("quest_tasks")
-      .select("id, image_url, task_type, title, description, points, content")
+      .select("id, task_type, title, description, points, content")
       .eq("id", taskId)
       .eq("quest_id", id)
       .maybeSingle<OwnedTaskImage>();
@@ -289,56 +279,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       return NextResponse.json({ task: result.task });
     }
 
-    const previousImageUrl = currentTask.image_url;
-
-    const { data, error } = await supabase
-      .from("quest_tasks")
-      .update(parsed.data)
-      .eq("id", taskId)
-      .eq("quest_id", id)
-      .select("*")
-      .maybeSingle();
-
-    if (error) {
-      console.error(error);
-      return NextResponse.json(
-        { error: "Unable to save task." },
-        { status: 500 }
-      );
-    }
-
-    if (!data) {
-      return NextResponse.json({ error: "Task not found." }, { status: 404 });
-    }
-
-    if (previousImageUrl && previousImageUrl !== data.image_url) {
-      try {
-        const previousObjectPath = getSafeQuestImageObjectPath(
-          previousImageUrl,
-          ownedQuest.userId,
-          id,
-          taskId
-        );
-
-        if (previousObjectPath) {
-          const { error: cleanupError } = await supabase.storage
-            .from(questImageBucketName)
-            .remove([previousObjectPath]);
-
-          if (cleanupError) {
-            console.warn("Quest image cleanup failed after replacement.", {
-              questId: id,
-              taskId,
-              error: cleanupError.message,
-            });
-          }
-        }
-      } catch {
-        // The image reference is already persisted; cleanup remains best-effort.
-      }
-    }
-
-    return NextResponse.json({ task: data });
   }
 }
 

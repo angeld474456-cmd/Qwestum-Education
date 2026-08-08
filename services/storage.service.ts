@@ -34,10 +34,12 @@ type RemoveQuestCoverImageResponse = {
 export async function uploadQuestImage(
   questId: string,
   taskId: string,
-  file: File
+  file: File,
+  expectedImageUrl: string | null
 ) {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("expectedImageUrl", expectedImageUrl ?? "");
 
   try {
     const response = await fetch(
@@ -81,7 +83,11 @@ export async function uploadQuestImage(
   }
 }
 
-export async function removeQuestImage(questId: string, taskId: string) {
+export async function removeQuestImage(
+  questId: string,
+  taskId: string,
+  expectedImageUrl: string
+) {
   try {
     const response = await fetch(
       `/api/teacher/quests/${encodeURIComponent(
@@ -89,6 +95,10 @@ export async function removeQuestImage(questId: string, taskId: string) {
       )}/tasks/${encodeURIComponent(taskId)}/image`,
       {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ expectedImageUrl }),
       }
     );
 

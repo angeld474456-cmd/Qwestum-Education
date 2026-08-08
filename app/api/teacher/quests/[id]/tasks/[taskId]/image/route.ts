@@ -5,6 +5,10 @@ import {
   questImageBucketName,
 } from "@/lib/storage/quest-image.server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  clearOwnedQuestTaskImage,
+  setOwnedQuestTaskImage,
+} from "@/services/teacher-task-image-mutation.server";
 
 const maxFileSize = 5 * 1024 * 1024;
 const uuidPattern =
@@ -25,8 +29,43 @@ type RouteContext = {
 
 type OwnedTask = {
   id: string;
-  image_url: string | null;
 };
+
+async function removeObjectPath(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  objectPath: string
+) {
+  try {
+    const { error } = await supabase.storage
+      .from(questImageBucketName)
+      .remove([objectPath]);
+
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+async function removeCanonicalImage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  imageUrl: string,
+  userId: string,
+  questId: string,
+  taskId: string
+) {
+  try {
+    const objectPath = getSafeQuestImageObjectPath(
+      imageUrl,
+      userId,
+      questId,
+      taskId
+    );
+
+    return objectPath ? await removeObjectPath(supabase, objectPath) : false;
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(request: Request, { params }: RouteContext) {
   const { id, taskId } = await params;
@@ -71,7 +110,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     .select("id")
     .eq("id", taskId)
     .eq("quest_id", id)
-    .maybeSingle();
+    .maybeSingle<OwnedTask>();
 
   if (taskError) {
     console.error("Image upload task relation check failed.", {
@@ -102,14 +141,38 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   const entries = Array.from(formData.entries());
 
-  if (entries.length !== 1 || entries[0][0] !== "file") {
+  if (
+    entries.length !== 2 ||
+    !entries.some(([key]) => key === "file") ||
+    !entries.some(([key]) => key === "expectedImageUrl")
+  ) {
     return NextResponse.json(
       { error: "Upload must include exactly one file." },
       { status: 400 }
     );
   }
 
-  const file = entries[0][1];
+  const file = formData.get("file");
+  const expectedImageUrlValue = formData.get("expectedImageUrl");
+
+  if (typeof expectedImageUrlValue !== "string") {
+    return NextResponse.json(
+      { error: "Invalid upload payload." },
+      { status: 400 }
+    );
+  }
+
+  const expectedImageUrl = expectedImageUrlValue || null;
+
+  if (
+    expectedImageUrl &&
+    !getSafeQuestImageObjectPath(expectedImageUrl, user.id, id, taskId)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid upload payload." },
+      { status: 400 }
+    );
+  }
 
   if (!(file instanceof File)) {
     return NextResponse.json(
@@ -162,17 +225,54 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  const { data } = supabase.storage
-    .from(questImageBucketName)
-    .getPublicUrl(objectPath);
-
-  return NextResponse.json({
-    imageUrl: data.publicUrl,
-    objectPath,
+  const result = await setOwnedQuestTaskImage({
+    questId: id,
+    taskId,
+    expectedImageUrl,
+    newObjectPath: objectPath,
   });
+
+  if (result.status === "updated") {
+    const storageDeleted = result.previousImageUrl
+      ? await removeCanonicalImage(
+          supabase,
+          result.previousImageUrl,
+          user.id,
+          id,
+          taskId
+        )
+      : false;
+
+    return NextResponse.json({
+      imageUrl: result.imageUrl,
+      storageDeleted,
+    });
+  }
+
+  await removeObjectPath(supabase, objectPath);
+
+  if (result.status === "unauthorized") {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (result.status === "stale_image") {
+    return NextResponse.json(
+      { error: "Task image changed. Refresh and try again." },
+      { status: 409 }
+    );
+  }
+
+  if (result.status === "not_found") {
+    return NextResponse.json({ error: "Task not found." }, { status: 404 });
+  }
+
+  return NextResponse.json(
+    { error: "Unable to upload image." },
+    { status: 500 }
+  );
 }
 
-export async function DELETE(_request: Request, { params }: RouteContext) {
+export async function DELETE(request: Request, { params }: RouteContext) {
   const { id, taskId } = await params;
 
   if (!uuidPattern.test(id) || !uuidPattern.test(taskId)) {
@@ -186,6 +286,39 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
   if (!user) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid image request." },
+      { status: 400 }
+    );
+  }
+
+  if (
+    !body ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    Object.keys(body).length !== 1 ||
+    typeof (body as { expectedImageUrl?: unknown }).expectedImageUrl !== "string"
+  ) {
+    return NextResponse.json(
+      { error: "Invalid image request." },
+      { status: 400 }
+    );
+  }
+
+  const expectedImageUrl = (body as { expectedImageUrl: string }).expectedImageUrl;
+
+  if (!getSafeQuestImageObjectPath(expectedImageUrl, user.id, id, taskId)) {
+    return NextResponse.json(
+      { error: "Invalid image request." },
+      { status: 400 }
+    );
   }
 
   const { data: ownedQuest, error: ownedQuestError } = await supabase
@@ -212,7 +345,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
   const { data: task, error: taskError } = await supabase
     .from("quest_tasks")
-    .select("id, image_url")
+    .select("id")
     .eq("id", taskId)
     .eq("quest_id", id)
     .maybeSingle<OwnedTask>();
@@ -233,80 +366,47 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
-  if (!task.image_url) {
-    return NextResponse.json({
-      success: true,
-      imageUrl: null,
-      storageDeleted: false,
-    });
+  const result = await clearOwnedQuestTaskImage({
+    questId: id,
+    taskId,
+    expectedImageUrl,
+  });
+
+  if (result.status === "unauthorized") {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const objectPath = getSafeQuestImageObjectPath(
-    task.image_url,
-    user.id,
-    id,
-    taskId
-  );
-
-  const { data: updatedTask, error: updateError } = await supabase
-    .from("quest_tasks")
-    .update({ image_url: null })
-    .eq("id", taskId)
-    .eq("quest_id", id)
-    .eq("image_url", task.image_url)
-    .select("*")
-    .maybeSingle();
-
-  if (updateError) {
-    console.error("Image removal task update failed.", {
-      questId: id,
-      taskId,
-      error: updateError.message,
-    });
-    return NextResponse.json(
-      { error: "Unable to remove image." },
-      { status: 500 }
-    );
-  }
-
-  if (!updatedTask) {
+  if (result.status === "stale_image") {
     return NextResponse.json(
       { error: "Task image changed. Refresh and try again." },
       { status: 409 }
     );
   }
 
-  if (!objectPath) {
-    return NextResponse.json({
-      success: true,
-      imageUrl: null,
-      storageDeleted: false,
-      task: updatedTask,
-    });
+  if (result.status === "not_found") {
+    return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
-  const { error: deleteError } = await supabase.storage
-    .from(questImageBucketName)
-    .remove([objectPath]);
-
-  if (deleteError) {
-    console.warn("Quest image cleanup failed after DB removal.", {
-      questId: id,
-      taskId,
-      error: deleteError.message,
-    });
-    return NextResponse.json({
-      success: true,
-      imageUrl: null,
-      storageDeleted: false,
-      task: updatedTask,
-    });
+  if (result.status !== "cleared") {
+    return NextResponse.json(
+      { error: "Unable to remove image." },
+      { status: 500 }
+    );
   }
+
+  const storageDeleted = result.previousImageUrl
+    ? await removeCanonicalImage(
+        supabase,
+        result.previousImageUrl,
+        user.id,
+        id,
+        taskId
+      )
+    : false;
 
   return NextResponse.json({
     success: true,
     imageUrl: null,
-    storageDeleted: true,
-    task: updatedTask,
+    storageDeleted,
   });
 }

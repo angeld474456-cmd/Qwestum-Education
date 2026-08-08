@@ -79,38 +79,6 @@ function configurePatch(currentTask: Record<string, unknown>) {
   });
 }
 
-function updateQuery(result: { data: unknown; error: unknown }) {
-  const builder = {
-    update: vi.fn(),
-    select: vi.fn(),
-    eq: vi.fn(),
-    maybeSingle: vi.fn().mockResolvedValue(result),
-  };
-  builder.update.mockReturnValue(builder);
-  builder.select.mockReturnValue(builder);
-  builder.eq.mockReturnValue(builder);
-  return builder;
-}
-
-function configureImagePatch(
-  currentTask: Record<string, unknown>,
-  updatedTask: Record<string, unknown>
-) {
-  const ownedQuest = query({ data: { id: questId, is_public: false }, error: null });
-  const task = query({ data: currentTask, error: null });
-  const update = updateQuery({ data: updatedTask, error: null });
-  mocks.createClient.mockResolvedValue({
-    auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: "owner" } } }) },
-    from: vi
-      .fn()
-      .mockReturnValueOnce(ownedQuest)
-      .mockReturnValueOnce(task)
-      .mockReturnValueOnce(update),
-    storage: { from: mocks.storageFrom },
-  });
-  return update;
-}
-
 function taskDto(overrides: Record<string, unknown> = {}) {
   return {
     id: taskId,
@@ -336,30 +304,14 @@ describe("teacher task mutation route PATCH", () => {
     expect(response.status).toBe(500);
   });
 
-  it("keeps image-only PATCH on the temporary direct image path", async () => {
-    const update = configureImagePatch(taskDto(), taskDto({ image_url: "https://example.test/new.png" }));
-
-    const response = await PATCH(patchRequest({ image_url: "https://example.test/new.png" }), context);
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ task: taskDto({ image_url: "https://example.test/new.png" }) });
-    expect(update.update).toHaveBeenCalledWith({ image_url: "https://example.test/new.png" });
-    expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
-  });
-
-  it("keeps an image replacement successful when cleanup throws", async () => {
-    const previousUrl = "https://example.test/old.png";
-    configureImagePatch(
-      taskDto({ image_url: previousUrl }),
-      taskDto({ image_url: "https://example.test/new.png" })
+  it("rejects image-only PATCH before any direct task update", async () => {
+    const response = await PATCH(
+      patchRequest({ image_url: "https://example.test/new.png" }),
+      context
     );
-    mocks.getSafeQuestImageObjectPath.mockReturnValue("teachers/owner/quests/quest/tasks/task/old.png");
-    mocks.storageFrom.mockReturnValue({ remove: mocks.remove });
-    mocks.remove.mockRejectedValue(new Error("RAW_STORAGE_THROW"));
 
-    const response = await PATCH(patchRequest({ image_url: "https://example.test/new.png" }), context);
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ task: taskDto({ image_url: "https://example.test/new.png" }) });
+    expect(response.status).toBe(400);
+    expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.createClient).not.toHaveBeenCalled();
   });
 });
