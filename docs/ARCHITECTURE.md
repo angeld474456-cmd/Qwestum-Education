@@ -334,16 +334,16 @@ Quest ownership model:
 - Teacher dashboard queries return only quests owned by the current teacher.
 - Public/student catalog queries should eventually return only `is_public` quests or assigned quests.
 - Updates are allowed only to the owning teacher.
-- Quest deletion remains unavailable because no `quests` DELETE policy exists.
+- Direct base-table quest deletion remains denied by RLS; owner-safe quest deletion uses its dedicated RPC boundary.
 
-Current `quests` and `quest_tasks` RLS boundaries after `database/migrations/004_harden_quest_rls.sql`:
+Initial `quests` and `quest_tasks` RLS boundaries established by `database/migrations/004_harden_quest_rls.sql`:
 
 - `quests`
   - Authenticated teachers can select, insert, and update only their own quests through `author_id = auth.uid()`.
   - Direct anonymous access is denied.
   - No DELETE policy exists.
 - `quest_tasks`
-  - Authenticated teachers can select, insert, update, and delete tasks only when the parent quest belongs to `auth.uid()`.
+  - The original authenticated owner-derived SELECT/INSERT/UPDATE/DELETE policies used the parent quest's `auth.uid()` ownership check. Migrations 022, 024, and 027 later removed the direct INSERT, DELETE, and UPDATE policies; SELECT remains.
   - Direct anonymous access is denied.
   - Public/student reads are not allowed because `answer` fields and `content.correctOptionId` may expose correct answers.
 
@@ -400,7 +400,7 @@ RLS and storage findings:
 - Broad public policies on `quests` and `quest_tasks` were removed.
 - `quests` now has authenticated owner policies for SELECT, INSERT, and UPDATE.
 - `quests` has no DELETE policy, so direct quest deletion remains denied by RLS.
-- `quest_tasks` now has authenticated owner-derived policies for SELECT, INSERT, UPDATE, and DELETE through the parent quest.
+- `quest_tasks` initially received authenticated owner-derived policies for SELECT, INSERT, UPDATE, and DELETE through the parent quest. Migrations 022, 024, and 027 later removed the direct INSERT, DELETE, and UPDATE policies while retaining SELECT.
 - Direct anonymous table access to `quests` and `quest_tasks` is denied.
 - `database/migrations/005_harden_quest_image_storage.sql` was applied live after Sprint 12.15.4a verification.
 - `quest-images` remains public for existing public URLs.
@@ -676,7 +676,7 @@ Authoritative live schema: `public.profiles`, `public.quests`, `public.quest_tas
 
 `public.subjects`: `id uuid NOT NULL DEFAULT gen_random_uuid()`; `name text NOT NULL` with no default; `grade integer NULL` with no default; and `created_at timestamptz NULL DEFAULT now()`. PRIMARY KEY (`id`) and `subjects_pkey` are its only constraint/index. Its owner is `postgres`, RLS is enabled without FORCE RLS, and no user-defined trigger exists.
 
-Current live RLS is owner-safe: quests permit authenticated owner SELECT/INSERT/UPDATE but no DELETE or anonymous published read; tasks permit authenticated parent-quest-owner SELECT/INSERT/UPDATE/DELETE and no anonymous task read; subjects permit authenticated SELECT and no anonymous read. No relevant profiles policy was returned. Anon, authenticated, and service_role have broad explicit table ACLs and PUBLIC has USAGE on `public`, but RLS is the effective anon/authenticated row boundary. No existing catalog/view/materialized view/function/RPC or naming conflict exists.
+Current live RLS is owner-safe: quests permit authenticated owner SELECT/INSERT/UPDATE but no direct DELETE or anonymous published read; tasks retain authenticated parent-quest-owner SELECT only, with direct INSERT/UPDATE/DELETE removed by Migrations 022, 024, and 027 in favor of owner-safe mutation RPCs; subjects permit authenticated SELECT and no anonymous read. No relevant profiles policy was returned. Anon, authenticated, and service_role have broad explicit table ACLs and PUBLIC has USAGE on `public`, but RLS is the effective anon/authenticated row boundary. No existing catalog/view/materialized view/function/RPC or naming conflict exists.
 
 `quest-images` remains public with a 5,242,880-byte limit and JPEG/PNG/WebP MIME allowlist. PUBLIC SELECT supports anonymous image retrieval; authenticated owner-path task image and strict owner-path quest-cover writes/deletes remain. Owner UUIDs remain in object paths, an existing disclosure tradeoff. `pgcrypto` 1.3 and `uuid-ossp` 1.1 are installed; `pg_graphql` is absent. No `supabase_migrations` relation was found, so no live migration identifiers can be inspected and the live schema is authoritative over the empty local `001_initial_schema.sql`.
 
@@ -860,7 +860,15 @@ Migration 025 provides `public.update_owned_quest_task_content(p_quest_id uuid, 
 
 `PATCH /api/teacher/quests/[id]/tasks/[taskId]` delegates metadata/content changes once through `services/teacher-task-update.server.ts`. The route validates title (maximum 500 characters), description (maximum 10,000 characters), positive safe-integer points, content shape, and Multiple Choice content before the RPC. Zero rows remain owner-safe not-found; malformed, multi-row, or provider output becomes a generic failure. A mixed metadata plus `image_url` payload receives fixed HTTP 400 and performs no write.
 
-Image writes intentionally remain outside this RPC boundary: image-only PATCH and compare-and-clear image removal still use the existing direct owner-scoped UPDATE policy. Image replacement cleanup starts only after the database update and is best-effort; returned Storage errors and thrown exceptions cannot turn a committed image update into HTTP 500. A future image set/clear RPC migration must replace both image paths before the direct UPDATE policy can be removed. Optimistic concurrency/versioning and published quests edited into runtime-ineligible states remain separate scope; public DTOs, runtime, catalog, scoring, Auth, and provider boundaries are unchanged.
+Image writes were subsequently moved to the dedicated boundary below. Optimistic concurrency/versioning and published quests edited into runtime-ineligible states remain separate scope; public DTOs, runtime, catalog, scoring, Auth, and provider boundaries are unchanged.
+
+## Atomic Teacher Task Image Mutation Boundary
+
+Migration 026 provides `public.set_owned_quest_task_image(uuid, uuid, text, text)` and `public.clear_owned_quest_task_image_if_matches(uuid, uuid, text)` as authenticated owner-safe image SET and CLEAR authorities. Both use `SECURITY DEFINER`, fixed `pg_catalog, public` search paths, parent-first locking compatible with Migrations 020, 021, 023, and 025, and null-safe expected-image CAS. Stale operations return a fixed stale outcome; same-value SET returns zero rows so a cleanup path can never delete the image that remains active.
+
+SET accepts a canonical object path, never a caller-selected absolute URL. It verifies the exact owner/quest/task-bound `quest-images` object in `storage.objects`, reads the private `qwestum_private.task_image_runtime_config` singleton, and derives the canonical public URL inside the database. The trusted-origin bootstrap is required separately for each environment, is verified live, and its value is provider-managed rather than committed. CLEAR requires neither the config row nor a Storage-object read and updates only `image_url = NULL` on a matching expected URL.
+
+The server-only image service and routes strictly allowlist RPC outcomes. Upload, replacement, and clear cleanup begins only after a confirmed database result, uses only canonical server-returned URLs, and is one-shot best-effort: returned or thrown Storage cleanup failures leave the committed successful HTTP response intact. Migration 027 removes the final direct authenticated `public.quest_tasks` UPDATE policy. RLS remains enabled with SELECT retained; direct INSERT, UPDATE, and DELETE are absent, so supported task mutations use the six owner-safe RPC boundaries.
 
 ## Current Publication Architecture
 

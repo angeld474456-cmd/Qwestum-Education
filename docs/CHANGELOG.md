@@ -1,10 +1,18 @@
 # Changelog
 
+## Sprint 12.20.28B - Teacher Task Image Mutation Boundary
+
+- Completed in `abc989e2c621e9802508911023f8467459a61d67` (`Harden teacher task image mutations`). Live Migration 026 adds the owner-safe image SET and CLEAR RPC boundaries, backed by verified per-environment `qwestum_private` trusted Storage-origin configuration. The bootstrap origin value remains provider-managed and is not committed.
+- SET accepts only an owner/quest/task-bound canonical object path, verifies the object in `quest-images`, derives the public URL inside the database, and uses client-held expected-image CAS. CLEAR uses the same parent-first locking and CAS model without a config or Storage-object read. Stale SET/CLEAR operations return a safe conflict, and same-value SET produces no update so cleanup cannot remove the active object.
+- Live Migration 027 removes the final direct authenticated `public.quest_tasks` UPDATE policy. RLS remains enabled with SELECT retained and direct INSERT, UPDATE, and DELETE absent; supported task mutations now use the six owner-safe RPC boundaries.
+- Image cleanup occurs only after a confirmed database mutation and remains canonical, one-shot, and best-effort. Returned or thrown cleanup failures preserve the committed success response rather than producing a misleading `500`.
+- Verified by focused 4-file/23-test and full 29-file/232-test suites, lint, build, and `git diff --check`. Browser checks passed for upload, replacement, clear, stale DELETE CAS, stale REPLACE CAS, and post-Migration-027 metadata, image SET, and image CLEAR. No public catalog, runtime, Auth, or Storage-policy regression occurred.
+
 ## Sprint 12.20.28A - Teacher Task Metadata/Content Update Boundary
 
 - Added live, metadata-verified Migration 025 and the server-only `update_owned_quest_task_content(p_quest_id, p_task_id, p_title, p_description, p_points, p_content)` path. The authenticated owner-safe RPC locks the parent quest before the target task, derives ownership from `auth.uid()`, accepts no type/order/media/reassignment fields, and returns the full existing task DTO.
 - Metadata/content PATCH now validates title (500), description (10,000), points, content, and Multiple Choice structure before one RPC call. Zero rows map to safe 404; malformed, multi-row, and provider output map to generic 500. Mixed metadata plus image input returns fixed 400 with no write.
-- Image-only PATCH and image compare-and-clear remain intentionally direct, so the direct UPDATE policy remains in place. Image replacement cleanup is best-effort after committed DB state; returned or thrown cleanup failures cannot turn success into 500.
+- At this sprint's completion, image-only PATCH and image compare-and-clear remained intentionally direct, so the direct UPDATE policy was still required. Image replacement cleanup was best-effort after committed DB state; returned or thrown cleanup failures could not turn success into 500. Sprint 12.20.28B subsequently replaced those paths and removed the policy.
 - Verified by focused 2-file/19-test and full 26-file/224-test suites, lint, build, and `git diff --check`; browser checks passed for Text, Single Choice, Multiple Choice, image upload, and image removal persistence. No public runtime, catalog, scoring, Auth, Storage policy, or provider boundary changed.
 
 ## Sprint 12.20.27 - Owner-Safe Teacher Task Deletion Boundary

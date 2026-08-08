@@ -2,18 +2,18 @@
 
 ## Milestone
 
-Teacher Task Image Mutation Boundary
+Core MVP Next Milestone Planning
 
 ## Next Task
 
-Plan owner-safe image set and image-clear database mutation boundaries.
+Select the next smallest coherent Core MVP milestone after completion of the teacher task mutation boundaries.
 
 ## Objective
 
-Replace the remaining direct `public.quest_tasks` image UPDATE paths with narrow owner-safe boundaries, then remove the direct UPDATE policy only after both paths are migrated and verified.
+Use the current roadmap and architecture to inventory remaining Model A capabilities, separate first-launch needs from post-launch work, and produce one approved implementation plan. Keep P0 production-readiness work separate from feature development.
 
 ## Constraints
 
-- Preserve the existing server-orchestrated image upload, canonical path checks, compare-and-clear semantics, and best-effort Storage cleanup.
-- Keep metadata/content updates on Migration 025 and do not broaden the future image boundary to task type, ordering, or unrelated fields.
-- Analyze first; no migration, policy change, implementation, provider configuration, deployment, commit, or push without explicit approval.
+- Teacher task creation, reorder, deletion, metadata/content updates, and image SET/CLEAR now use owner-safe RPC boundaries; direct `quest_tasks` INSERT, UPDATE, and DELETE policies are absent while SELECT remains retained.
+- Preserve the current anonymous-public plus authenticated-teacher Model A boundary. Do not prematurely add student identity, attempts/history, assignments, payments, AI generation, exports, or organizations without a separately approved plan.
+- Production promotion remains separately gated by the P0 pre-production checklist. Planning only: no migration, policy change, implementation, provider configuration, deployment, commit, or push without explicit approval.
