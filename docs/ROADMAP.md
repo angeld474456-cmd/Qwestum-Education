@@ -529,8 +529,12 @@ Sprint 12.20.31 - Owner-Safe Quest Creation Boundary
 
 Next:
 
-- Core MVP Next Milestone Planning.
-  - No next implementation milestone is approved by the roadmap after the quest write-boundary work. Select one through a separate planning pass without changing Model A scope or the separate P0 pre-production gates.
+- Sprint 12.20.32 - Controlled Preview 429 Verification.
+  - Completed the P0 authorized Preview limiter evidence gate: normal submit returned `200`, then one same-identity/same-quest sequential browser run reached its first fixed no-store `429` at attempt 62 with `Retry-After: 15`. The fixed body was `{"error":"Too many requests. Please try again later."}`; no `503`, concurrency, forwarding-header manipulation, or Production traffic occurred.
+  - No timeout, code, provider, environment, deployment, or migration change was made. The earlier Preview fail-closed `503` is not an active unresolved defect. Remaining P0 work is read-only Production deployment/domain/protection/environment inventory, followed by Production Auth, rollback, smoke-plan, and observability gates.
+
+- P0 Production Deployment / Domain / Protection / Environment Inventory.
+  - Next approved milestone: read-only inventory only. Do not change provider settings, deploy, send Production traffic, or select a new Core MVP implementation milestone in this gate.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.

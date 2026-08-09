@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.32 - Controlled Preview 429 Verification
+
+- Completed the P0 authorized Preview submit-rate-limit evidence gate. A same-deployment, same-client-identity, same-quest sequential browser test first returned normal `200`, then returned its first fixed `429` at attempt 62: `{"error":"Too many requests. Please try again later."}`, `Retry-After: 15`, and `Cache-Control: no-store`.
+- The sequence used no concurrency or forwarding-header manipulation, stopped immediately on the first `429`, and did not contact Production. No `503` occurred during the successful sequence. Earlier Preview `503` observations were fail-closed connectivity evidence, not an active unresolved limiter defect.
+- No limiter timeout, code, provider, environment, deployment, or migration change was made. Fail-closed limiter behavior remains covered by automated tests and prior live evidence. Remaining P0 work is Production deployment/domain/protection/environment inventory, Production Auth redirect/callback verification, rollback verification, Production smoke planning, and observability baseline.
+
 ## Sprint 12.20.31 - Owner-Safe Quest Creation Boundary
 
 - Completed in `a343cc2acc2626ee8254ca173ab117c205e1f57d` (`Harden owner-safe quest creation`). Live Migration 034 adds authenticated owner-safe `create_owned_quest(text, text, integer)`: a postgres-owned `SECURITY DEFINER` Draft-only creation RPC that derives ownership from `auth.uid()`, validates title/difficulty, normalizes description, and returns only `{ outcome, id }`.
