@@ -515,10 +515,16 @@ Sprint 12.20.29 - Owner-Safe Teacher Quest Deletion Boundary
 - Migration 029 is live and removes only `Teachers can delete own quests`; direct `public.quests` DELETE is no longer an application dependency. The service makes one RPC call, strictly validates its result, maps zero rows to owner-safe not-found, and does canonical/deduplicated best-effort Storage cleanup only after confirmed deletion. Draft deletion, library removal, direct-revisit unavailability, FK cascade, cover/task-image cleanup, and post-policy-removal deletion passed.
 - A separate verification discovery corrected legacy task image state: controlled live repair normalized `image_url = ''` rows to `NULL`, and live Migration 030 replaces `create_owned_quest_task` with the same identity/security/locking/order contract but inserts `image_url = NULL`. The mapper accepts null and rejects empty strings; a new task's NULL image state and immediate upload passed. Focused deletion 2 files/32 tests, focused creation 2 files/10 tests, and full 29 files/242 tests passed, along with lint, build, and `git diff --check`.
 
+Sprint 12.20.30 - Quest Metadata and Cover Mutation Boundary
+
+- Completed in `1daaa8e` (`Harden quest metadata and cover mutations`). Live Migration 031 moves owner-safe Settings metadata writes to `update_owned_quest_metadata(...)`; its parent-first locked RPC uses explicit optional-field presence flags, updates only approved metadata, and keeps `is_public`, cover, and author immutable.
+- Live Migration 032 moves cover SET/CLEAR to `set_owned_quest_cover_image(...)` and `clear_owned_quest_cover_image_if_matches(...)`. Canonical owner/quest cover paths, exact `quest-images` object verification, expected-path CAS, and post-commit best-effort cleanup preserve cover integrity. Live Migration 033 removes the final direct `Teachers can update own quests` policy.
+- `public.quests` now retains only owner INSERT and SELECT policies. Metadata, cover, publication, and deletion use dedicated owner-safe RPCs; direct quest creation INSERT is intentionally the remaining next boundary. Browser verification passed for metadata, cover, publication, catalog visibility, and zero-task publication blocking. Focused 4-file/28-test and full 32-file/257-test suites, lint, build, and `git diff --check` passed.
+
 Next:
 
-- Quest Metadata and Publication Write Boundary.
-  - Planning-only handoff: replace remaining direct teacher quest metadata/publication writes with owner-safe database mutation boundaries, without changing Model A scope or the separate P0 pre-production gates.
+- Owner-Safe Quest Creation Boundary.
+  - Planning-only handoff: replace the remaining direct teacher quest creation INSERT path with an owner-safe database mutation boundary, without changing Model A scope or the separate P0 pre-production gates.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.

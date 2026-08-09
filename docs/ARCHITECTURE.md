@@ -878,6 +878,14 @@ The deletion service calls the RPC once, accepts only its exact successful DTO, 
 
 Migration 029 removes the former direct `Teachers can delete own quests` DELETE policy. Quest deletion is now RPC-only; this does not imply that all quest writes are RPC-only. Quest creation, metadata/settings update, cover set/clear, and the current publication boundary remain separate direct or existing mutation paths. Migration 030 separately corrects the task-create nullable media contract: `create_owned_quest_task` now inserts `image_url = NULL`, preventing the legacy empty-string value from violating the image SET/CLEAR CAS boundary; `video_url` and `audio_url` remain unchanged.
 
+## Owner-Safe Quest Metadata and Cover Boundaries
+
+Migration 031 makes Settings metadata writes RPC-only through `public.update_owned_quest_metadata(...)`. The postgres-owned `SECURITY DEFINER` function uses fixed `pg_catalog, public` search path, derives ownership from `auth.uid()`, locks the owned quest first, preserves or clears optional values through explicit presence flags, validates the final metadata state, and returns only an allowlisted metadata DTO. It cannot mutate `is_public`, `cover_image_path`, or `author_id`.
+
+Migration 032 makes cover SET/CLEAR RPC-only through `public.set_owned_quest_cover_image(...)` and `public.clear_owned_quest_cover_image_if_matches(...)`. Both lock the owned parent quest first and use null-safe expected-path CAS. SET accepts only the canonical owner/quest cover path, confirms its exact `quest-images` Storage object, and never accepts an external URL. Returned mutation DTOs are allowlisted; route-side cleanup begins only after a confirmed update/clear and remains canonical, one-shot, and best-effort.
+
+Migration 033 removes `Teachers can update own quests`. Current `public.quests` RLS retains owner INSERT and SELECT only; direct UPDATE and DELETE are absent. Metadata, cover, publication (`set_owned_quest_publication_state`), and deletion (`delete_owned_quest`) are dedicated RPC boundaries. Quest creation remains the sole direct quest-table INSERT path and is the next boundary milestone.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

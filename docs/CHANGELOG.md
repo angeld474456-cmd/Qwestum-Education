@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.20.30 - Quest Metadata and Cover Mutation Boundary
+
+- Completed in `1daaa8ec5f453637e3a8e997d9586c65d2fbf985` (`Harden quest metadata and cover mutations`). Live Migration 031 adds `update_owned_quest_metadata(...)`: authenticated owner-only, parent-first locked metadata updates with explicit presence flags, strict allowlisted metadata fields, and `is_public` return-only.
+- Live Migration 032 adds `set_owned_quest_cover_image(...)` and `clear_owned_quest_cover_image_if_matches(...)`. Both use owner-safe parent locking and expected-path CAS; SET accepts only canonical owner/quest cover object paths and verifies their exact `quest-images` Storage object before attachment. Storage cleanup remains route-side, canonical, and best-effort.
+- Live Migration 033 removes `Teachers can update own quests`. `public.quests` now retains only owner INSERT and SELECT policies; supported metadata, cover, publication, and deletion mutations use their dedicated owner-safe RPC boundaries.
+- Browser verification passed for metadata save/category clear, cover upload/replace/clear and reload, publication unpublish/publish, catalog visibility, and zero-task publication blocking. Focused verification passed 4 files/28 tests; full verification passed 32 files/257 tests; lint, build, and `git diff --check` passed.
+
 ## Sprint 12.20.29 - Owner-Safe Teacher Quest Deletion Boundary
 
 - Completed in `f40b56c861a73c58282e12b3798f7200bc5f8140` (`Harden owner-safe quest deletion`). Live Migration 028 adds `delete_owned_quest(uuid)`: an authenticated owner-safe, parent-first locked RPC that snapshots only cleanup references, deletes the parent, and relies on task FK cascade.
