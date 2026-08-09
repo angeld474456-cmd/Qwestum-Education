@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.33 - Production Readiness Inventory
+
+- Completed the read-only Vercel/Supabase/Upstash Production-readiness inventory. The sole current Production deployment is Ready but stale: it came from `feature/next-work` commit `7282256` (`Document public surface hardening`) rather than the current verified branch state. `main` remains the intended Production branch; no push or merge to it is approved.
+- The default Production domain `qwestum-education.vercel.app` is valid; no user custom domain was observed. Standard Vercel Protection is enabled, Password Protection is disabled, and Firewall is active with no custom, bypass, IP-blocking, Bot Protection, or path-specific rules observed. These are verified baselines, not launch approval or Production traffic evidence.
+- All required application runtime variables are assigned to Preview only, and Supabase Auth still uses localhost Site URL with only the Preview callback allowed. Production configuration, Auth URL readiness, an approved current Production build, Production smoke verification, and a formal rollback target are confirmed P0 blockers. The latest verified Preview (`50f5f71`) is a reference candidate only. Next: planning-only Production Environment and Auth Configuration.
+
 ## Sprint 12.20.32 - Controlled Preview 429 Verification
 
 - Completed the P0 authorized Preview submit-rate-limit evidence gate. A same-deployment, same-client-identity, same-quest sequential browser test first returned normal `200`, then returned its first fixed `429` at attempt 62: `{"error":"Too many requests. Please try again later."}`, `Retry-After: 15`, and `Cache-Control: no-store`.

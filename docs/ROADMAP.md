@@ -529,12 +529,17 @@ Sprint 12.20.31 - Owner-Safe Quest Creation Boundary
 
 Next:
 
+- Sprint 12.20.33 - Production Readiness Inventory.
+  - Completed read-only Vercel/Supabase/Upstash inventory. Current Production is a Ready but stale Jul 31 deployment from `feature/next-work` commit `7282256` (`Document public surface hardening`); `main` remains the intended Production branch. `qwestum-education.vercel.app` is valid, no user custom domain was observed, and the old deployment is not an approved release.
+  - Standard Vercel Protection and an active Firewall baseline are verified: Password Protection is disabled, Bot Protection inactive, and no custom/bypass/IP-blocking/path-specific rules were observed. These are non-blocking baselines; no Production traffic was sent.
+  - Confirmed P0 blockers: all six application runtime variables are Preview-only; Supabase Auth Site URL is localhost and the Production domain is absent from the redirect allowlist; Production build/smoke verification and formal rollback target remain unapproved. Latest verified Preview `50f5f71` is only a reference candidate. Vercel Preview observability is active/partial; historical `503` is not an active reproduced defect.
+
 - Sprint 12.20.32 - Controlled Preview 429 Verification.
   - Completed the P0 authorized Preview limiter evidence gate: normal submit returned `200`, then one same-identity/same-quest sequential browser run reached its first fixed no-store `429` at attempt 62 with `Retry-After: 15`. The fixed body was `{"error":"Too many requests. Please try again later."}`; no `503`, concurrency, forwarding-header manipulation, or Production traffic occurred.
   - No timeout, code, provider, environment, deployment, or migration change was made. The earlier Preview fail-closed `503` is not an active unresolved defect. Remaining P0 work is read-only Production deployment/domain/protection/environment inventory, followed by Production Auth, rollback, smoke-plan, and observability gates.
 
-- P0 Production Deployment / Domain / Protection / Environment Inventory.
-  - Next approved milestone: read-only inventory only. Do not change provider settings, deploy, send Production traffic, or select a new Core MVP implementation milestone in this gate.
+- P0 Production Environment and Auth Configuration Planning.
+  - Next approved milestone: planning only. Define Production resource mapping, required Supabase Site/Redirect URLs, safe provider-change order, rollback gate, and smoke gate. Do not change provider settings, deploy, send Production traffic, or select a new Core MVP implementation milestone in this gate.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.
