@@ -1,5 +1,12 @@
 # Changelog
 
+## Sprint 12.20.29 - Owner-Safe Teacher Quest Deletion Boundary
+
+- Completed in `f40b56c861a73c58282e12b3798f7200bc5f8140` (`Harden owner-safe quest deletion`). Live Migration 028 adds `delete_owned_quest(uuid)`: an authenticated owner-safe, parent-first locked RPC that snapshots only cleanup references, deletes the parent, and relies on task FK cascade.
+- Live Migration 029 removes the direct `Teachers can delete own quests` policy. The route/service calls the RPC once, validates exact results, and performs canonical, deduplicated, best-effort post-commit cover/task-image cleanup. Draft deletion, library removal, direct-revisit unavailability, FK cascade, and both cleanup categories passed after policy removal.
+- Verification found a separate legacy image-state defect: the task-create RPC used `image_url = ''`, which violated image CAS no-image semantics. Controlled live repair normalized existing empty values to `NULL`; live Migration 030 prevents recurrence by inserting `image_url = NULL` while retaining empty `video_url`/`audio_url`. A fresh task had NULL image state and accepted immediate image upload.
+- Focused deletion passed 2 files/32 tests, focused creation 2 files/10 tests, and the full suite 29 files/242 tests; lint, build, and `git diff --check` passed. No public catalog/runtime, Auth, Storage-policy, or provider regression occurred.
+
 ## Sprint 12.20.28B - Teacher Task Image Mutation Boundary
 
 - Completed in `abc989e2c621e9802508911023f8467459a61d67` (`Harden teacher task image mutations`). Live Migration 026 adds the owner-safe image SET and CLEAR RPC boundaries, backed by verified per-environment `qwestum_private` trusted Storage-origin configuration. The bootstrap origin value remains provider-managed and is not committed.

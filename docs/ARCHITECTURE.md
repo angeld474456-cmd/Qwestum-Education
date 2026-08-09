@@ -870,6 +870,14 @@ SET accepts a canonical object path, never a caller-selected absolute URL. It ve
 
 The server-only image service and routes strictly allowlist RPC outcomes. Upload, replacement, and clear cleanup begins only after a confirmed database result, uses only canonical server-returned URLs, and is one-shot best-effort: returned or thrown Storage cleanup failures leave the committed successful HTTP response intact. Migration 027 removes the final direct authenticated `public.quest_tasks` UPDATE policy. RLS remains enabled with SELECT retained; direct INSERT, UPDATE, and DELETE are absent, so supported task mutations use the six owner-safe RPC boundaries.
 
+## Atomic Teacher Quest Deletion Boundary
+
+Migration 028 provides `public.delete_owned_quest(p_quest_id uuid)` as the authenticated owner-only quest-deletion authority. The postgres-owned `SECURITY DEFINER` function has a fixed `pg_catalog, public` search path, derives ownership internally from `auth.uid()`, locks the owned parent quest first, then locks/snapshots child task image references. It returns only `{ outcome, id, cover_image_path, task_image_urls }`, deletes the parent quest, and relies on the existing task foreign key's `ON DELETE CASCADE`; it neither accepts caller cleanup data nor performs Storage work.
+
+The deletion service calls the RPC once, accepts only its exact successful DTO, and maps zero rows to owner-safe not-found. Malformed, unknown, wrong-ID, multi-row, or provider results are generic failures. Only after confirmed deletion does it validate canonical RPC-returned cover and task-image references, deduplicate task image paths, and attempt independent best-effort Storage cleanup. External or malformed references are ignored; cleanup failure cannot turn the confirmed HTTP 204 deletion into a `500`.
+
+Migration 029 removes the former direct `Teachers can delete own quests` DELETE policy. Quest deletion is now RPC-only; this does not imply that all quest writes are RPC-only. Quest creation, metadata/settings update, cover set/clear, and the current publication boundary remain separate direct or existing mutation paths. Migration 030 separately corrects the task-create nullable media contract: `create_owned_quest_task` now inserts `image_url = NULL`, preventing the legacy empty-string value from violating the image SET/CLEAR CAS boundary; `video_url` and `audio_url` remain unchanged.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

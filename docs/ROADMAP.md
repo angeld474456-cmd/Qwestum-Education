@@ -509,10 +509,16 @@ Sprint 12.20.28B - Teacher Task Image Mutation Boundary
 - Live, policy-verified Migration 027 removes only the final direct `Teachers can update tasks for own quests` policy. `public.quest_tasks` remains RLS-enabled with SELECT retained and direct authenticated INSERT, UPDATE, and DELETE absent. Supported task creates, reorders, deletes, metadata/content updates, image SETs, and image CLEARs now use owner-safe RPC boundaries.
 - Focused 4-file/23-test and full 29-file/232-test suites, lint, build, and `git diff --check` passed. Browser verification passed for image persistence, stale DELETE/REPLACE CAS, and post-Migration-027 metadata/image SET/image CLEAR. No public catalog, runtime, Auth, or Storage-policy regression occurred. Per-environment origin bootstrap remains operational configuration and is not committed.
 
+Sprint 12.20.29 - Owner-Safe Teacher Quest Deletion Boundary
+
+- Completed in `f40b56c` (`Harden owner-safe quest deletion`). Migration 028 is live: `public.delete_owned_quest(uuid)` is authenticated owner-only, postgres-owned, `SECURITY DEFINER`, parent-first locked, and returns only allowlisted post-commit cleanup references. It snapshots child task-image URLs before deleting the parent and relies on the existing FK cascade rather than deleting tasks manually.
+- Migration 029 is live and removes only `Teachers can delete own quests`; direct `public.quests` DELETE is no longer an application dependency. The service makes one RPC call, strictly validates its result, maps zero rows to owner-safe not-found, and does canonical/deduplicated best-effort Storage cleanup only after confirmed deletion. Draft deletion, library removal, direct-revisit unavailability, FK cascade, cover/task-image cleanup, and post-policy-removal deletion passed.
+- A separate verification discovery corrected legacy task image state: controlled live repair normalized `image_url = ''` rows to `NULL`, and live Migration 030 replaces `create_owned_quest_task` with the same identity/security/locking/order contract but inserts `image_url = NULL`. The mapper accepts null and rejects empty strings; a new task's NULL image state and immediate upload passed. Focused deletion 2 files/32 tests, focused creation 2 files/10 tests, and full 29 files/242 tests passed, along with lint, build, and `git diff --check`.
+
 Next:
 
-- Core MVP Next Milestone Planning.
-  - Planning-only handoff: select the next smallest coherent MVP milestone before implementation approval while preserving the separate P0 pre-production gates.
+- Quest Metadata and Publication Write Boundary.
+  - Planning-only handoff: replace remaining direct teacher quest metadata/publication writes with owner-safe database mutation boundaries, without changing Model A scope or the separate P0 pre-production gates.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.
