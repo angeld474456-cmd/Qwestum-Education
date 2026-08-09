@@ -45,7 +45,8 @@ function mapCreatedTask(value: unknown, questId: string): QuestTask | null {
     !isNullableString(row.description) ||
     !isNullableString(row.answer) ||
     !isNullableString(row.hint) ||
-    typeof row.image_url !== "string" ||
+    !isNullableString(row.image_url) ||
+    row.image_url === "" ||
     typeof row.video_url !== "string" ||
     typeof row.audio_url !== "string" ||
     (row.content !== null && !isTaskContent(row.content)) ||

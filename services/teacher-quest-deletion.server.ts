@@ -12,20 +12,83 @@ import { createClient } from "@/lib/supabase/server";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const taskImagePublicPrefix = "/storage/v1/object/public/quest-images/";
 
-type OwnedQuest = {
+type DeleteOwnedQuestRpcRow = {
+  outcome: "deleted";
   id: string;
   cover_image_path: string | null;
-};
-
-type OwnedQuestTask = {
-  id: string;
-  image_url: string | null;
+  task_image_urls: string[];
 };
 
 export type DeleteOwnedQuestResult =
   | { status: "ok" }
   | { status: "unauthorized" | "not_found" | "error" };
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function isDeletedQuestRpcRow(
+  value: unknown,
+  questId: string
+): value is DeleteOwnedQuestRpcRow {
+  if (!isPlainObject(value)) return false;
+
+  const keys = Object.keys(value).sort();
+  const expectedKeys = [
+    "cover_image_path",
+    "id",
+    "outcome",
+    "task_image_urls",
+  ];
+
+  if (
+    keys.length !== expectedKeys.length ||
+    keys.some((key, index) => key !== expectedKeys[index])
+  ) {
+    return false;
+  }
+
+  return (
+    value.outcome === "deleted" &&
+    value.id === questId &&
+    (typeof value.cover_image_path === "string" ||
+      value.cover_image_path === null) &&
+    Array.isArray(value.task_image_urls) &&
+    value.task_image_urls.every((imageUrl) => typeof imageUrl === "string")
+  );
+}
+
+function getTaskIdFromQuestImageUrl(imageUrl: string): string | null {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!supabaseUrl) return null;
+
+  try {
+    const publicUrl = new URL(imageUrl);
+    const projectUrl = new URL(supabaseUrl);
+
+    if (publicUrl.origin !== projectUrl.origin) return null;
+    if (!publicUrl.pathname.startsWith(taskImagePublicPrefix)) return null;
+
+    const objectPath = decodeURIComponent(
+      publicUrl.pathname.slice(taskImagePublicPrefix.length)
+    );
+    const segments = objectPath.split("/");
+
+    if (segments.length !== 7 || segments[4] !== "tasks") return null;
+
+    return uuidPattern.test(segments[5]) ? segments[5] : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function deleteOwnedQuest(
   questId: string
@@ -43,59 +106,44 @@ export async function deleteOwnedQuest(
     return { status: "unauthorized" };
   }
 
-  const { data: quest, error: questError } = await supabase
-    .from("quests")
-    .select("id, cover_image_path")
-    .eq("id", questId)
-    .eq("author_id", user.id)
-    .maybeSingle<OwnedQuest>();
+  const { data, error } = await supabase.rpc("delete_owned_quest", {
+    p_quest_id: questId,
+  });
 
-  if (questError) {
+  if (error) {
     return { status: "error" };
   }
 
-  if (!quest) {
+  if (!Array.isArray(data)) {
+    return { status: "error" };
+  }
+
+  if (data.length === 0) {
     return { status: "not_found" };
   }
 
-  const { data: tasks, error: tasksError } = await supabase
-    .from("quest_tasks")
-    .select("id, image_url")
-    .eq("quest_id", questId);
-
-  if (tasksError) {
+  if (data.length !== 1 || !isDeletedQuestRpcRow(data[0], questId)) {
     return { status: "error" };
   }
 
-  const { data: deletedQuest, error: deleteError } = await supabase
-    .from("quests")
-    .delete()
-    .eq("id", questId)
-    .eq("author_id", user.id)
-    .select("id")
-    .maybeSingle();
-
-  if (deleteError) {
-    return { status: "error" };
-  }
-
-  if (!deletedQuest) {
-    return { status: "not_found" };
-  }
-
+  const deletedQuest = data[0];
   const coverPath = getSafeQuestCoverImageObjectPath(
-    quest.cover_image_path,
+    deletedQuest.cover_image_path,
     user.id,
     questId
   );
   const taskImagePaths = new Set<string>();
 
-  for (const task of (tasks ?? []) as OwnedQuestTask[]) {
+  for (const imageUrl of deletedQuest.task_image_urls) {
+    const taskId = getTaskIdFromQuestImageUrl(imageUrl);
+
+    if (!taskId) continue;
+
     const imagePath = getSafeQuestImageObjectPath(
-      task.image_url ?? "",
+      imageUrl,
       user.id,
       questId,
-      task.id
+      taskId
     );
 
     if (imagePath) {

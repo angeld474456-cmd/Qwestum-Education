@@ -18,7 +18,7 @@ const validTask = {
   description: "Description",
   answer: "Answer",
   hint: "Hint",
-  image_url: "",
+  image_url: null,
   video_url: "",
   audio_url: "",
   content: null,

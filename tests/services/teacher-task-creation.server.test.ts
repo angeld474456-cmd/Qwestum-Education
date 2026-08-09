@@ -39,7 +39,7 @@ function createdTask(overrides: Record<string, unknown> = {}) {
     description: input.description,
     answer: input.answer,
     hint: input.hint,
-    image_url: "",
+    image_url: null,
     video_url: "",
     audio_url: "",
     content: input.content,
@@ -79,6 +79,19 @@ describe("createOwnedQuestTask", () => {
       p_points: input.points,
       p_task_type: input.taskType,
       p_content: input.content,
+    });
+  });
+
+  it("accepts the nullable image contract and rejects an empty image URL", async () => {
+    configure([createdTask({ image_url: null })]);
+    await expect(createOwnedQuestTask(input)).resolves.toMatchObject({
+      status: "ok",
+      task: { image_url: null },
+    });
+
+    configure([createdTask({ image_url: "" })]);
+    await expect(createOwnedQuestTask(input)).resolves.toEqual({
+      status: "error",
     });
   });
 

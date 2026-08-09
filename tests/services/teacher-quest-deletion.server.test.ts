@@ -10,8 +10,9 @@ const mocks = vi.hoisted(() => ({
   auth: vi.fn(),
   createClient: vi.fn(),
   from: vi.fn(),
-  storageFrom: vi.fn(),
   remove: vi.fn(),
+  rpc: vi.fn(),
+  storageFrom: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
@@ -23,75 +24,37 @@ function taskImageUrl(id = taskId) {
   return `${origin}/storage/v1/object/public/quest-images/teachers/${ownerId}/quests/${questId}/tasks/${id}/${fileId}.png`;
 }
 
+function deletedRow(overrides: Record<string, unknown> = {}) {
+  return {
+    outcome: "deleted",
+    id: questId,
+    cover_image_path: null,
+    task_image_urls: [],
+    ...overrides,
+  };
+}
+
 function configure(options?: {
+  data?: unknown;
+  error?: unknown;
+  removeResult?: { error: unknown };
   user?: { id: string } | null;
-  quest?: { id: string; cover_image_path: string | null } | null;
-  questError?: unknown;
-  tasks?: Array<{
-    id: string;
-    image_url: string | null;
-    video_url?: string | null;
-    audio_url?: string | null;
-  }>;
-  tasksError?: unknown;
-  deletedQuest?: { id: string } | null;
-  deleteError?: unknown;
-  cleanupError?: unknown;
 }) {
-  const questQuery = {
-    select: vi.fn(),
-    eq: vi.fn(),
-    maybeSingle: vi.fn(),
-  };
-  const tasksQuery = {
-    select: vi.fn(),
-    eq: vi.fn(),
-    delete: vi.fn(),
-  };
-  const deleteQuery = {
-    delete: vi.fn(),
-    eq: vi.fn(),
-    select: vi.fn(),
-    maybeSingle: vi.fn(),
-  };
-
-  questQuery.select.mockReturnValue(questQuery);
-  questQuery.eq.mockReturnValue(questQuery);
-  questQuery.maybeSingle.mockResolvedValue({
-    data: options?.quest === undefined
-      ? { id: questId, cover_image_path: null }
-      : options.quest,
-    error: options?.questError ?? null,
-  });
-  tasksQuery.select.mockReturnValue(tasksQuery);
-  tasksQuery.eq.mockResolvedValue({
-    data: options?.tasks ?? [],
-    error: options?.tasksError ?? null,
-  });
-  deleteQuery.delete.mockReturnValue(deleteQuery);
-  deleteQuery.eq.mockReturnValue(deleteQuery);
-  deleteQuery.select.mockReturnValue(deleteQuery);
-  deleteQuery.maybeSingle.mockResolvedValue({
-    data: options?.deletedQuest === undefined ? { id: questId } : options.deletedQuest,
-    error: options?.deleteError ?? null,
-  });
-
   mocks.auth.mockResolvedValue({
     data: { user: options?.user === undefined ? { id: ownerId } : options.user },
   });
-  mocks.from
-    .mockImplementationOnce(() => questQuery)
-    .mockImplementationOnce(() => tasksQuery)
-    .mockImplementationOnce(() => deleteQuery);
-  mocks.remove.mockResolvedValue({ error: options?.cleanupError ?? null });
+  mocks.rpc.mockResolvedValue({
+    data: options?.data === undefined ? [deletedRow()] : options.data,
+    error: options?.error ?? null,
+  });
+  mocks.remove.mockResolvedValue(options?.removeResult ?? { error: null });
   mocks.storageFrom.mockReturnValue({ remove: mocks.remove });
   mocks.createClient.mockResolvedValue({
     auth: { getUser: mocks.auth },
     from: mocks.from,
+    rpc: mocks.rpc,
     storage: { from: mocks.storageFrom },
   });
-
-  return { questQuery, tasksQuery, deleteQuery };
 }
 
 describe("deleteOwnedQuest", () => {
@@ -100,97 +63,95 @@ describe("deleteOwnedQuest", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = origin;
   });
 
-  it("prefetches and deletes only the authenticated owner's quest without deleting tasks directly", async () => {
-    const { questQuery, tasksQuery, deleteQuery } = configure();
+  it("calls the delete RPC once with only the quest ID and performs no direct reads or writes", async () => {
+    configure();
 
     await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
-    expect(questQuery.select).toHaveBeenCalledWith("id, cover_image_path");
-    expect(questQuery.eq).toHaveBeenNthCalledWith(1, "id", questId);
-    expect(questQuery.eq).toHaveBeenNthCalledWith(2, "author_id", ownerId);
-    expect(tasksQuery.select).toHaveBeenCalledWith("id, image_url");
-    expect(tasksQuery.eq).toHaveBeenCalledWith("quest_id", questId);
-    expect(tasksQuery.delete).not.toHaveBeenCalled();
-    expect(deleteQuery.delete).toHaveBeenCalledOnce();
-    expect(deleteQuery.eq).toHaveBeenNthCalledWith(1, "id", questId);
-    expect(deleteQuery.eq).toHaveBeenNthCalledWith(2, "author_id", ownerId);
-  });
 
-  it("returns owner-safe not_found without cleanup for missing or foreign quests", async () => {
-    configure({ quest: null });
-
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({
-      status: "not_found",
+    expect(mocks.rpc).toHaveBeenCalledOnce();
+    expect(mocks.rpc).toHaveBeenCalledWith("delete_owned_quest", {
+      p_quest_id: questId,
     });
-    expect(mocks.storageFrom).not.toHaveBeenCalled();
+    expect(mocks.from).not.toHaveBeenCalled();
   });
 
-  it("returns unauthorized without querying database rows", async () => {
+  it("returns unauthorized without calling the RPC", async () => {
     configure({ user: null });
 
     await expect(deleteOwnedQuest(questId)).resolves.toEqual({
       status: "unauthorized",
     });
-    expect(mocks.from).not.toHaveBeenCalled();
-  });
-
-  it("fails safely for database errors without exposing raw detail", async () => {
-    configure({ deleteError: { message: "RAW_DELETE_ERROR" } });
-
-    const result = await deleteOwnedQuest(questId);
-    expect(result).toEqual({ status: "error" });
-    expect(JSON.stringify(result)).not.toContain("RAW_DELETE_ERROR");
+    expect(mocks.rpc).not.toHaveBeenCalled();
     expect(mocks.storageFrom).not.toHaveBeenCalled();
   });
 
-  it("returns not_found without cleanup when the owner-scoped delete returns no row", async () => {
-    const { deleteQuery } = configure({ deletedQuest: null });
+  it("maps zero RPC rows to owner-safe not_found without cleanup", async () => {
+    configure({ data: [] });
 
     await expect(deleteOwnedQuest(questId)).resolves.toEqual({
       status: "not_found",
     });
-    expect(deleteQuery.delete).toHaveBeenCalledOnce();
     expect(mocks.storageFrom).not.toHaveBeenCalled();
   });
 
-  it("does not delete or clean up when task prefetch fails", async () => {
-    const { deleteQuery } = configure({
-      tasksError: { message: "RAW_TASK_PREFETCH_ERROR" },
-    });
+  it("maps provider errors to a safe error without cleanup", async () => {
+    configure({ error: { message: "RAW_RPC_ERROR" } });
 
     const result = await deleteOwnedQuest(questId);
     expect(result).toEqual({ status: "error" });
-    expect(JSON.stringify(result)).not.toContain("RAW_TASK_PREFETCH_ERROR");
-    expect(deleteQuery.delete).not.toHaveBeenCalled();
+    expect(JSON.stringify(result)).not.toContain("RAW_RPC_ERROR");
     expect(mocks.storageFrom).not.toHaveBeenCalled();
   });
 
-  it("cleans only deduplicated canonical cover and task image paths", async () => {
+  it.each([
+    null,
+    {},
+    [deletedRow(), deletedRow()],
+    [{ ...deletedRow(), outcome: "not_found" }],
+    [{ ...deletedRow(), id: ownerId }],
+    [{ ...deletedRow(), cover_image_path: 1 }],
+    [{ ...deletedRow(), task_image_urls: null }],
+    [{ ...deletedRow(), task_image_urls: [null] }],
+    [{ ...deletedRow(), extra: true }],
+  ])("rejects malformed RPC result %# without cleanup", async (data) => {
+    configure({ data });
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({
+      status: "error",
+    });
+    expect(mocks.storageFrom).not.toHaveBeenCalled();
+  });
+
+  it("cleans only canonical RPC-returned cover and deduplicated task image paths", async () => {
     const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
     configure({
-      quest: { id: questId, cover_image_path: coverPath },
-      tasks: [
-        { id: taskId, image_url: taskImageUrl() },
-        { id: taskId, image_url: taskImageUrl() },
+      data: [
+        deletedRow({
+          cover_image_path: coverPath,
+          task_image_urls: [taskImageUrl(), taskImageUrl()],
+        }),
       ],
     });
 
     await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
+    expect(mocks.storageFrom).toHaveBeenNthCalledWith(1, "quest-images");
     expect(mocks.remove).toHaveBeenNthCalledWith(1, [coverPath]);
+    expect(mocks.storageFrom).toHaveBeenNthCalledWith(2, "quest-images");
     expect(mocks.remove).toHaveBeenNthCalledWith(2, [
       `teachers/${ownerId}/quests/${questId}/tasks/${taskId}/${fileId}.png`,
     ]);
   });
 
-  it("ignores malformed, legacy, video, and audio media values", async () => {
+  it("ignores malformed and external RPC-returned cleanup references", async () => {
     configure({
-      quest: { id: questId, cover_image_path: "legacy-cover.png" },
-      tasks: [
-        {
-          id: taskId,
-          image_url: "https://other.example/object.png",
-          video_url: "https://other.example/video.mp4",
-          audio_url: "https://other.example/audio.mp3",
-        },
+      data: [
+        deletedRow({
+          cover_image_path: "legacy-cover.png",
+          task_image_urls: [
+            "https://other.example/object.png",
+            `${origin}/storage/v1/object/public/quest-images/teachers/${ownerId}/quests/${questId}/tasks/not-a-uuid/${fileId}.png`,
+          ],
+        }),
       ],
     });
 
@@ -198,36 +159,69 @@ describe("deleteOwnedQuest", () => {
     expect(mocks.storageFrom).not.toHaveBeenCalled();
   });
 
-  it("keeps a confirmed deletion successful when storage cleanup fails", async () => {
+  it("keeps confirmed deletion successful when cleanup returns errors", async () => {
+    const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
     configure({
-      quest: {
-        id: questId,
-        cover_image_path: `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`,
-      },
-      cleanupError: { message: "RAW_STORAGE_ERROR" },
+      data: [
+        deletedRow({
+          cover_image_path: coverPath,
+          task_image_urls: [taskImageUrl()],
+        }),
+      ],
+      removeResult: { error: { message: "RAW_STORAGE_ERROR" } },
     });
 
     const result = await deleteOwnedQuest(questId);
     expect(result).toEqual({ status: "ok" });
     expect(JSON.stringify(result)).not.toContain("RAW_STORAGE_ERROR");
+    expect(mocks.remove).toHaveBeenCalledTimes(2);
   });
 
   it("still attempts task cleanup when cover cleanup throws", async () => {
     const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
     configure({
-      quest: { id: questId, cover_image_path: coverPath },
-      tasks: [{ id: taskId, image_url: taskImageUrl() }],
+      data: [
+        deletedRow({
+          cover_image_path: coverPath,
+          task_image_urls: [taskImageUrl()],
+        }),
+      ],
     });
     mocks.remove
       .mockRejectedValueOnce(new Error("RAW_COVER_CLEANUP_ERROR"))
       .mockResolvedValueOnce({ error: null });
 
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
+    expect(mocks.remove).toHaveBeenCalledTimes(2);
+  });
+
+  it("still attempts task cleanup when cover bucket access throws", async () => {
+    const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
+    configure({
+      data: [
+        deletedRow({
+          cover_image_path: coverPath,
+          task_image_urls: [taskImageUrl()],
+        }),
+      ],
+    });
+    mocks.storageFrom
+      .mockImplementationOnce(() => {
+        throw new Error("RAW_COVER_BUCKET_ERROR");
+      })
+      .mockReturnValueOnce({ remove: mocks.remove });
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
+    expect(mocks.storageFrom).toHaveBeenCalledTimes(2);
+    expect(mocks.remove).toHaveBeenCalledOnce();
+  });
+
+  it("keeps confirmed deletion successful when task cleanup throws", async () => {
+    configure({ data: [deletedRow({ task_image_urls: [taskImageUrl()] })] });
+    mocks.remove.mockRejectedValueOnce(new Error("RAW_TASK_CLEANUP_ERROR"));
+
     const result = await deleteOwnedQuest(questId);
     expect(result).toEqual({ status: "ok" });
-    expect(mocks.remove).toHaveBeenNthCalledWith(1, [coverPath]);
-    expect(mocks.remove).toHaveBeenNthCalledWith(2, [
-      `teachers/${ownerId}/quests/${questId}/tasks/${taskId}/${fileId}.png`,
-    ]);
-    expect(JSON.stringify(result)).not.toContain("RAW_COVER_CLEANUP_ERROR");
+    expect(JSON.stringify(result)).not.toContain("RAW_TASK_CLEANUP_ERROR");
   });
 });
