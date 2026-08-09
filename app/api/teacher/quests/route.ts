@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createOwnedQuest } from "@/services/teacher-quest-creation.server";
 
 const allowedDifficulties = new Set([1, 2, 3]);
 
@@ -59,27 +59,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const result = await createOwnedQuest(parsed.data);
 
-  if (!user) {
+  if (result.status === "unauthorized") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const { data, error } = await supabase
-    .from("quests")
-    .insert({
-      ...parsed.data,
-      is_public: false,
-      author_id: user.id,
-    })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    console.error(error);
+  if (result.status !== "ok") {
     return NextResponse.json(
       { error: "Unable to create quest." },
       { status: 500 }
@@ -88,7 +74,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     quest: {
-      id: data.id,
+      id: result.id,
     },
   });
 }
