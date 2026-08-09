@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.31 - Owner-Safe Quest Creation Boundary
+
+- Completed in `a343cc2acc2626ee8254ca173ab117c205e1f57d` (`Harden owner-safe quest creation`). Live Migration 034 adds authenticated owner-safe `create_owned_quest(text, text, integer)`: a postgres-owned `SECURITY DEFINER` Draft-only creation RPC that derives ownership from `auth.uid()`, validates title/difficulty, normalizes description, and returns only `{ outcome, id }`.
+- Live Migration 035 removes `Teachers can insert own quests`. `public.quests` now retains only authenticated owner SELECT; direct INSERT, UPDATE, and DELETE policies are absent. Creation, metadata, cover SET/CLEAR, publication, and deletion all use dedicated owner-safe RPC boundaries.
+- Browser checks passed for creation, Settings redirect, owned library, Draft/catalog behavior, metadata, cover persistence, publication guards, publication after adding a task, and creation after policy removal. Focused verification passed 2 files/27 tests; the full suite passed 34 files/284 tests; lint, build, and `git diff --check` passed.
+
 ## Sprint 12.20.30 - Quest Metadata and Cover Mutation Boundary
 
 - Completed in `1daaa8ec5f453637e3a8e997d9586c65d2fbf985` (`Harden quest metadata and cover mutations`). Live Migration 031 adds `update_owned_quest_metadata(...)`: authenticated owner-only, parent-first locked metadata updates with explicit presence flags, strict allowlisted metadata fields, and `is_public` return-only.

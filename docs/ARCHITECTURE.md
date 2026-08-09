@@ -333,15 +333,14 @@ Quest ownership model:
 - Use `quests.author_id = auth.uid()` for teacher-owned quests.
 - Teacher dashboard queries return only quests owned by the current teacher.
 - Public/student catalog queries should eventually return only `is_public` quests or assigned quests.
-- Updates are allowed only to the owning teacher.
-- Direct base-table quest deletion remains denied by RLS; owner-safe quest deletion uses its dedicated RPC boundary.
+- Supported quest writes use dedicated owner-safe RPCs; no direct base-table quest INSERT, UPDATE, or DELETE policy remains.
 
 Initial `quests` and `quest_tasks` RLS boundaries established by `database/migrations/004_harden_quest_rls.sql`:
 
 - `quests`
-  - Authenticated teachers can select, insert, and update only their own quests through `author_id = auth.uid()`.
+  - Authenticated teachers can select only their own quests through `author_id = auth.uid()`.
+  - Direct authenticated INSERT, UPDATE, and DELETE policies were removed by Migrations 035, 033, and 029 respectively; supported writes use dedicated owner-safe RPCs.
   - Direct anonymous access is denied.
-  - No DELETE policy exists.
 - `quest_tasks`
   - The original authenticated owner-derived SELECT/INSERT/UPDATE/DELETE policies used the parent quest's `auth.uid()` ownership check. Migrations 022, 024, and 027 later removed the direct INSERT, DELETE, and UPDATE policies; SELECT remains.
   - Direct anonymous access is denied.
@@ -876,7 +875,7 @@ Migration 028 provides `public.delete_owned_quest(p_quest_id uuid)` as the authe
 
 The deletion service calls the RPC once, accepts only its exact successful DTO, and maps zero rows to owner-safe not-found. Malformed, unknown, wrong-ID, multi-row, or provider results are generic failures. Only after confirmed deletion does it validate canonical RPC-returned cover and task-image references, deduplicate task image paths, and attempt independent best-effort Storage cleanup. External or malformed references are ignored; cleanup failure cannot turn the confirmed HTTP 204 deletion into a `500`.
 
-Migration 029 removes the former direct `Teachers can delete own quests` DELETE policy. Quest deletion is now RPC-only; this does not imply that all quest writes are RPC-only. Quest creation, metadata/settings update, cover set/clear, and the current publication boundary remain separate direct or existing mutation paths. Migration 030 separately corrects the task-create nullable media contract: `create_owned_quest_task` now inserts `image_url = NULL`, preventing the legacy empty-string value from violating the image SET/CLEAR CAS boundary; `video_url` and `audio_url` remain unchanged.
+Migration 029 removes the former direct `Teachers can delete own quests` DELETE policy. Migration 030 separately corrects the task-create nullable media contract: `create_owned_quest_task` now inserts `image_url = NULL`, preventing the legacy empty-string value from violating the image SET/CLEAR CAS boundary; `video_url` and `audio_url` remain unchanged.
 
 ## Owner-Safe Quest Metadata and Cover Boundaries
 
@@ -884,7 +883,15 @@ Migration 031 makes Settings metadata writes RPC-only through `public.update_own
 
 Migration 032 makes cover SET/CLEAR RPC-only through `public.set_owned_quest_cover_image(...)` and `public.clear_owned_quest_cover_image_if_matches(...)`. Both lock the owned parent quest first and use null-safe expected-path CAS. SET accepts only the canonical owner/quest cover path, confirms its exact `quest-images` Storage object, and never accepts an external URL. Returned mutation DTOs are allowlisted; route-side cleanup begins only after a confirmed update/clear and remains canonical, one-shot, and best-effort.
 
-Migration 033 removes `Teachers can update own quests`. Current `public.quests` RLS retains owner INSERT and SELECT only; direct UPDATE and DELETE are absent. Metadata, cover, publication (`set_owned_quest_publication_state`), and deletion (`delete_owned_quest`) are dedicated RPC boundaries. Quest creation remains the sole direct quest-table INSERT path and is the next boundary milestone.
+Migration 033 removes `Teachers can update own quests`. At that stage, `public.quests` retained owner INSERT and SELECT only. Sprint 12.20.31 subsequently moves creation to the dedicated boundary below and removes the final direct INSERT policy.
+
+## Owner-Safe Quest Creation Boundary
+
+Migration 034 provides `public.create_owned_quest(p_title text, p_description text, p_difficulty integer)` as the authenticated owner-safe quest-creation authority. The postgres-owned `VOLATILE SECURITY DEFINER` function uses fixed `pg_catalog, public` search path, derives the owner from `auth.uid()`, returns zero rows when unauthenticated, validates trimmed title and difficulty `1..3`, and normalizes description with `coalesce(btrim(...), '')`.
+
+Its only INSERT allowlist is title, description, difficulty, `author_id`, and an explicit `is_public = false`; database defaults provide the ID, creation timestamp, and tags while optional metadata remains omitted. It returns only `{ outcome, id }`, creates no child or cover rows, uses no locks, and exposes no caller-controlled ownership, publication state, or metadata fields. The server-only creation service calls it once and strictly validates the exact result before the existing route returns `{ quest: { id } }`.
+
+Migration 035 removes `Teachers can insert own quests`. Current `public.quests` RLS retains only authenticated owner SELECT; direct INSERT, UPDATE, and DELETE are absent. Supported quest writes are now RPC-only: `create_owned_quest`, `update_owned_quest_metadata`, `set_owned_quest_cover_image`, `clear_owned_quest_cover_image_if_matches`, `set_owned_quest_publication_state`, and `delete_owned_quest`.
 
 ## Current Publication Architecture
 
