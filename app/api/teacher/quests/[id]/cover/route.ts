@@ -9,6 +9,10 @@ import {
   questCoverImageMaxFileSize,
 } from "@/lib/storage/quest-cover.server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  clearOwnedQuestCoverImage,
+  setOwnedQuestCoverImage,
+} from "@/services/teacher-quest-cover-mutation.server";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -28,11 +32,15 @@ async function removeCoverObject(
   supabase: Awaited<ReturnType<typeof createClient>>,
   objectPath: string
 ) {
-  const { error } = await supabase.storage
-    .from(questCoverImageBucketName)
-    .remove([objectPath]);
+  try {
+    const { error } = await supabase.storage
+      .from(questCoverImageBucketName)
+      .remove([objectPath]);
 
-  return error;
+    return error;
+  } catch {
+    return new Error("Cover Storage cleanup threw.");
+  }
 }
 
 async function getOwnedQuestCover(
@@ -161,58 +169,66 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  let updateQuery = supabase
-    .from("quests")
-    .update({ cover_image_path: objectPath })
-    .eq("id", id)
-    .eq("author_id", user.id);
+  const result = await setOwnedQuestCoverImage({
+    questId: id,
+    expectedCoverImagePath: quest.cover_image_path,
+    newObjectPath: objectPath,
+  });
 
-  updateQuery = quest.cover_image_path
-    ? updateQuery.eq("cover_image_path", quest.cover_image_path)
-    : updateQuery.is("cover_image_path", null);
-
-  const { data: updatedQuest, error: updateError } = await updateQuery
-    .select("id, cover_image_path")
-    .maybeSingle<OwnedQuestCover>();
-
-  if (updateError) {
-    console.error("Quest cover path update failed.", {
-      questId: id,
-      error: updateError.message,
-    });
-    const cleanupError = await removeCoverObject(supabase, objectPath);
-
-    if (cleanupError) {
-      console.warn("Quest cover cleanup failed after DB update error.", {
-        questId: id,
-        error: cleanupError.message,
-      });
-    }
-
-    return NextResponse.json(
-      { error: "Unable to save cover image." },
-      { status: 500 }
-    );
+  if (result.status === "unauthorized") {
+    await removeCoverObject(supabase, objectPath);
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  if (!updatedQuest) {
-    const cleanupError = await removeCoverObject(supabase, objectPath);
+  if (result.status === "not_found") {
+    await removeCoverObject(supabase, objectPath);
+    return NextResponse.json({ error: "Quest not found." }, { status: 404 });
+  }
 
+  if (result.status === "stale_cover") {
+    const cleanupError = await removeCoverObject(supabase, objectPath);
     if (cleanupError) {
       console.warn("Quest cover cleanup failed after replacement conflict.", {
         questId: id,
         error: cleanupError.message,
       });
     }
-
     return NextResponse.json(
       { error: "Quest cover changed. Refresh and try again." },
       { status: 409 }
     );
   }
 
+  if (result.status === "error") {
+    const cleanupError = await removeCoverObject(supabase, objectPath);
+    if (cleanupError) {
+      console.warn("Quest cover cleanup failed after DB update error.", {
+        questId: id,
+        error: cleanupError.message,
+      });
+    }
+    return NextResponse.json(
+      { error: "Unable to save cover image." },
+      { status: 500 }
+    );
+  }
+
+  if (result.status === "already_current") {
+    return NextResponse.json({
+      cover_image_path: result.coverImagePath,
+      cover_image_url: getQuestCoverImagePublicUrl(result.coverImagePath),
+    });
+  }
+
+  if (result.status !== "updated") {
+    return NextResponse.json(
+      { error: "Unable to save cover image." },
+      { status: 500 }
+    );
+  }
+
   const previousObjectPath = getSafeQuestCoverImageObjectPath(
-    quest.cover_image_path,
+    result.previousCoverImagePath,
     user.id,
     id
   );
@@ -229,8 +245,8 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
 
   return NextResponse.json({
-    cover_image_path: updatedQuest.cover_image_path,
-    cover_image_url: getQuestCoverImagePublicUrl(updatedQuest.cover_image_path),
+    cover_image_path: result.coverImagePath,
+    cover_image_url: getQuestCoverImagePublicUrl(result.coverImagePath),
   });
 }
 
@@ -271,46 +287,42 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Quest not found." }, { status: 404 });
   }
 
-  if (!quest.cover_image_path) {
-    return NextResponse.json({
-      success: true,
-      cover_image_path: null,
-      cover_image_url: null,
-      storageDeleted: false,
-    });
+  const result = await clearOwnedQuestCoverImage({
+    questId: id,
+    expectedCoverImagePath: quest.cover_image_path,
+  });
+
+  if (result.status === "unauthorized") {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const updateQuery = supabase
-    .from("quests")
-    .update({ cover_image_path: null })
-    .eq("id", id)
-    .eq("author_id", user.id)
-    .eq("cover_image_path", quest.cover_image_path);
-
-  const { data: updatedQuest, error: updateError } = await updateQuery
-    .select("id, cover_image_path")
-    .maybeSingle<OwnedQuestCover>();
-
-  if (updateError) {
-    console.error("Quest cover path removal failed.", {
-      questId: id,
-      error: updateError.message,
-    });
-    return NextResponse.json(
-      { error: "Unable to remove cover image." },
-      { status: 500 }
-    );
+  if (result.status === "not_found") {
+    return NextResponse.json({ error: "Quest not found." }, { status: 404 });
   }
 
-  if (!updatedQuest) {
+  if (result.status === "stale_cover") {
     return NextResponse.json(
       { error: "Quest cover changed. Refresh and try again." },
       { status: 409 }
     );
   }
 
+  if (result.status === "error") {
+    return NextResponse.json(
+      { error: "Unable to remove cover image." },
+      { status: 500 }
+    );
+  }
+
+  if (result.status !== "cleared" && result.status !== "already_clear") {
+    return NextResponse.json(
+      { error: "Unable to remove cover image." },
+      { status: 500 }
+    );
+  }
+
   const objectPath = getSafeQuestCoverImageObjectPath(
-    quest.cover_image_path,
+    result.previousCoverImagePath,
     user.id,
     id
   );

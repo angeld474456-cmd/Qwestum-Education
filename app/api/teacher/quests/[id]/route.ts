@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
 import { deleteOwnedQuest } from "@/services/teacher-quest-deletion.server";
 import { isQuestLanguageCode } from "@/services/quest-language";
+import { updateOwnedQuestMetadata } from "@/services/teacher-quest-metadata-update.server";
 
 const allowedDifficulties = new Set([1, 2, 3]);
 const uuidPattern =
@@ -440,6 +440,22 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     );
   }
 
+  if (gradeMin.provided && gradeMax.provided) {
+    const providedGradeMin = gradeMin.value;
+    const providedGradeMax = gradeMax.value;
+
+    if (
+      typeof providedGradeMin === "number" &&
+      typeof providedGradeMax === "number" &&
+      providedGradeMin > providedGradeMax
+    ) {
+      return NextResponse.json(
+        { error: "Grade from must be less than or equal to Grade to." },
+        { status: 400 }
+      );
+    }
+  }
+
   if (subjectId.error) {
     return NextResponse.json({ error: subjectId.error }, { status: 400 });
   }
@@ -456,129 +472,68 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: tags.error }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const result = await updateOwnedQuestMetadata({
+    questId: id,
+    ...parsed.data,
+    subjectId: {
+      provided: subjectId.provided,
+      value: subjectId.provided ? subjectId.value ?? null : null,
+    },
+    languageCode: {
+      provided: languageCode.provided,
+      value: languageCode.provided ? languageCode.value ?? null : null,
+    },
+    category: {
+      provided: category.provided,
+      value: category.provided ? category.value ?? null : null,
+    },
+    tags: {
+      provided: tags.provided,
+      value: tags.provided ? tags.value ?? [] : [],
+    },
+    gradeMin: {
+      provided: gradeMin.provided,
+      value: gradeMin.provided ? gradeMin.value ?? null : null,
+    },
+    gradeMax: {
+      provided: gradeMax.provided,
+      value: gradeMax.provided ? gradeMax.value ?? null : null,
+    },
+    estimatedDurationMinutes: {
+      provided: estimatedDuration.provided,
+      value: estimatedDuration.provided
+        ? estimatedDuration.value ?? null
+        : null,
+    },
+  });
 
-  if (!user) {
+  if (result.status === "ok") {
+    return NextResponse.json({ quest: result.quest });
+  }
+
+  if (result.status === "unauthorized") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const { data: ownedQuest, error: ownedQuestError } = await supabase
-    .from("quests")
-    .select("id, grade_min, grade_max")
-    .eq("id", id)
-    .eq("author_id", user.id)
-    .maybeSingle();
-
-  if (ownedQuestError) {
-    console.error(ownedQuestError);
-    return NextResponse.json(
-      { error: "Unable to save quest settings." },
-      { status: 500 }
-    );
-  }
-
-  if (!ownedQuest) {
+  if (result.status === "not_found") {
     return NextResponse.json({ error: "Quest not found." }, { status: 404 });
   }
 
-  if (subjectId.provided && subjectId.value !== null) {
-    const { data: subject, error: subjectError } = await supabase
-      .from("subjects")
-      .select("id")
-      .eq("id", subjectId.value)
-      .maybeSingle();
-
-    if (subjectError) {
-      console.error(subjectError);
-      return NextResponse.json(
-        { error: "Unable to save quest settings." },
-        { status: 500 }
-      );
-    }
-
-    if (!subject) {
-      return NextResponse.json({ error: "Subject is invalid." }, { status: 400 });
-    }
+  if (result.status === "subject_not_found") {
+    return NextResponse.json({ error: "Subject is invalid." }, { status: 400 });
   }
 
-  const finalGradeMin = gradeMin.provided
-    ? gradeMin.value
-    : ownedQuest.grade_min;
-  const finalGradeMax = gradeMax.provided
-    ? gradeMax.value
-    : ownedQuest.grade_max;
-
-  const hasGradeMin = finalGradeMin !== null;
-  const hasGradeMax = finalGradeMax !== null;
-
-  if (hasGradeMin !== hasGradeMax) {
+  if (result.status === "invalid") {
     return NextResponse.json(
-      { error: "Grade range must include both Grade from and Grade to." },
+      { error: "Invalid quest settings." },
       { status: 400 }
     );
   }
 
-  if (
-    finalGradeMin !== null &&
-    finalGradeMax !== null &&
-    finalGradeMin > finalGradeMax
-  ) {
-    return NextResponse.json(
-      { error: "Grade from must be less than or equal to Grade to." },
-      { status: 400 }
-    );
-  }
-
-  const updateData = {
-    ...parsed.data,
-    ...(subjectId.provided ? { subject_id: subjectId.value } : {}),
-    ...(languageCode.provided
-      ? { language_code: languageCode.value }
-      : {}),
-    ...(category.provided ? { category: category.value } : {}),
-    ...(tags.provided ? { tags: tags.value } : {}),
-    ...(gradeMin.provided ? { grade_min: gradeMin.value } : {}),
-    ...(gradeMax.provided ? { grade_max: gradeMax.value } : {}),
-    ...(estimatedDuration.provided
-      ? { estimated_duration_minutes: estimatedDuration.value }
-      : {}),
-  };
-
-  const { data, error } = await supabase
-    .from("quests")
-    .update(updateData)
-    .eq("id", id)
-    .eq("author_id", user.id)
-    .select(
-      "id, title, description, subject_id, language_code, category, tags, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes"
-    )
-    .maybeSingle();
-
-  if (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Unable to save quest settings." },
-      { status: 500 }
-    );
-  }
-
-  if (!data) {
-    console.error(
-      "Owned quest update returned no row. Check quests UPDATE RLS policy.",
-      { questId: id }
-    );
-    return NextResponse.json(
-      { error: "Unable to save quest settings." },
-      { status: 500 }
-    );
-  }
-
-  return NextResponse.json({
-    quest: data,
-  });
+  return NextResponse.json(
+    { error: "Unable to save quest settings." },
+    { status: 500 }
+  );
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {

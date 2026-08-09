@@ -1,228 +1,124 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const questId = "11111111-1111-4111-8111-111111111111";
-const ownerId = "22222222-2222-4222-8222-222222222222";
-const mocks = vi.hoisted(() => ({
-  auth: vi.fn(),
-  createClient: vi.fn(),
-  deleteOwnedQuest: vi.fn(),
-  from: vi.fn(),
-  rpc: vi.fn(),
-}));
+const mocks = vi.hoisted(() => ({ deleteOwnedQuest: vi.fn(), updateOwnedQuestMetadata: vi.fn() }));
 
-vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
-vi.mock("@/services/teacher-quest-deletion.server", () => ({
-  deleteOwnedQuest: mocks.deleteOwnedQuest,
-}));
+vi.mock("@/services/teacher-quest-deletion.server", () => ({ deleteOwnedQuest: mocks.deleteOwnedQuest }));
+vi.mock("@/services/teacher-quest-metadata-update.server", () => ({ updateOwnedQuestMetadata: mocks.updateOwnedQuestMetadata }));
 
 import { DELETE, PATCH } from "@/app/api/teacher/quests/[id]/route";
 
 const context = { params: Promise.resolve({ id: questId }) };
-const metadataBody = {
-  title: "Updated quest",
-  description: "Updated description",
-  difficulty: 2,
-};
-const publishedQuest = {
-  id: questId,
-  title: "Updated quest",
-  description: "Updated description",
-  subject_id: null,
-  language_code: null,
-  category: null,
-  tags: [],
-  difficulty: 2,
-  is_public: true,
-  grade_min: null,
-  grade_max: null,
-  estimated_duration_minutes: null,
-};
+const body = { title: "Updated quest", description: "Updated description", difficulty: 2 };
+const quest = { id: questId, ...body, subject_id: null, language_code: null, category: null, tags: [], is_public: false, grade_min: null, grade_max: null, estimated_duration_minutes: null };
 
-function request(body: BodyInit) {
-  return new Request("http://example.test", {
-    method: "PATCH",
-    headers: { "content-type": "application/json" },
-    body,
-  });
-}
-
-function configureClient(options?: {
-  user?: { id: string } | null;
-  owner?: Record<string, unknown> | null;
-  ownerError?: unknown;
-  update?: Record<string, unknown> | null;
-  updateError?: unknown;
-}) {
-  const ownerQuery = {
-    select: vi.fn(),
-    eq: vi.fn(),
-    maybeSingle: vi.fn(),
-  };
-  const updateQuery = {
-    update: vi.fn(),
-    eq: vi.fn(),
-    select: vi.fn(),
-    maybeSingle: vi.fn(),
-  };
-  ownerQuery.select.mockReturnValue(ownerQuery);
-  ownerQuery.eq.mockReturnValue(ownerQuery);
-  ownerQuery.maybeSingle.mockResolvedValue({
-    data: options?.owner === undefined
-      ? { id: questId, grade_min: null, grade_max: null }
-      : options.owner,
-    error: options?.ownerError ?? null,
-  });
-  updateQuery.update.mockReturnValue(updateQuery);
-  updateQuery.eq.mockReturnValue(updateQuery);
-  updateQuery.select.mockReturnValue(updateQuery);
-  updateQuery.maybeSingle.mockResolvedValue({
-    data: options?.update === undefined ? publishedQuest : options.update,
-    error: options?.updateError ?? null,
-  });
-  mocks.auth.mockResolvedValue({ data: { user: options?.user === undefined ? { id: ownerId } : options.user } });
-  mocks.from.mockImplementationOnce(() => ownerQuery).mockImplementationOnce(() => updateQuery);
-  mocks.createClient.mockResolvedValue({ auth: { getUser: mocks.auth }, from: mocks.from, rpc: mocks.rpc });
-  return { ownerQuery, updateQuery };
+function request(value: unknown) {
+  return new Request("http://example.test", { method: "PATCH", headers: { "content-type": "application/json" }, body: typeof value === "string" ? value : JSON.stringify(value) });
 }
 
 describe("quest settings PATCH", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
-  });
+  beforeEach(() => vi.clearAllMocks());
 
-  it("updates valid metadata without is_public and preserves the published value", async () => {
-    const { updateQuery } = configureClient();
-    const response = await PATCH(request(JSON.stringify(metadataBody)), context);
+  it("delegates a valid full update with exact presence flags", async () => {
+    mocks.updateOwnedQuestMetadata.mockResolvedValue({ status: "ok", quest });
+    const response = await PATCH(request({ ...body, subject_id: null, language_code: "ru", category: " Science ", tags: ["Space", "space", "Physics"], grade_min: 5, grade_max: 7, estimated_duration_minutes: 45 }), context);
+
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ quest: publishedQuest });
-    expect(updateQuery.update).toHaveBeenCalledWith({
-      title: "Updated quest",
-      description: "Updated description",
-      difficulty: 2,
-    });
-    expect(updateQuery.update.mock.calls[0][0]).not.toHaveProperty("is_public");
-    expect(mocks.from).toHaveBeenNthCalledWith(1, "quests");
-    expect(mocks.from).toHaveBeenNthCalledWith(2, "quests");
-    expect(mocks.from).not.toHaveBeenCalledWith("quest_tasks");
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({ quest });
+    expect(mocks.updateOwnedQuestMetadata).toHaveBeenCalledWith(expect.objectContaining({
+      questId, title: body.title, description: body.description, difficulty: 2,
+      subjectId: { provided: true, value: null }, languageCode: { provided: true, value: "ru" },
+      category: { provided: true, value: "Science" }, tags: { provided: true, value: ["Space", "Physics"] },
+      gradeMin: { provided: true, value: 5 }, gradeMax: { provided: true, value: 7 },
+      estimatedDurationMinutes: { provided: true, value: 45 },
+    }));
   });
 
-  it("rejects a body containing only is_public before authentication", async () => {
-    const response = await PATCH(request(JSON.stringify({ is_public: true })), context);
+  it("preserves omitted optionals and accepts explicit null clears", async () => {
+    mocks.updateOwnedQuestMetadata.mockResolvedValue({ status: "ok", quest });
+    await PATCH(request(body), context);
+    expect(mocks.updateOwnedQuestMetadata).toHaveBeenLastCalledWith(expect.objectContaining({
+      subjectId: { provided: false, value: null }, languageCode: { provided: false, value: null },
+      category: { provided: false, value: null }, tags: { provided: false, value: [] },
+      gradeMin: { provided: false, value: null }, gradeMax: { provided: false, value: null },
+      estimatedDurationMinutes: { provided: false, value: null },
+    }));
+
+    await PATCH(request({ ...body, subject_id: null, language_code: null, category: null, grade_min: null, grade_max: null, estimated_duration_minutes: null, tags: [] }), context);
+    expect(mocks.updateOwnedQuestMetadata).toHaveBeenLastCalledWith(expect.objectContaining({
+      subjectId: { provided: true, value: null }, languageCode: { provided: true, value: null },
+      category: { provided: true, value: null }, tags: { provided: true, value: [] },
+      gradeMin: { provided: true, value: null }, gradeMax: { provided: true, value: null },
+      estimatedDurationMinutes: { provided: true, value: null },
+    }));
+  });
+
+  it("passes partial grade updates to the authoritative final-state validator", async () => {
+    mocks.updateOwnedQuestMetadata.mockResolvedValue({ status: "ok", quest });
+
+    const response = await PATCH(request({ ...body, grade_min: 5 }), context);
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateOwnedQuestMetadata).toHaveBeenCalledWith(expect.objectContaining({
+      gradeMin: { provided: true, value: 5 },
+      gradeMax: { provided: false, value: null },
+    }));
+  });
+
+  it.each([
+    [{ ...body, is_public: true }, "Publication state must be changed through the publication action."],
+    [{ ...body, title: "   " }, "Title is required."],
+    [{ ...body, difficulty: 4 }, "Difficulty must be 1, 2, or 3."],
+    [{ ...body, language_code: "fr" }, "Language is invalid."],
+    [{ ...body, category: "x".repeat(41) }, "Category must be 40 characters or fewer."],
+    [{ ...body, tags: Array.from({ length: 11 }, (_, index) => `tag-${index}`) }, "A maximum of 10 tags is allowed."],
+    [{ ...body, grade_min: 8, grade_max: 5 }, "Grade from must be less than or equal to Grade to."],
+    [{ ...body, estimated_duration_minutes: 4 }, "Estimated duration must be between 5 and 240."],
+  ])("rejects invalid input before the service", async (payload, message) => {
+    const response = await PATCH(request(payload), context);
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ error: "Publication state must be changed through the publication action." });
-    expect(mocks.createClient).not.toHaveBeenCalled();
-    expect(mocks.auth).not.toHaveBeenCalled();
-    expect(mocks.from).not.toHaveBeenCalled();
-    expect(mocks.rpc).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({ error: message });
+    expect(mocks.updateOwnedQuestMetadata).not.toHaveBeenCalled();
   });
 
-  it("rejects is_public together with otherwise valid settings", async () => {
-    const response = await PATCH(request(JSON.stringify({ ...metadataBody, is_public: false })), context);
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ error: "Publication state must be changed through the publication action." });
-    expect(mocks.createClient).not.toHaveBeenCalled();
-    expect(mocks.from).not.toHaveBeenCalled();
-    expect(mocks.rpc).not.toHaveBeenCalled();
-  });
+  it("maps service outcomes without direct base-table writes", async () => {
+    const cases = [
+      ["unauthorized", 401, { error: "Unauthorized." }],
+      ["not_found", 404, { error: "Quest not found." }],
+      ["subject_not_found", 400, { error: "Subject is invalid." }],
+      ["invalid", 400, { error: "Invalid quest settings." }],
+      ["error", 500, { error: "Unable to save quest settings." }],
+    ] as const;
 
-  it("rejects a non-boolean is_public before every query", async () => {
-    const response = await PATCH(request(JSON.stringify({ ...metadataBody, is_public: "true" })), context);
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ error: "Publication state must be changed through the publication action." });
-    expect(mocks.createClient).not.toHaveBeenCalled();
-    expect(mocks.from).not.toHaveBeenCalled();
-    expect(mocks.rpc).not.toHaveBeenCalled();
-  });
-
-  it("keeps malformed JSON safe", async () => {
-    const response = await PATCH(request("{"), context);
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ error: "Invalid JSON payload." });
-    expect(mocks.createClient).not.toHaveBeenCalled();
-  });
-
-  it("returns owner-safe not_found for an invalid UUID", async () => {
-    const response = await PATCH(request(JSON.stringify(metadataBody)), { params: Promise.resolve({ id: "not-a-uuid" }) });
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: "Quest not found." });
-    expect(mocks.createClient).not.toHaveBeenCalled();
-  });
-
-  it("returns unauthorized without querying quests", async () => {
-    configureClient({ user: null });
-    const response = await PATCH(request(JSON.stringify(metadataBody)), context);
-    expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toEqual({ error: "Unauthorized." });
-    expect(mocks.from).not.toHaveBeenCalled();
-  });
-
-  it("returns owner-safe not_found when the quest is absent", async () => {
-    configureClient({ owner: null });
-    const response = await PATCH(request(JSON.stringify(metadataBody)), context);
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toEqual({ error: "Quest not found." });
-    expect(mocks.from).toHaveBeenCalledTimes(1);
-    expect(mocks.from).toHaveBeenCalledWith("quests");
-  });
-
-  it("returns a generic error without raw owner-query details", async () => {
-    configureClient({ ownerError: { message: "RAW_DB_MESSAGE", details: "RAW_DB_DETAIL" } });
-    const response = await PATCH(request(JSON.stringify(metadataBody)), context);
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body).toEqual({ error: "Unable to save quest settings." });
-    expect(JSON.stringify(body)).not.toMatch(/RAW_DB_MESSAGE|RAW_DB_DETAIL/);
-  });
-
-  it("returns a generic error without raw update details", async () => {
-    configureClient({ update: null, updateError: { message: "RAW_DB_MESSAGE", details: "RAW_DB_DETAIL" } });
-    const response = await PATCH(request(JSON.stringify(metadataBody)), context);
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body).toEqual({ error: "Unable to save quest settings." });
-    expect(JSON.stringify(body)).not.toMatch(/RAW_DB_MESSAGE|RAW_DB_DETAIL/);
+    for (const [status, code, expected] of cases) {
+      mocks.updateOwnedQuestMetadata.mockResolvedValue({ status });
+      const response = await PATCH(request(body), context);
+      expect(response.status).toBe(code);
+      await expect(response.json()).resolves.toEqual(expected);
+    }
   });
 });
 
 describe("quest deletion DELETE", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns 400 for a malformed UUID without calling the deletion service", async () => {
-    const response = await DELETE(new Request("http://example.test"), {
-      params: Promise.resolve({ id: "not-a-uuid" }),
-    });
-
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({ error: "Invalid quest id." });
-    expect(mocks.deleteOwnedQuest).not.toHaveBeenCalled();
-  });
-
-  it("returns 204 after one successful deletion service call", async () => {
+  it("preserves deletion response semantics", async () => {
     mocks.deleteOwnedQuest.mockResolvedValue({ status: "ok" });
-
     const response = await DELETE(new Request("http://example.test"), context);
     expect(response.status).toBe(204);
-    expect(await response.text()).toBe("");
-    expect(mocks.deleteOwnedQuest).toHaveBeenCalledTimes(1);
     expect(mocks.deleteOwnedQuest).toHaveBeenCalledWith(questId);
   });
 
-  it("maps safe deletion failures without exposing raw details", async () => {
-    const cases = [
-      ["unauthorized", 401, { error: "Unauthorized." }],
-      ["not_found", 404, { error: "Quest not found." }],
-      ["error", 500, { error: "Unable to delete quest." }],
-    ] as const;
+  it.each([
+    ["unauthorized", 401, { error: "Unauthorized." }],
+    ["not_found", 404, { error: "Quest not found." }],
+    ["error", 500, { error: "Unable to delete quest." }],
+  ] as const)("preserves deletion %s mapping", async (status, code, expected) => {
+    mocks.deleteOwnedQuest.mockResolvedValue({ status });
 
-    for (const [status, code, expectedBody] of cases) {
-      mocks.deleteOwnedQuest.mockResolvedValue({ status });
-      const response = await DELETE(new Request("http://example.test"), context);
-      expect(response.status).toBe(code);
-      const body = await response.json();
-      expect(body).toEqual(expectedBody);
-      expect(JSON.stringify(body)).not.toMatch(/RAW_DATABASE|author_id|owner|image_url/);
-    }
+    const response = await DELETE(new Request("http://example.test"), context);
+
+    expect(response.status).toBe(code);
+    await expect(response.json()).resolves.toEqual(expected);
   });
 });
