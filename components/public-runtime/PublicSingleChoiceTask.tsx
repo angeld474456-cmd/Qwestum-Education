@@ -43,7 +43,7 @@ export default function PublicSingleChoiceTask({
                 onChange={() => onSelectOption(option.id)}
                 className="mt-1 size-4 border-slate-600 bg-slate-950 text-violet-500 focus:ring-violet-500"
               />
-              <span className="leading-6">{option.text}</span>
+              <span className="min-w-0 flex-1 whitespace-normal break-words leading-6 [overflow-wrap:anywhere]">{option.text}</span>
             </label>
           );
         })}

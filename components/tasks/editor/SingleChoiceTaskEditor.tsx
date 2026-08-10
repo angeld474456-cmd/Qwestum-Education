@@ -174,7 +174,7 @@ export default function SingleChoiceTaskEditor({
           {options.map((option) => (
             <div
               key={option.id}
-              className="grid grid-cols-[auto_1fr_auto] items-start gap-3"
+              className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]"
             >
               <input
                 type="radio"
@@ -194,14 +194,14 @@ export default function SingleChoiceTaskEditor({
                 onChange={(e) =>
                   handleOptionTextChange(option.id, e.target.value)
                 }
-                className="min-h-24 w-full resize-y overflow-x-hidden break-words rounded-xl bg-[#1B2435] p-4"
+                className="min-h-24 min-w-0 w-full resize-y overflow-x-hidden break-words rounded-xl bg-[#1B2435] p-4"
                 aria-label="Вариант ответа"
               />
 
               <button
                 type="button"
                 onClick={() => handleRemoveOption(option.id)}
-                className="self-center rounded-lg bg-red-600 px-4 py-3 hover:bg-red-700 transition"
+                className="col-start-2 justify-self-start rounded-lg bg-red-600 px-4 py-3 transition hover:bg-red-700 md:col-auto md:justify-self-end md:self-start"
                 aria-label="Удалить вариант"
               >
                 Удалить вариант
