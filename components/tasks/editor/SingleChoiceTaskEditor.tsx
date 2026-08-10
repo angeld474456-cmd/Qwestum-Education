@@ -63,6 +63,13 @@ function createOption(): SingleChoiceOption {
   };
 }
 
+function autoSizeOptionTextarea(textarea: HTMLTextAreaElement | null) {
+  if (!textarea) return;
+
+  textarea.style.height = "auto";
+  textarea.style.height = `${textarea.scrollHeight}px`;
+}
+
 export default function SingleChoiceTaskEditor({
   task,
   onSave,
@@ -167,7 +174,7 @@ export default function SingleChoiceTaskEditor({
           {options.map((option) => (
             <div
               key={option.id}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-3"
+              className="grid grid-cols-[auto_1fr_auto] items-start gap-3"
             >
               <input
                 type="radio"
@@ -179,12 +186,15 @@ export default function SingleChoiceTaskEditor({
                 aria-label="Правильный ответ"
               />
 
-              <input
+              <textarea
+                rows={3}
                 value={option.text}
+                ref={autoSizeOptionTextarea}
+                onInput={(event) => autoSizeOptionTextarea(event.currentTarget)}
                 onChange={(e) =>
                   handleOptionTextChange(option.id, e.target.value)
                 }
-                className="w-full rounded-xl bg-[#1B2435] p-4"
+                className="min-h-24 w-full resize-y overflow-x-hidden break-words rounded-xl bg-[#1B2435] p-4"
                 aria-label="Вариант ответа"
               />
 
