@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
+import {
+  classifyMultipleChoiceContent,
+  classifySingleChoiceContent,
+} from "@/lib/task-choice-content";
+import { MAX_TASK_POINTS } from "@/lib/task-points";
 import { createOwnedQuestTask } from "@/services/teacher-task-creation.server";
 
 const allowedTaskTypes = new Set(["text", "single_choice", "multiple_choice"]);
@@ -68,7 +72,7 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
   const hint = typeof body.hint === "string" ? body.hint.trim() : "";
   const points = body.points;
 
-  if (!title) {
+  if (!title || title.length > 500) {
     return {
       error: "Title is required.",
     };
@@ -78,11 +82,16 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
     typeof points !== "number" ||
     !Number.isFinite(points) ||
     !Number.isSafeInteger(points) ||
-    points < 1
+    points < 1 ||
+    points > MAX_TASK_POINTS
   ) {
     return {
       error: "Points must be a positive integer.",
     };
+  }
+
+  if (description.length > 10000) {
+    return { error: "Description is too long." };
   }
 
   if (
@@ -94,13 +103,34 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
     };
   }
 
-  const content =
-    body.task_type === "multiple_choice"
-      ? parseMultipleChoiceContent(body.content)
-      : undefined;
+  if (
+    body.content !== undefined &&
+    body.content !== null &&
+    (typeof body.content !== "object" || Array.isArray(body.content))
+  ) {
+    return { error: "Content must be an object or null." };
+  }
 
-  if (body.task_type === "multiple_choice" && !content) {
-    return { error: "Multiple Choice content is invalid." };
+  const content = body.content === undefined || body.content === null
+    ? null
+    : body.content as Record<string, unknown>;
+
+  if (body.task_type === "text" && content !== null) {
+    return { error: "Text content is not supported." };
+  }
+
+  if (body.task_type === "single_choice") {
+    const choiceContent = classifySingleChoiceContent(content);
+    if (choiceContent.state === "malformed") {
+      return { error: "Single Choice content is invalid." };
+    }
+  }
+
+  if (body.task_type === "multiple_choice") {
+    const choiceContent = classifyMultipleChoiceContent(content);
+    if (choiceContent.state === "malformed") {
+      return { error: "Multiple Choice content is invalid." };
+    }
   }
 
   return {
@@ -111,7 +141,7 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
       hint,
       points,
       task_type: body.task_type,
-      ...(content ? { content } : {}),
+      content,
     },
   };
 }

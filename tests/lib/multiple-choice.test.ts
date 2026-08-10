@@ -21,6 +21,7 @@ describe("multiple choice content contract", () => {
     [{ options: [{ id: "", text: "First" }, { id: "second", text: "Second" }], correctOptionIds: ["second", "first"] }],
     [{ options: [{ id: "first", text: " " }, { id: "second", text: "Second" }], correctOptionIds: ["first", "second"] }],
     [{ options: [{ id: "first", text: "First" }, { id: "first", text: "Second" }], correctOptionIds: ["first", "second"] }],
+    [{ options: [{ id: "first", text: "Тараз" }, { id: "second", text: "  тараз  " }], correctOptionIds: ["first", "second"] }],
     [{ ...validContent, correctOptionIds: ["first"] }],
     [{ ...validContent, correctOptionIds: ["first", "first"] }],
     [{ ...validContent, correctOptionIds: ["first", "foreign"] }],

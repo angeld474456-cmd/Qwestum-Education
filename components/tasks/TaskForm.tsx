@@ -16,7 +16,7 @@ interface TaskFormProps {
     hint: string;
     points: number;
     taskType: TaskType;
-    content?: Record<string, unknown>;
+    content: Record<string, unknown> | null;
   }) => Promise<boolean>;
 }
 
@@ -24,8 +24,6 @@ export default function TaskForm({ onSave }: TaskFormProps) {
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState(false);
   const [description, setDescription] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [hint, setHint] = useState("");
   const [points, setPoints] = useState("1");
   const [pointsError, setPointsError] = useState(false);
   const [taskType, setTaskType] = useState<TaskType>("text");
@@ -49,22 +47,14 @@ export default function TaskForm({ onSave }: TaskFormProps) {
 
     setPointsError(false);
 
-    const content = taskType === "multiple_choice"
-      ? {
-          options: [
-            { id: crypto.randomUUID(), text: "Option 1" },
-            { id: crypto.randomUUID(), text: "Option 2" },
-          ],
-        }
-      : undefined;
     const created = await onSave({
       title,
       description,
-      answer,
-      hint,
+      answer: "",
+      hint: "",
       points: parsedPoints,
       taskType,
-      ...(content ? { content: { ...content, correctOptionIds: content.options.map((option) => (option as { id: string }).id) } } : {}),
+      content: null,
     });
 
     if (!created) return;
@@ -72,8 +62,6 @@ export default function TaskForm({ onSave }: TaskFormProps) {
     setTitle("");
     setTitleError(false);
     setDescription("");
-    setAnswer("");
-    setHint("");
     setPoints("1");
     setTaskType("text");
   }
@@ -134,34 +122,11 @@ export default function TaskForm({ onSave }: TaskFormProps) {
         />
       </div>
 
-      <div className="mt-4">
-        <label htmlFor="task-answer" className="mb-2 block text-slate-300">
-          Правильный ответ
-        </label>
-
-        <input
-          id="task-answer"
-          className="w-full rounded-xl bg-[#1B2435] p-4"
-          placeholder="Правильный ответ"
-          value={answer}
-          onChange={(e)=>setAnswer(e.target.value)}
-        />
-      </div>
-
-      <div className="mt-4">
-        <label htmlFor="task-hint" className="mb-2 block text-slate-300">
-          Подсказка
-        </label>
-
-        <textarea
-          id="task-hint"
-          rows={2}
-          className="w-full rounded-xl bg-[#1B2435] p-4"
-          placeholder="Подсказка"
-          value={hint}
-          onChange={(e)=>setHint(e.target.value)}
-        />
-      </div>
+      {taskType === "text" ? (
+        <p className="mt-4 text-sm text-slate-400">
+          Текстовое задание — открытый ответ; автоматическая проверка пока не выполняется.
+        </p>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-4 mt-4">
 

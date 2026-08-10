@@ -50,20 +50,11 @@ function payload(overrides: Record<string, unknown> = {}) {
 describe("teacher task creation route", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("keeps text, single-choice, and multiple-choice requests on the existing contract", async () => {
+  it("creates text, Single Choice, and Multiple Choice as null-content drafts", async () => {
     const cases = [
       payload(),
       payload({ task_type: "single_choice" }),
-      payload({
-        task_type: "multiple_choice",
-        content: {
-          options: [
-            { id: "option-a", text: "A" },
-            { id: "option-b", text: "B" },
-          ],
-          correctOptionIds: ["option-a", "option-b"],
-        },
-      }),
+      payload({ task_type: "multiple_choice" }),
     ];
 
     for (const body of cases) {
@@ -74,6 +65,9 @@ describe("teacher task creation route", () => {
     }
 
     expect(mocks.createOwnedQuestTask).toHaveBeenCalledTimes(3);
+    expect(mocks.createOwnedQuestTask).toHaveBeenNthCalledWith(1, expect.objectContaining({ taskType: "text", content: null }));
+    expect(mocks.createOwnedQuestTask).toHaveBeenNthCalledWith(2, expect.objectContaining({ taskType: "single_choice", content: null }));
+    expect(mocks.createOwnedQuestTask).toHaveBeenNthCalledWith(3, expect.objectContaining({ taskType: "multiple_choice", content: null }));
   });
 
   it("rejects malformed requests before calling the RPC service", async () => {
@@ -81,8 +75,12 @@ describe("teacher task creation route", () => {
       [request(payload()), { params: Promise.resolve({ id: "not-a-uuid" }) }, 404],
       [request("not-json"), context, 400],
       [request(payload({ title: "   " })), context, 400],
+      [request(payload({ title: "x".repeat(501) })), context, 400],
+      [request(payload({ description: "x".repeat(10001) })), context, 400],
       [request(payload({ points: 0 })), context, 400],
+      [request(payload({ points: 2147483648 })), context, 400],
       [request(payload({ task_type: "unsupported" })), context, 400],
+      [request(payload({ task_type: "single_choice", content: { options: [] } })), context, 400],
       [request(payload({ task_type: "multiple_choice", content: { options: [] } })), context, 400],
     ] as const;
 

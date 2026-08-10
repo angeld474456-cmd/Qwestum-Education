@@ -184,7 +184,7 @@ export default function QuestTasksClient({
     hint: string;
     points: number;
     taskType: string;
-    content?: TaskContent;
+    content: TaskContent | null;
   }): Promise<boolean> {
     if (busy) return false;
 
@@ -205,7 +205,7 @@ export default function QuestTasksClient({
           hint: task.hint,
           points: task.points,
           task_type: task.taskType,
-          ...(task.content ? { content: task.content } : {}),
+          content: task.content,
         }),
       });
 

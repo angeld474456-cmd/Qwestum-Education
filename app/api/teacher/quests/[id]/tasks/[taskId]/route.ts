@@ -5,7 +5,11 @@ import {
   questImageBucketName,
 } from "@/lib/storage/quest-image.server";
 import { createClient } from "@/lib/supabase/server";
-import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
+import {
+  classifyMultipleChoiceContent,
+  classifySingleChoiceContent,
+} from "@/lib/task-choice-content";
+import { MAX_TASK_POINTS } from "@/lib/task-points";
 import { deleteOwnedQuestTask } from "@/services/teacher-task-deletion.server";
 import { updateOwnedQuestTask } from "@/services/teacher-task-update.server";
 
@@ -128,7 +132,8 @@ function parseUpdateTaskPayload(body: unknown) {
       typeof points !== "number" ||
       !Number.isFinite(points) ||
       !Number.isSafeInteger(points) ||
-      points < 1
+      points < 1 ||
+      points > MAX_TASK_POINTS
     ) {
       return {
         error: "Points must be a positive integer.",
@@ -234,7 +239,20 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     const content = isContentUpdate ? parsed.data.content : currentTask.content;
 
-    if (currentTask.task_type === "multiple_choice" && !parseMultipleChoiceContent(content)) {
+    if (
+      currentTask.task_type === "single_choice" &&
+      classifySingleChoiceContent(content).state === "malformed"
+    ) {
+      return NextResponse.json(
+        { error: "Single Choice content is invalid." },
+        { status: 400 }
+      );
+    }
+
+    if (
+      currentTask.task_type === "multiple_choice" &&
+      classifyMultipleChoiceContent(content).state === "malformed"
+    ) {
       return NextResponse.json(
         { error: "Multiple Choice content is invalid." },
         { status: 400 }

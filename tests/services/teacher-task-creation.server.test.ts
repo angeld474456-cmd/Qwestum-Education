@@ -95,6 +95,20 @@ describe("createOwnedQuestTask", () => {
     });
   });
 
+  it("accepts null choice-draft content without changing RPC arguments", async () => {
+    const draftInput = { ...input, taskType: "multiple_choice", content: null };
+    configure([createdTask({ task_type: "multiple_choice", content: null })]);
+
+    await expect(createOwnedQuestTask(draftInput)).resolves.toMatchObject({
+      status: "ok",
+      task: { task_type: "multiple_choice", content: null },
+    });
+    expect(mocks.rpc).toHaveBeenCalledWith("create_owned_quest_task", expect.objectContaining({
+      p_task_type: "multiple_choice",
+      p_content: null,
+    }));
+  });
+
   it("returns unauthorized without calling the RPC", async () => {
     configure(null, null, null);
 

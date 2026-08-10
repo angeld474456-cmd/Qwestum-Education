@@ -283,13 +283,30 @@ describe("teacher task mutation route PATCH", () => {
     });
   });
 
-  it("validates Multiple Choice content before calling the RPC", async () => {
-    configurePatch(taskDto({ task_type: "multiple_choice", content: { options: [], correctOptionIds: [] } }));
+  it("validates malformed Single Choice and Multiple Choice content before calling the RPC", async () => {
+    configurePatch(taskDto({ task_type: "single_choice", content: { options: [], correctOptionId: "a" } }));
 
-    const response = await PATCH(patchRequest({ content: { options: [], correctOptionIds: [] } }), context);
+    let response = await PATCH(patchRequest({ content: { options: [], correctOptionId: "a" } }), context);
 
     expect(response.status).toBe(400);
     expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
+
+    configurePatch(taskDto({ task_type: "multiple_choice", content: { options: [], correctOptionIds: [] } }));
+
+    response = await PATCH(patchRequest({ content: { options: [], correctOptionIds: [] } }), context);
+
+    expect(response.status).toBe(400);
+    expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
+  });
+
+  it("keeps null choice drafts editable", async () => {
+    configurePatch(taskDto({ task_type: "single_choice", content: null }));
+    mocks.updateOwnedQuestTask.mockResolvedValue({ status: "updated", task: taskDto({ task_type: "single_choice", content: null }) });
+
+    const response = await PATCH(patchRequest({ title: "Updated" }), context);
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateOwnedQuestTask).toHaveBeenCalledWith(expect.objectContaining({ content: null }));
   });
 
   it("maps metadata service outcomes without direct update", async () => {
