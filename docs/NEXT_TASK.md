@@ -2,15 +2,15 @@
 
 ## Milestone
 
-P1 Post-Launch Observability and Rollback Baseline Review
+Core MVP Next Milestone Planning
 
 ## Next Task
 
-Perform a read-only review of the first Production release observability, current deployment identity, and documented rollback target. Do not change application, provider, deployment, or content state without separate approval.
+Choose the next smallest coherent Core MVP milestone through analysis, architecture, and an implementation plan. Do not begin implementation without separate approval.
 
 ## Objective
 
-Establish the first post-launch operational baseline after the successful Production release while preserving the Model A boundary and keeping later Core MVP work separate.
+Resume deliberate Core MVP planning after the first Production release while preserving the anonymous-public plus authenticated-teacher Model A boundary.
 
 ## Constraints
 
@@ -21,4 +21,5 @@ Establish the first post-launch operational baseline after the successful Produc
 - Production Auth and environment configuration are complete: the shared Supabase Auth Site URL is `https://qwestum-education.vercel.app`; the deployment-specific Preview, stable branch Preview, and Production callbacks are allowlisted; and all six application runtime variables have distinct Production-scope entries while Preview remains unchanged.
 - Preview and first-launch Production intentionally share the existing Supabase project and Upstash database. Production uses a newly generated distinct `RATE_LIMIT_HMAC_SECRET`, producing separate opaque limiter identifiers; shared quota, outage, and credential-operational risk remain accepted first-MVP constraints. Every Preview database write is therefore a live shared-database write.
 - The first intentional Production release is complete: PR #1 merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` through merge commit `bfe773a66024d60d6824209290f5990d9c551225`, then passed Production smoke verification after correcting the Production Supabase Project URL value. The initial `/catalog` failure formed `/rest/v1/rest/v1/rpc/list_public_catalog_quests`; no application code or schema change was needed. The public catalog intentionally remains empty because test/demo quests were unpublished before release.
-- Next is read-only **P1 Post-Launch Observability and Rollback Baseline Review**. Do not make provider, deployment, migration, policy, implementation, commit, or push changes without explicit approval.
+- The P1 post-launch operational baseline is documented. The known-good Production rollback deployment is `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` (`qwestum-education-gskc2mem9-qwestum.vercel.app`), Ready/Current in Production from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment with the malformed Supabase URL is not a rollback target. For urgent operations, promote this exact known-good Vercel deployment; for a normal code regression, use a reviewed `git revert` on `main`; never force-push or reset `main`. Rollback does not revert database or data state. Schema remains frozen through Migration 035.
+- Current Hobby/free monitoring is manual: review Vercel deployment status, runtime logs and basic Observability for `/`, `/catalog`, `/login`, `/auth/callback`, `/auth/logout`, `/dashboard`, `/dashboard/quests`, and public runtime/submit routes. Investigate repeated 5xx, unexpected auth failures, catalog/runtime RPC failures, and submit `503`; `429` is expected only at limiter threshold. The smoke checklist remains `/`, `/catalog`, login, protected dashboard redirect, teacher dashboard/library, logout, and public runtime/submit only when approved public content exists.

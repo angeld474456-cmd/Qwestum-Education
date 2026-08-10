@@ -1,5 +1,11 @@
 # Changelog
 
+## P1 Post-Launch Observability and Rollback Baseline
+
+- Recorded the current known-good Vercel Production rollback deployment: `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y`, `qwestum-education-gskc2mem9-qwestum.vercel.app`, Ready/Current from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment affected by the malformed `NEXT_PUBLIC_SUPABASE_URL` is explicitly not a rollback baseline.
+- Operational rollback order is now defined: urgently promote the recorded known-good Vercel deployment; use a reviewed `git revert` on `main` for a normal code regression; never force-push or reset `main`. Deployment rollback does not revert database or data state; schema remains frozen through Migration 035.
+- Current first-launch monitoring is manual on Hobby/free: inspect Vercel deployment status, runtime logs, and basic Observability for public entry/catalog/runtime/submit and auth/dashboard/logout routes. Repeated 5xx, unexpected authentication failures, catalog/runtime RPC failures, and submit `503` require investigation; a threshold `429` is expected rate-limiter behavior.
+
 ## First Production Release Verification
 
 - PR #1 (`Prepare first Qwestum Production release`) merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` to `main` as `bfe773a66024d60d6824209290f5990d9c551225`, producing the first intentional Vercel Production deployment.
