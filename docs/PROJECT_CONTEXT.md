@@ -776,6 +776,13 @@ The planned live-schema and public-read-boundary verification completed without 
 - Production environment configuration is **COMPLETE / PASS**; Preview scope remains unchanged and no redeploy occurred. A missing canonical fresh-database baseline remains post-launch technical debt. Because Preview and Production share Supabase, every currently Public quest is eligible to appear in the Production catalog after launch. A read-only public catalog/publication audit is mandatory before merge or deployment; no quest was deleted or unpublished here.
 - Remaining P0 work is an approved release candidate, final tests/build, first intentional Production deployment, SHA/alias and smoke verification, formal rollback target, and observability baseline review. Next: read-only **P0 Pre-Launch Public Catalog and Release Candidate Audit**.
 
+## First Production Release Verification
+
+- PR #1, `Prepare first Qwestum Production release`, merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` to `main` as merge commit `bfe773a66024d60d6824209290f5990d9c551225`. Vercel then created the first intentional Production deployment from `main`.
+- The initial Production smoke test found `/catalog` failing because the Production `NEXT_PUBLIC_SUPABASE_URL` value produced `/rest/v1/rest/v1/rpc/list_public_catalog_quests`. The environment value was corrected to the Supabase Project URL without `/rest/v1`, and Vercel redeployed the same `main` source commit. The replacement deployment became Ready and Current; no application code, migration, or schema change was required to resolve the incident.
+- Production smoke verification passed for `/`, `/catalog`, `/login`, magic-link login, `/dashboard`, `/dashboard/quests`, logout, and unauthenticated `/dashboard` redirect to `/login`. The public catalog is intentionally empty because all test/demo quests were unpublished before release. Migration 035 remains the schema freeze; no schema migration was required before Production.
+- Next post-launch milestone: read-only **P1 Post-Launch Observability and Rollback Baseline Review**.
+
 ## Sprint 12.20.32 - Controlled Preview 429 Verification
 
 - Completed the P0 authorized Preview submit-rate-limit evidence gate. On one Preview deployment, one same-client-identity/same-quest sequential browser run first returned normal `200`; its first limiter denial was attempt 62 with fixed `429`, body `{"error":"Too many requests. Please try again later."}`, `Retry-After: 15`, and `Cache-Control: no-store`.

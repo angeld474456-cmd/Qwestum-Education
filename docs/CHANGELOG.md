@@ -1,5 +1,11 @@
 # Changelog
 
+## First Production Release Verification
+
+- PR #1 (`Prepare first Qwestum Production release`) merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` to `main` as `bfe773a66024d60d6824209290f5990d9c551225`, producing the first intentional Vercel Production deployment.
+- Initial Production `/catalog` smoke failed because `NEXT_PUBLIC_SUPABASE_URL` included `/rest/v1`, yielding `/rest/v1/rest/v1/rpc/list_public_catalog_quests`. Correcting the Production value to the Supabase Project URL and redeploying the same `main` source made the replacement deployment Ready and Current. No application code or schema change was needed.
+- Production smoke passed for `/`, `/catalog`, `/login`, magic-link login, `/dashboard`, `/dashboard/quests`, logout, and unauthenticated `/dashboard` redirect to `/login`. Public catalog content is intentionally empty because test/demo quests were unpublished before release. Migration 035 remains the schema freeze; no pre-Production schema migration was required. Next: read-only P1 Post-Launch Observability and Rollback Baseline Review.
+
 ## Sprint 12.20.34 - Production Auth and Environment Configuration
 
 - Completed the approved no-deployment provider configuration. The intentionally shared Supabase project's Site URL is now `https://qwestum-education.vercel.app`; its exact callback allowlist retains the deployment-specific Preview callback and adds the stable `feature/next-work` Preview callback plus the Production callback. No wildcard or stale Production alias was added.
