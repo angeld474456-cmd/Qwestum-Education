@@ -3,17 +3,26 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function LoginForm() {
+type LoginFormProps = {
+  message?: string;
+  messageTone?: "success" | "error";
+};
+
+export default function LoginForm({
+  message,
+  messageTone = "success",
+}: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function signIn() {
     setLoading(true);
+    const callbackUrl = `${window.location.origin}/auth/callback?next=/dashboard`;
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: "http://localhost:3000/dashboard",
+        emailRedirectTo: callbackUrl,
       },
     });
 
@@ -46,6 +55,18 @@ export default function LoginForm() {
         onChange={(e) => setEmail(e.target.value)}
         className="w-full rounded-2xl bg-white/20 border border-white/20 px-5 py-4 text-white placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-violet-500"
       />
+
+      {message ? (
+        <div
+          className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
+            messageTone === "error"
+              ? "border-red-400/40 bg-red-500/10 text-red-100"
+              : "border-emerald-400/40 bg-emerald-500/10 text-emerald-100"
+          }`}
+        >
+          {message}
+        </div>
+      ) : null}
 
       <button
         onClick={signIn}

@@ -1,13 +1,19 @@
 "use client";
 
+import Image from "next/image";
+
 interface ImageUploaderProps {
   imageUrl?: string | null;
   onUpload: (file: File) => Promise<void>;
+  onRemove?: () => Promise<void>;
+  disabled?: boolean;
 }
 
 export default function ImageUploader({
   imageUrl,
   onUpload,
+  onRemove,
+  disabled = false,
 }: ImageUploaderProps) {
   async function handleChange(
     e: React.ChangeEvent<HTMLInputElement>
@@ -16,7 +22,10 @@ export default function ImageUploader({
 
     if (!file) return;
 
+    if (disabled) return;
+
     await onUpload(file);
+    e.target.value = "";
   }
 
   return (
@@ -27,9 +36,12 @@ export default function ImageUploader({
       </h3>
 
       {imageUrl ? (
-        <img
+        <Image
           src={imageUrl}
-          alt="Task"
+          alt="Изображение задания"
+          width={1200}
+          height={675}
+          unoptimized
           className="mt-4 w-full rounded-xl border border-slate-700"
         />
       ) : (
@@ -42,8 +54,22 @@ export default function ImageUploader({
         type="file"
         accept="image/*"
         onChange={handleChange}
+        disabled={disabled}
         className="mt-6 block w-full text-sm"
+        aria-label="Загрузить изображение задания"
       />
+
+      {imageUrl && onRemove ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={disabled}
+          className="mt-4 rounded-xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Удалить изображение"
+        >
+          Удалить изображение
+        </button>
+      ) : null}
 
     </div>
   );

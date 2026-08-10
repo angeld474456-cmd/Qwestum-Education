@@ -1,0 +1,99 @@
+import "server-only";
+import { createClient } from "@/lib/supabase/server";
+import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
+import type {
+  PublicationAction,
+  PublicationActionResult,
+  PublicationIssue,
+  PublicationReadiness,
+  PublicationRpcRow,
+  PublicationStateDto,
+} from "@/types/publication";
+
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+type Row = Record<string, unknown>;
+export type PublicationReadinessResult = { status: "ok"; readiness: PublicationReadiness } | { status: "unauthorized" | "not_found" | "error" };
+const nonBlank = (v: unknown): v is string => typeof v === "string" && /\S/.test(v);
+const object = (v: unknown): v is Row => typeof v === "object" && v !== null && !Array.isArray(v);
+const plainObject = (v: unknown): v is Row => {
+  if (!object(v)) return false;
+  const prototype = Object.getPrototypeOf(v);
+  return prototype === Object.prototype || prototype === null;
+};
+const add = (items: PublicationIssue[], code: string, message: string, taskId?: string, field?: string) => items.push({ code, message, ...(taskId ? { taskId } : {}), ...(field ? { field } : {}) });
+
+const publicationOutcomes = new Set<string>([
+  "published",
+  "already_published",
+  "unpublished",
+  "already_draft",
+  "blocked",
+  "not_found",
+]);
+
+function isPublicationRpcRow(row: unknown): row is PublicationRpcRow {
+  return plainObject(row)
+    && typeof row.is_public === "boolean"
+    && typeof row.outcome === "string"
+    && publicationOutcomes.has(row.outcome);
+}
+
+function mapPublicationRpcRow(row: unknown): PublicationActionResult {
+  if (!isPublicationRpcRow(row)) {
+    return { status: "error" };
+  }
+
+  const outcome = row.outcome;
+  const isPublic = row.is_public;
+  if ((outcome === "published" || outcome === "already_published") && !isPublic) return { status: "error" };
+  if ((outcome === "unpublished" || outcome === "already_draft" || outcome === "not_found") && isPublic) return { status: "error" };
+  if (outcome === "blocked") return { status: "blocked" };
+  if (outcome === "not_found") return { status: "not_found" };
+
+  const publication: PublicationStateDto = { isPublic, outcome };
+  return { status: "ok", publication };
+}
+
+function evaluate(q: Row, tasks: Row[]): PublicationReadiness {
+  const blockers: PublicationIssue[] = [], warnings: PublicationIssue[] = [];
+  if (!nonBlank(q.title)) add(blockers,"quest_title_blank","Название квеста обязательно.",undefined,"title"); else if(q.title.length>500) add(blockers,"quest_title_too_long","Название квеста слишком длинное.",undefined,"title");
+  if(typeof q.description==="string"&&q.description.length>10000)add(blockers,"quest_description_too_long","Описание квеста слишком длинное.",undefined,"description");
+  if(tasks.length<1)add(blockers,"task_count_too_low","Добавьте хотя бы одно задание."); if(tasks.length>100)add(blockers,"task_count_too_high","Количество заданий превышает лимит.");
+  if(!nonBlank(q.description))add(warnings,"missing_description","Добавьте описание квеста."); if(!q.subject_id)add(warnings,"missing_subject","Выберите предмет."); if(q.grade_min==null||q.grade_max==null)add(warnings,"missing_grades","Укажите классы."); if(!q.language_code)add(warnings,"missing_language","Укажите язык."); if(q.estimated_duration_minutes==null)add(warnings,"missing_duration","Укажите длительность."); if(!q.category)add(warnings,"missing_category","Укажите категорию."); if(!Array.isArray(q.tags)||!q.tags.length)add(warnings,"empty_tags","Добавьте теги."); if(!q.cover_image_path)add(warnings,"missing_cover","Добавьте обложку.");
+  tasks = tasks.map((task) => {
+    if (task.task_type !== "multiple_choice") return task;
+    const content = parseMultipleChoiceContent(task.content);
+    if (!content) return task;
+    return {
+      ...task,
+      task_type: "single_choice",
+      content: { options: content.options, correctOptionId: content.correctOptionIds[0] },
+    };
+  });
+  let supportedTaskCount=0; const orders=new Set<number>();
+  for(const t of tasks){const id=typeof t.id==="string"?t.id:undefined; if(t.task_type!=="text"&&t.task_type!=="single_choice"){add(blockers,"unsupported_task_type","Тип задания не поддерживается.",id,"task_type");continue;} supportedTaskCount++; if(!nonBlank(t.title))add(blockers,"task_title_blank","Название задания обязательно.",id,"title"); else if(t.title.length>500)add(blockers,"task_title_too_long","Название задания слишком длинное.",id,"title"); if(typeof t.description==="string"&&t.description.length>10000)add(blockers,"task_description_too_long","Описание задания слишком длинное.",id,"description"); if(t.sort_order==null||(typeof t.sort_order==="number"&&orders.has(t.sort_order)))add(warnings,"task_order","Проверьте порядок заданий.",id,"sort_order"); if(typeof t.sort_order==="number")orders.add(t.sort_order); if(t.task_type==="text")continue;
+    if(typeof t.points!=="number"||!Number.isInteger(t.points)||t.points<=0)add(blockers,"invalid_points","Баллы должны быть положительным целым числом.",id,"points"); if(!object(t.content)){add(blockers,"invalid_single_choice_content","Настройки выбора ответа некорректны.",id,"content");continue;} const options=t.content.options, correct=t.content.correctOptionId; if(!Array.isArray(options)||options.length<2||options.length>100){add(blockers,"invalid_option_count","Количество вариантов ответа некорректно.",id,"content");continue;} const ids=new Set<string>(), texts=new Set<string>(); let invalid=false; for(const o of options){if(!object(o)||!nonBlank(o.id)||!nonBlank(o.text)||(o.id as string).length>128||(o.text as string).length>4000||ids.has(o.id as string)){invalid=true;break;}ids.add(o.id as string);const x=(o.text as string).trim().replace(/\s+/g," ").toLowerCase();if(texts.has(x))add(warnings,"duplicate_option_text","Проверьте повторяющиеся варианты ответа.",id,"content");texts.add(x);} if(invalid)add(blockers,"invalid_options","Варианты ответа некорректны.",id,"content"); if(!nonBlank(correct)||typeof correct!=="string"||correct.length>128||!ids.has(correct))add(blockers,"invalid_correct_option","Правильный ответ должен принадлежать этому заданию.",id,"content");
+  } return {ready:!blockers.length,blockers,warnings,taskCount:tasks.length,supportedTaskCount};
+}
+export async function getOwnedQuestPublicationReadiness(questId:string):Promise<PublicationReadinessResult>{if(!uuid.test(questId))return{status:"not_found"};const supabase=await createClient();const {data:{user}}=await supabase.auth.getUser();if(!user)return{status:"unauthorized"};const {data:quest,error}=await supabase.from("quests").select("id,title,description,subject_id,language_code,cover_image_path,category,tags,grade_min,grade_max,estimated_duration_minutes").eq("id",questId).eq("author_id",user.id).maybeSingle();if(error)return{status:"error"};if(!quest)return{status:"not_found"};const {data:tasks,error:taskError}=await supabase.from("quest_tasks").select("id,title,description,points,task_type,content,sort_order").eq("quest_id",questId).order("sort_order",{ascending:true,nullsFirst:false}).order("id",{ascending:true});if(taskError)return{status:"error"};return{status:"ok",readiness:evaluate(quest as Row,(tasks??[]) as Row[])}};
+
+export async function setOwnedQuestPublicationState(
+  questId: string,
+  action: PublicationAction,
+): Promise<PublicationActionResult> {
+  if (!uuid.test(questId)) return { status: "not_found" };
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { status: "unauthorized" };
+
+  const { data, error } = await supabase.rpc(
+    "set_owned_quest_publication_state",
+    { p_quest_id: questId, p_publish: action === "publish" },
+  );
+  if (error || !Array.isArray(data) || data.length !== 1) {
+    return { status: "error" };
+  }
+
+  return mapPublicationRpcRow(data[0]);
+}

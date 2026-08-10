@@ -1,6 +1,69 @@
 import LoginForm from "@/components/auth/LoginForm";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams?: Promise<{
+    error?: string | string[];
+    logged_out?: string | string[];
+  }>;
+};
+
+type LoginFeedback = {
+  message?: string;
+  messageTone?: "success" | "error";
+};
+
+function getFirstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getLoginFeedback(searchParams: Awaited<NonNullable<LoginPageProps["searchParams"]>>): LoginFeedback {
+  if (getFirstParam(searchParams.logged_out) === "1") {
+    return {
+      message: "You have been signed out.",
+      messageTone: "success",
+    };
+  }
+
+  switch (getFirstParam(searchParams.error)) {
+    case "missing_auth_code":
+      return {
+        message: "The login link is incomplete. Request a new sign-in link.",
+        messageTone: "error",
+      };
+    case "auth_callback_failed":
+      return {
+        message: "The login link could not be verified. Request a new sign-in link.",
+        messageTone: "error",
+      };
+    case "logout_failed":
+      return {
+        message: "Sign out could not be completed. Please try again.",
+        messageTone: "error",
+      };
+    case "session_expired":
+      return {
+        message: "Your session has expired. Please sign in again.",
+        messageTone: "error",
+      };
+    default:
+      return {};
+  }
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
+  const feedback = getLoginFeedback((await searchParams) ?? {});
+
   return (
     <main className="min-h-screen bg-[#070B14]">
 
@@ -57,7 +120,10 @@ export default function LoginPage() {
 
         <section className="flex items-center justify-center p-10">
 
-          <LoginForm />
+          <LoginForm
+            message={feedback.message}
+            messageTone={feedback.messageTone}
+          />
 
         </section>
 

@@ -5,7 +5,15 @@ export interface Quest {
 
   description: string | null;
 
-  subject_id: string;
+  subject_id: string | null;
+
+  language_code: "ru" | "kk" | "en" | null;
+
+  cover_image_path: string | null;
+
+  category: string | null;
+
+  tags: string[];
 
   author_id: string;
 

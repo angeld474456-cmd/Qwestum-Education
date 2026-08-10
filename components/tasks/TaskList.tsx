@@ -8,6 +8,12 @@ interface TaskListProps {
   selectedTaskId: string | null;
   onSelectTask: (task: QuestTask) => void;
   onDelete: (id: string) => void;
+  onMoveTask: (taskId: string, direction: "up" | "down") => void;
+  reorderBusy: boolean;
+  onRegisterTaskPencil: (
+    taskId: string,
+    element: HTMLButtonElement | null
+  ) => void;
 }
 
 export default function TaskList({
@@ -15,6 +21,9 @@ export default function TaskList({
   selectedTaskId,
   onSelectTask,
   onDelete,
+  onMoveTask,
+  reorderBusy,
+  onRegisterTaskPencil,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return (
@@ -48,7 +57,15 @@ export default function TaskList({
           <TaskCard
             index={index}
             task={task}
+            isSelected={selectedTaskId === task.id}
+            onSelect={() => onSelectTask(task)}
             onDelete={onDelete}
+            onMoveUp={() => onMoveTask(task.id, "up")}
+            onMoveDown={() => onMoveTask(task.id, "down")}
+            canMoveUp={index > 0}
+            canMoveDown={index < tasks.length - 1}
+            reorderBusy={reorderBusy}
+            onRegisterPencil={onRegisterTaskPencil}
           />
 
         </div>

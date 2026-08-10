@@ -1,6 +1,8 @@
+import Link from "next/link";
+
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-[#0B1220] border-r border-slate-800 p-6">
+    <aside className="w-64 border-r border-slate-800 bg-[#0B1220] p-6">
       <h2 className="text-3xl font-bold text-white">
         Questum
       </h2>
@@ -10,25 +12,53 @@ export default function Sidebar() {
       </p>
 
       <nav className="mt-10 space-y-4">
-        <a href="/dashboard" className="block text-slate-300 hover:text-white">
-          🏠 Главная
-        </a>
+        <Link href="/dashboard" className="block text-slate-300 hover:text-white">
+          Dashboard
+        </Link>
 
-        <a href="/catalog" className="block text-slate-300 hover:text-white">
-          📚 Каталог
-        </a>
+        <Link href="/dashboard/quests" className="block text-slate-300 hover:text-white">
+          My Quests
+        </Link>
 
-        <a href="/students" className="block text-slate-300 hover:text-white">
-          👨‍🎓 Ученики
-        </a>
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Catalog</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
 
-        <a href="/schools" className="block text-slate-300 hover:text-white">
-          🏫 Школы
-        </a>
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Students</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
 
-        <a href="/settings" className="block text-slate-300 hover:text-white">
-          ⚙ Настройки
-        </a>
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Schools</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
+
+        <div
+          aria-disabled="true"
+          className="flex cursor-not-allowed items-center justify-between text-slate-500"
+        >
+          <span>Settings</span>
+          <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
+            Coming soon
+          </span>
+        </div>
       </nav>
     </aside>
   );

@@ -1,0 +1,34 @@
+export const questId = "11111111-1111-4111-8111-111111111111";
+export const ownerId = "22222222-2222-4222-8222-222222222222";
+const text = (id: string, title = "Text") => ({ id, title, description: null, points: 1, task_type: "text", content: null, sort_order: 1 });
+const choice = (id: string, content: unknown = { options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correctOptionId: "a" }) => ({ id, title: "Choice", description: null, points: 1, task_type: "single_choice", content, sort_order: 2 });
+const base = () => ({ id: questId, title: "Quest", description: "Description", subject_id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", language_code: "ru", cover_image_path: "cover", category: "cat", tags: ["tag"], grade_min: 1, grade_max: 2, estimated_duration_minutes: 10 });
+export const validMixedQuest = { quest: base(), tasks: [text("33333333-3333-4333-8333-333333333331"), text("33333333-3333-4333-8333-333333333332"), text("33333333-3333-4333-8333-333333333333"), text("33333333-3333-4333-8333-333333333334"), choice("44444444-4444-4444-8444-444444444441"), choice("44444444-4444-4444-8444-444444444442")] };
+export const warningsOnlyQuest = { quest: { ...base(), description: null, subject_id: null, language_code: null, cover_image_path: null, category: null, tags: [], grade_min: null, grade_max: null, estimated_duration_minutes: null }, tasks: [text("33333333-3333-4333-8333-333333333333"), choice("44444444-4444-4444-8444-444444444444")] };
+export const blankTitleQuest = { quest: { ...base(), title: "  " }, tasks: [text("33333333-3333-4333-8333-333333333333")] };
+export const overlongDescriptionQuest = { quest: { ...base(), description: "x".repeat(10001) }, tasks: [text("33333333-3333-4333-8333-333333333333")] };
+export const zeroTaskQuest = { quest: base(), tasks: [] };
+export const tooManyTasksQuest = { quest: base(), tasks: Array.from({ length: 101 }, (_, i) => text(`33333333-3333-4333-8333-${i.toString(16).padStart(12, "0")}`)) };
+export const unsupportedTaskQuest = { quest: base(), tasks: [{ ...text("33333333-3333-4333-8333-333333333333"), task_type: "video" }] };
+export const malformedTextQuest = { quest: base(), tasks: [{ ...text("33333333-3333-4333-8333-333333333333"), title: "" }] };
+export const malformedSingleChoiceQuest = { quest: base(), tasks: [choice("44444444-4444-4444-8444-444444444444", { options: [] })] };
+export const duplicateOptionIdsQuest = { quest: base(), tasks: [choice("44444444-4444-4444-8444-444444444444", { options: [{ id: "a", text: "A" }, { id: "a", text: "B" }], correctOptionId: "a" })] };
+export const missingCorrectOptionQuest = { quest: base(), tasks: [choice("44444444-4444-4444-8444-444444444444", { options: [{ id: "a", text: "A" }, { id: "b", text: "B" }] })] };
+export const foreignCorrectOptionQuest = { quest: base(), tasks: [choice("44444444-4444-4444-8444-444444444444", { options: [{ id: "a", text: "A" }, { id: "b", text: "B" }], correctOptionId: "foreign" })] };
+export const safeReadiness = Object.freeze({ ready: true, blockers: [], warnings: [], taskCount: 6, supportedTaskCount: 6 });
+export const validQuest = validMixedQuest.quest; export const textTask = validMixedQuest.tasks[0]; export const choiceTask = validMixedQuest.tasks[4];
+export const publicationDtoFixtures = Object.freeze({
+  published: Object.freeze({ isPublic: true, outcome: "published" as const }),
+  alreadyPublished: Object.freeze({ isPublic: true, outcome: "already_published" as const }),
+  unpublished: Object.freeze({ isPublic: false, outcome: "unpublished" as const }),
+  alreadyDraft: Object.freeze({ isPublic: false, outcome: "already_draft" as const }),
+});
+export const publicationRpcRowFixtures = Object.freeze({
+  published: Object.freeze({ is_public: true, outcome: "published" as const }),
+  alreadyPublished: Object.freeze({ is_public: true, outcome: "already_published" as const }),
+  unpublished: Object.freeze({ is_public: false, outcome: "unpublished" as const }),
+  alreadyDraft: Object.freeze({ is_public: false, outcome: "already_draft" as const }),
+  blockedDraft: Object.freeze({ is_public: false, outcome: "blocked" as const }),
+  blockedPublic: Object.freeze({ is_public: true, outcome: "blocked" as const }),
+  notFound: Object.freeze({ is_public: false, outcome: "not_found" as const }),
+});
