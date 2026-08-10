@@ -57,13 +57,11 @@ export default function TaskCard({
   );
 
   return (
-    <div className="rounded-2xl bg-[#111827] p-6">
+    <div className="flex flex-col gap-4 rounded-2xl bg-[#111827] p-6">
 
-      <div className="flex items-start justify-between">
+      <div className="min-w-0">
 
-        <div>
-
-          <h3 className="text-2xl font-bold">
+          <h3 className="break-words text-2xl font-bold [overflow-wrap:anywhere]">
             {index + 1}. {task.title}
           </h3>
 
@@ -85,9 +83,9 @@ export default function TaskCard({
 
           </div>
 
-        </div>
+      </div>
 
-        <div className="flex gap-3">
+      <div className="flex flex-wrap items-center gap-3">
 
           <div className="flex gap-2" aria-label="Task order controls">
             <button
@@ -144,8 +142,6 @@ export default function TaskCard({
           >
             🗑
           </button>
-
-        </div>
 
       </div>
 
