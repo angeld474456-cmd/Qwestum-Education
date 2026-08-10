@@ -201,7 +201,7 @@ export default function SingleChoiceTaskEditor({
               <button
                 type="button"
                 onClick={() => handleRemoveOption(option.id)}
-                className="rounded-lg bg-red-600 px-4 py-3 hover:bg-red-700 transition"
+                className="self-start rounded-lg bg-red-600 px-4 py-3 hover:bg-red-700 transition"
                 aria-label="Удалить вариант"
               >
                 Удалить вариант
