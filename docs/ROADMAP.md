@@ -543,7 +543,12 @@ Next:
   - First-MVP provider strategy is intentionally shared: Preview and Production use the existing Supabase project and Upstash database. A distinct Production `RATE_LIMIT_HMAC_SECRET` separates opaque limiter identifiers, while shared database writes, quota, availability, and credential-operational risk remain accepted constraints. A canonical fresh Supabase baseline remains post-launch technical debt.
 
 - P0 Pre-Launch Public Catalog and Release Candidate Audit.
-  - Next approved milestone: read-only inventory of every currently Public quest; classify launch-approved versus test/demo/verification content requiring unpublication. Because Supabase is shared, every Public quest can appear in Production after launch. Do not mutate content without explicit approval; then perform final tests/build and release-candidate pinning before any deployment decision.
+  - Completed: all five identified Public test/demo quests were approved for and manually unpublished through the authenticated teacher UI. Read-only verification confirmed zero public catalog/runtime results and preserved quest/task records. RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` passed final verification (34 test files / 284 tests, lint, build, and `git diff --check`).
+
+- First Production Release Verification.
+  - PR #1 merged the RC to `main` as `bfe773a66024d60d6824209290f5990d9c551225`; Vercel created the first intentional Production deployment. The first smoke attempt exposed a Production `NEXT_PUBLIC_SUPABASE_URL` value containing `/rest/v1`, which formed `/rest/v1/rest/v1/rpc/list_public_catalog_quests` for `/catalog`. Correcting the value to the Supabase Project URL and redeploying the same source resolved the issue without code or schema changes.
+  - The replacement Production deployment is Ready and Current. Smoke verification passed for `/`, `/catalog`, `/login`, magic-link login, `/dashboard`, `/dashboard/quests`, logout, and unauthenticated dashboard redirect. The catalog is intentionally empty at launch; no migration newer than 035 exists or was required.
+  - Next approved milestone: read-only **P1 Post-Launch Observability and Rollback Baseline Review**.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.
