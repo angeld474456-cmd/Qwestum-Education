@@ -539,7 +539,11 @@ Next:
   - No timeout, code, provider, environment, deployment, or migration change was made. The earlier Preview fail-closed `503` is not an active unresolved defect. Remaining P0 work is read-only Production deployment/domain/protection/environment inventory, followed by Production Auth, rollback, smoke-plan, and observability gates.
 
 - P0 Production Environment and Auth Configuration Planning.
-  - Next approved milestone: planning only. Define Production resource mapping, required Supabase Site/Redirect URLs, safe provider-change order, rollback gate, and smoke gate. Do not change provider settings, deploy, send Production traffic, or select a new Core MVP implementation milestone in this gate.
+  - Completed in Sprint 12.20.34. Shared first-MVP Supabase now has Production Site URL plus retained deployment-specific Preview, stable Preview branch, and Production callbacks; no wildcard or stale Production alias is allowed. Production Vercel scope now has the six required runtime variables while Preview remains unchanged; no redeploy or Production traffic occurred.
+  - First-MVP provider strategy is intentionally shared: Preview and Production use the existing Supabase project and Upstash database. A distinct Production `RATE_LIMIT_HMAC_SECRET` separates opaque limiter identifiers, while shared database writes, quota, availability, and credential-operational risk remain accepted constraints. A canonical fresh Supabase baseline remains post-launch technical debt.
+
+- P0 Pre-Launch Public Catalog and Release Candidate Audit.
+  - Next approved milestone: read-only inventory of every currently Public quest; classify launch-approved versus test/demo/verification content requiring unpublication. Because Supabase is shared, every Public quest can appear in Production after launch. Do not mutate content without explicit approval; then perform final tests/build and release-candidate pinning before any deployment decision.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.

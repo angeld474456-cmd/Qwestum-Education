@@ -1,5 +1,11 @@
 # Changelog
 
+## Sprint 12.20.34 - Production Auth and Environment Configuration
+
+- Completed the approved no-deployment provider configuration. The intentionally shared Supabase project's Site URL is now `https://qwestum-education.vercel.app`; its exact callback allowlist retains the deployment-specific Preview callback and adds the stable `feature/next-work` Preview callback plus the Production callback. No wildcard or stale Production alias was added.
+- Production Vercel scope now contains all six runtime variables. The Supabase URL/anon key/service-role key and Upstash URL/token intentionally match Preview; Production has a newly generated distinct `RATE_LIMIT_HMAC_SECRET`. Preview remains unchanged, no secret values are recorded, and no redeploy occurred. Shared Upstash uses separate opaque limiter identifiers through distinct HMAC secrets but retains shared quota, outage, and credential-operational risk.
+- Preview and Production intentionally share Supabase database, Auth, Storage, schema, RPCs, and policies for the first Model A launch. Every Preview write is therefore a shared live-database write, and every Public quest may appear in Production after launch. The next P0 milestone is the read-only public catalog/publication and release-candidate audit; no content mutation, merge, deployment, or Production traffic is approved.
+
 ## Sprint 12.20.33 - Production Readiness Inventory
 
 - Completed the read-only Vercel/Supabase/Upstash Production-readiness inventory. The sole current Production deployment is Ready but stale: it came from `feature/next-work` commit `7282256` (`Document public surface hardening`) rather than the current verified branch state. `main` remains the intended Production branch; no push or merge to it is approved.
