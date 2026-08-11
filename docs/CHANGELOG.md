@@ -1,5 +1,11 @@
 # Changelog
 
+## P1 Public Task Image Delivery
+
+- Completed in `9559869c8228ec84a30f32603eec9c2bf7aebc44` (`Add public task image delivery`). Live Migration 038 extends only `get_public_runtime_quest(uuid)` to project nullable canonical task-image URLs for Text, Single Choice, and Multiple Choice; trusted canonical URLs pass through while legacy/noncanonical values project `null`.
+- The public DTO now maps `image_url` to required nullable `imageUrl`. Shared `PublicTaskImage` uses responsive `object-contain`, lazy loading, title fallback alt text, and quiet hide-on-error behavior. It exposes no answer keys, content, owner IDs, or Storage metadata.
+- Preview browser QA passed for public `/catalog/[id]/start` image rendering with preserved aspect ratio and intact runtime layout. The QA quest was returned to Draft. Scoring, catalog, publication eligibility, RLS, Storage policies, provider configuration, and Production state were unchanged.
+
 ## P1 Production Content Authoring Safety Pass
 
 - Completed in `abf45dd2a7691d58d9429d58d07c835f7a5572dc` and `fae9dff8cfe0675e83d7ba90cb3aeae78c15bed3`. Type-specific task creation now omits generic Answer/Hint fields; Text remains open-response, while new Single Choice and Multiple Choice tasks begin as safe `content: null` drafts with no default MC options or implicit correct IDs.
