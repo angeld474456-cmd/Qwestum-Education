@@ -7,6 +7,7 @@ import {
   POINTS_VALIDATION_MESSAGE,
   parsePositiveSafeInteger,
 } from "@/lib/task-points";
+import { parseSingleChoiceContent } from "@/lib/task-choice-content";
 import { QuestTask } from "@/services/quest.service";
 import { getTaskTypeLabel, TextTaskEditorProps } from "./TextTaskEditor";
 
@@ -92,6 +93,14 @@ export default function SingleChoiceTaskEditor({
   );
   const parsedPoints = parsePositiveSafeInteger(points);
   const isPointsValid = parsedPoints !== null;
+  const choiceContent = parseSingleChoiceContent({
+    options,
+    correctOptionId,
+  });
+  const isNullDraft =
+    task.content === null &&
+    options.length === 0 &&
+    correctOptionId === "";
   const validationMessages = [
     options.length < 2 ? "Добавьте минимум два варианта ответа." : null,
     !hasCorrectOption ? "Выберите один правильный ответ." : null,
@@ -100,7 +109,11 @@ export default function SingleChoiceTaskEditor({
       : null,
     !isPointsValid ? POINTS_VALIDATION_MESSAGE : null,
   ].filter((message): message is string => Boolean(message));
-  const isValid = validationMessages.length === 0;
+  const canSave = Boolean(
+    title.trim() &&
+      isPointsValid &&
+      (isNullDraft || choiceContent)
+  );
 
   function handleAddOption() {
     setOptions((currentOptions) => [
@@ -309,13 +322,16 @@ export default function SingleChoiceTaskEditor({
 
       <div className="pt-4">
         <button
-          disabled={!isValid}
+          disabled={!canSave}
           onClick={() => {
             if (parsedPoints !== null) {
-              onSave(task.id, title, description, parsedPoints, {
-                options,
-                correctOptionId,
-              });
+              onSave(
+                task.id,
+                title,
+                description,
+                parsedPoints,
+                isNullDraft ? null : choiceContent
+              );
             }
           }}
           className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50 transition"

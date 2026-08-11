@@ -22,7 +22,15 @@ export default function MultipleChoiceTaskEditor({ task, onSave, onUploadImage, 
   const [correctOptionIds, setCorrectOptionIds] = useState(initial.correctOptionIds);
   const parsedPoints = parsePositiveSafeInteger(points);
   const content = parseMultipleChoiceContent({ options, correctOptionIds });
-  const valid = Boolean(title.trim() && parsedPoints !== null && content);
+  const isNullDraft =
+    task.content === null &&
+    options.length === 0 &&
+    correctOptionIds.length === 0;
+  const canSave = Boolean(
+    title.trim() &&
+      parsedPoints !== null &&
+      (isNullDraft || content)
+  );
 
   function addOption() { setOptions((current) => [...current, { id: crypto.randomUUID(), text: "" }]); }
   function removeOption(id: string) { setOptions((current) => current.filter((option) => option.id !== id)); setCorrectOptionIds((current) => current.filter((optionId) => optionId !== id)); }
@@ -35,6 +43,6 @@ export default function MultipleChoiceTaskEditor({ task, onSave, onUploadImage, 
     <button type="button" onClick={addOption} className="mt-1 inline-flex min-h-11 items-center rounded-xl border border-slate-500/70 bg-slate-700 px-5 py-3 font-semibold text-white transition hover:bg-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-200 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111827]">Добавить вариант</button>
     <input type="number" min={1} step={1} value={points} onChange={(event) => setPoints(event.target.value)} className="w-full rounded-xl bg-[#1B2435] p-4" aria-label="Баллы" />
     <ImageUploader imageUrl={task.image_url} onUpload={(file) => onUploadImage(task.id, file)} onRemove={() => onRemoveImage(task.id)} />
-    <button type="button" disabled={!valid} onClick={() => { if (content && parsedPoints !== null) onSave(task.id, title, description, parsedPoints, content); }} className="inline-flex min-h-12 items-center rounded-xl bg-violet-600 px-8 py-4 font-semibold text-white transition hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111827] disabled:cursor-not-allowed disabled:opacity-50">Сохранить</button>
+    <button type="button" disabled={!canSave} onClick={() => { if (parsedPoints !== null) onSave(task.id, title, description, parsedPoints, isNullDraft ? null : content); }} className="inline-flex min-h-12 items-center rounded-xl bg-violet-600 px-8 py-4 font-semibold text-white transition hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111827] disabled:cursor-not-allowed disabled:opacity-50">Сохранить</button>
   </div>;
 }
