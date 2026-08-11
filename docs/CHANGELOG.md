@@ -1,5 +1,11 @@
 # Changelog
 
+## P1 Production Content Authoring Safety Pass
+
+- Completed in `abf45dd2a7691d58d9429d58d07c835f7a5572dc` and `fae9dff8cfe0675e83d7ba90cb3aeae78c15bed3`. Type-specific task creation now omits generic Answer/Hint fields; Text remains open-response, while new Single Choice and Multiple Choice tasks begin as safe `content: null` drafts with no default MC options or implicit correct IDs.
+- Live Migration 036 makes duplicate normalized choice-option text (`lower(btrim(option text))`) an authoritative publication-eligibility blocker. Live Migration 037 allows nullable choice drafts through the owner-safe update RPC while retaining malformed non-null rejection, parent-first ownership checks, and authenticated-only execution.
+- Shared validation and explicit SC/MC readiness preserve fail-closed publication. Preview browser QA passed for null-draft metadata saves and refresh persistence; incomplete drafts remained blocked from readiness and no permanent test content was published. The full suite passed 35 files / 302 tests with lint, build, and `git diff --check` passing. No scorer, public DTO, answer-key exposure, public task-image, or learner-hint behavior changed.
+
 ## P1 Post-Launch Observability and Rollback Baseline
 
 - Recorded the current known-good Vercel Production rollback deployment: `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y`, `qwestum-education-gskc2mem9-qwestum.vercel.app`, Ready/Current from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment affected by the malformed `NEXT_PUBLIC_SUPABASE_URL` is explicitly not a rollback baseline.

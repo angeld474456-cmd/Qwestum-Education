@@ -527,7 +527,14 @@ Sprint 12.20.31 - Owner-Safe Quest Creation Boundary
 - Live Migration 035 removes `Teachers can insert own quests`. `public.quests` now retains only authenticated owner SELECT; direct INSERT, UPDATE, and DELETE are absent. Creation, metadata, cover SET/CLEAR, publication, and deletion use their dedicated owner-safe RPC boundaries.
 - Browser verification passed for creation through the Settings redirect and owned library, initial Draft/catalog behavior, metadata and cover regressions, publication guards, publication after adding a task, and creation after policy removal. Focused 2-file/27-test and full 34-file/284-test suites, lint, build, and `git diff --check` passed.
 
-Next:
+### P1 Production Content Authoring Safety Pass
+
+- Completed in `abf45dd` and follow-up UI commit `fae9dff`. Live Migration 036 makes duplicate normalized choice-option text an authoritative public-eligibility blocker; Live Migration 037 permits `content: null` Single Choice and Multiple Choice drafts through the owner-safe update RPC while preserving malformed non-null rejection.
+- New choice tasks start incomplete without default Multiple Choice options or implicit correct IDs. Type-specific creation no longer exposes generic Answer/Hint fields; Text remains open-response and `not_scored`. Choice draft persistence is separate from publication readiness, which stays fail-closed until complete valid content exists.
+- Preview QA passed for SC/MC null-draft metadata save and refresh persistence with readiness blocked while incomplete. Fresh shared-database preflight found no affected public or draft duplicate-content tasks. The full 35-file / 302-test suite, lint, build, and `git diff --check` passed; public DTOs, scoring, hints, and public task-image delivery were unchanged.
+- Next content-readiness decision: plan the smallest safe path for public task-image delivery before authoring image-dependent public quests. Keep authoring-scale UX, dashboard static-metrics cleanup, localization cleanup, student identity, and persisted attempts as separate follow-on work.
+
+Historical P0 records:
 
 - Sprint 12.20.33 - Production Readiness Inventory.
   - Completed read-only Vercel/Supabase/Upstash inventory. Current Production is a Ready but stale Jul 31 deployment from `feature/next-work` commit `7282256` (`Document public surface hardening`); `main` remains the intended Production branch. `qwestum-education.vercel.app` is valid, no user custom domain was observed, and the old deployment is not an approved release.

@@ -895,6 +895,12 @@ Its only INSERT allowlist is title, description, difficulty, `author_id`, and an
 
 Migration 035 removes `Teachers can insert own quests`. Current `public.quests` RLS retains only authenticated owner SELECT; direct INSERT, UPDATE, and DELETE are absent. Supported quest writes are now RPC-only: `create_owned_quest`, `update_owned_quest_metadata`, `set_owned_quest_cover_image`, `clear_owned_quest_cover_image_if_matches`, `set_owned_quest_publication_state`, and `delete_owned_quest`.
 
+### Production Content Authoring Safety
+
+The supported task types are `text`, `single_choice`, and `multiple_choice`. Draft persistence and publication readiness are deliberately separate: Text remains open-response and `not_scored`; choice tasks may persist with `content = null` as an intentional incomplete draft, but public eligibility remains fail-closed until their content is complete and valid. The task-creation UI does not expose generic Answer or Hint inputs because they have no learner/runtime effect.
+
+Migration 036 extends only `public.is_public_runtime_eligible(uuid)`: it rejects duplicate Single Choice and Multiple Choice option text after `lower(btrim(option text))`, without rewriting stored display text. Migration 037 extends only `public.update_owned_quest_task_content(...)`: it permits nullable choice drafts while preserving malformed non-null rejection, owner checks, parent-first locks, and the existing result DTO. Multiple Choice scoring remains exact-set with no partial credit; public DTOs do not expose answer keys, learner hints remain unsupported, and task images are not yet delivered through the public runtime.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

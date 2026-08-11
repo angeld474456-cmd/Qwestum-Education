@@ -2,11 +2,11 @@
 
 ## Milestone
 
-Core MVP Next Milestone Planning
+P1 Public Content Readiness Planning
 
 ## Next Task
 
-Choose the next smallest coherent Core MVP milestone through analysis, architecture, and an implementation plan. Do not begin implementation without separate approval.
+Choose the smallest safe public-content readiness milestone, beginning with a read-only architecture review of public task-image delivery for image-dependent quests. Do not begin implementation without separate approval.
 
 ## Objective
 
@@ -14,7 +14,7 @@ Resume deliberate Core MVP planning after the first Production release while pre
 
 ## Constraints
 
-- Teacher task creation, reorder, deletion, metadata/content updates, and image SET/CLEAR now use owner-safe RPC boundaries; direct `quest_tasks` INSERT, UPDATE, and DELETE policies are absent while SELECT remains retained.
+- Teacher task creation, reorder, deletion, metadata/content updates, and image SET/CLEAR now use owner-safe RPC boundaries; direct `quest_tasks` INSERT, UPDATE, and DELETE policies are absent while SELECT remains retained. M036 makes duplicate normalized choice-option text fail public eligibility; M037 allows intentional `content: null` choice drafts while readiness remains fail-closed until complete valid content exists.
 - Migration 034 makes creation RPC-only through `create_owned_quest`; Migration 035 removes the final direct `public.quests` INSERT policy. Quest metadata, cover SET/CLEAR, publication, and deletion remain on their existing dedicated RPC boundaries. `public.quests` retains only its authenticated owner SELECT policy.
 - Preserve the current anonymous-public plus authenticated-teacher Model A boundary. Do not prematurely add student identity, attempts/history, assignments, payments, AI generation, exports, or organizations without a separately approved plan.
 - Controlled Preview submit-rate-limit verification is complete: an authorized same-identity/same-quest sequential test accepted normal traffic and returned the fixed no-store `429` on attempt 62 with `Retry-After: 15`; no `503`, header manipulation, concurrency, or Production traffic occurred. No timeout change is required from this evidence.
