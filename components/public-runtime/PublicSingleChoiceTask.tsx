@@ -1,5 +1,7 @@
 import type { PublicRuntimeSingleChoiceTask } from "@/types/public-runtime";
 
+import PublicTaskImage from "./PublicTaskImage";
+
 type PublicSingleChoiceTaskProps = {
   task: PublicRuntimeSingleChoiceTask;
   selectedOptionId?: string;
@@ -23,6 +25,7 @@ export default function PublicSingleChoiceTask({
           {task.description}
         </p>
       ) : null}
+      <PublicTaskImage imageUrl={task.imageUrl} title={task.title} />
       <div className="space-y-3">
         {task.options.map((option, index) => {
           const inputId = `public-runtime-${task.id}-option-${index}`;

@@ -3,6 +3,8 @@ export const missingQuestId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 export const unknownTaskId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 export const unknownOptionId = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
 export const foreignOptionId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+export const canonicalTaskImageUrl =
+  "https://example.supabase.co/storage/v1/object/public/quest-images/teachers/99999999-9999-4999-8999-999999999999/quests/11111111-1111-4111-8111-111111111111/tasks/22222222-2222-4222-8222-222222222221/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.png";
 
 export const textTaskIds = [
   "22222222-2222-4222-8222-222222222221",
@@ -27,7 +29,10 @@ export const validSubmission = {
   answers: [
     ...textTaskIds.map((taskId) => ({ taskId })),
     { taskId: singleChoiceTaskIds[0], selectedOptionId: optionIds[0] },
-    { taskId: singleChoiceTaskIds[1], selectedOptionId: optionIds[3] },
+    {
+      taskId: singleChoiceTaskIds[1],
+      selectedOptionIds: [optionIds[2], optionIds[3]],
+    },
   ],
 };
 
@@ -42,6 +47,7 @@ export const publicRuntimeQuestRow = {
       task_type: "text",
       title: `Text task ${index + 1}`,
       description: null,
+      image_url: index === 0 ? canonicalTaskImageUrl : null,
       answer: "private answer",
     })),
     {
@@ -49,6 +55,7 @@ export const publicRuntimeQuestRow = {
       task_type: "single_choice",
       title: "Choice task one",
       description: "Choose one option",
+      image_url: canonicalTaskImageUrl,
       correctOptionId: optionIds[0],
       options: [
         { id: optionIds[0], text: "Option one", internal: "ignored" },
@@ -57,9 +64,11 @@ export const publicRuntimeQuestRow = {
     },
     {
       id: singleChoiceTaskIds[1],
-      task_type: "single_choice",
+      task_type: "multiple_choice",
       title: "Choice task two",
       description: null,
+      image_url: null,
+      correctOptionIds: [optionIds[2], optionIds[3]],
       options: [
         { id: optionIds[2], text: "Option three" },
         { id: optionIds[3], text: "Option four" },

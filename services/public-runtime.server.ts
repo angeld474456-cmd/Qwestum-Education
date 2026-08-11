@@ -92,6 +92,8 @@ function mapRuntimeTask(value: unknown): PublicRuntimeTask | null {
     !isUuid(value.id) ||
     !isNonBlankString(value.title) ||
     !isNullableString(value.description) ||
+    !Object.prototype.hasOwnProperty.call(value, "image_url") ||
+    !isNullableString(value.image_url) ||
     typeof value.task_type !== "string"
   ) {
     return null;
@@ -103,6 +105,7 @@ function mapRuntimeTask(value: unknown): PublicRuntimeTask | null {
       taskType: "text",
       title: value.title,
       description: value.description,
+      imageUrl: value.image_url,
     };
   }
 
@@ -130,6 +133,7 @@ function mapRuntimeTask(value: unknown): PublicRuntimeTask | null {
     taskType: value.task_type,
     title: value.title,
     description: value.description,
+    imageUrl: value.image_url,
     options: mappedOptions,
   };
 }

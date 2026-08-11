@@ -8,6 +8,7 @@ export type PublicRuntimeMultipleChoiceTask = {
   taskType: "multiple_choice";
   title: string;
   description: string | null;
+  imageUrl: string | null;
   options: PublicRuntimeSingleChoiceOption[];
 };
 
@@ -16,6 +17,7 @@ export type PublicRuntimeTextTask = {
   taskType: "text";
   title: string;
   description: string | null;
+  imageUrl: string | null;
 };
 
 export type PublicRuntimeSingleChoiceTask = {
@@ -23,6 +25,7 @@ export type PublicRuntimeSingleChoiceTask = {
   taskType: "single_choice";
   title: string;
   description: string | null;
+  imageUrl: string | null;
   options: PublicRuntimeSingleChoiceOption[];
 };
 
