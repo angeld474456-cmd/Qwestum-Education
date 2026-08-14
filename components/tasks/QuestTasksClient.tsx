@@ -570,8 +570,8 @@ export default function QuestTasksClient({
           <TaskForm onSave={handleCreateTask} />
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-12">
-          <div className="xl:col-span-4">
+        <div className="mt-10">
+          <div>
             <h2
               ref={taskListHeadingRef}
               tabIndex={-1}
@@ -593,6 +593,14 @@ export default function QuestTasksClient({
                 onMoveTask={handleMoveTask}
                 reorderBusy={busy}
                 onRegisterTaskPencil={registerTaskPencil}
+                renderSelectedEditor={(task) => (
+                  <TaskEditor
+                    task={selectedTask?.id === task.id ? selectedTask : task}
+                    onSave={handleSaveTask}
+                    onUploadImage={handleUploadImage}
+                    onRemoveImage={handleRemoveImage}
+                  />
+                )}
               />
             )}
 
@@ -606,14 +614,6 @@ export default function QuestTasksClient({
             </button>
           </div>
 
-          <div className="xl:col-span-8">
-            <TaskEditor
-              task={selectedTask}
-              onSave={handleSaveTask}
-              onUploadImage={handleUploadImage}
-              onRemoveImage={handleRemoveImage}
-            />
-          </div>
         </div>
       </div>
     </section>

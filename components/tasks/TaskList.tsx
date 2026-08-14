@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { QuestTask } from "@/services/quest.service";
 import TaskCard from "./TaskCard";
 
@@ -14,6 +16,7 @@ interface TaskListProps {
     taskId: string,
     element: HTMLButtonElement | null
   ) => void;
+  renderSelectedEditor?: (task: QuestTask) => ReactNode;
 }
 
 export default function TaskList({
@@ -24,6 +27,7 @@ export default function TaskList({
   onMoveTask,
   reorderBusy,
   onRegisterTaskPencil,
+  renderSelectedEditor,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return (
@@ -42,35 +46,44 @@ export default function TaskList({
   return (
     <div className="space-y-4">
 
-      {tasks.map((task, index) => (
+      {tasks.map((task, index) => {
+        const isSelected = selectedTaskId === task.id;
+        const taskCard = (
+          <div
+            onClick={() => onSelectTask(task)}
+            className={`cursor-pointer rounded-2xl transition ${
+              isSelected ? "ring-2 ring-violet-500" : ""
+            }`}
+          >
+            <TaskCard
+              index={index}
+              task={task}
+              isSelected={isSelected}
+              onSelect={() => onSelectTask(task)}
+              onDelete={onDelete}
+              onMoveUp={() => onMoveTask(task.id, "up")}
+              onMoveDown={() => onMoveTask(task.id, "down")}
+              canMoveUp={index > 0}
+              canMoveDown={index < tasks.length - 1}
+              reorderBusy={reorderBusy}
+              onRegisterPencil={onRegisterTaskPencil}
+            />
+          </div>
+        );
 
-        <div
-          key={task.id}
-          onClick={() => onSelectTask(task)}
-          className={`cursor-pointer rounded-2xl transition ${
-            selectedTaskId === task.id
-              ? "ring-2 ring-violet-500"
-              : ""
-          }`}
-        >
-
-          <TaskCard
-            index={index}
-            task={task}
-            isSelected={selectedTaskId === task.id}
-            onSelect={() => onSelectTask(task)}
-            onDelete={onDelete}
-            onMoveUp={() => onMoveTask(task.id, "up")}
-            onMoveDown={() => onMoveTask(task.id, "down")}
-            canMoveUp={index > 0}
-            canMoveDown={index < tasks.length - 1}
-            reorderBusy={reorderBusy}
-            onRegisterPencil={onRegisterTaskPencil}
-          />
-
-        </div>
-
-      ))}
+        return (
+          <div key={task.id}>
+            {isSelected && renderSelectedEditor ? (
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+                {taskCard}
+                <div className="min-w-0">{renderSelectedEditor(task)}</div>
+              </div>
+            ) : (
+              taskCard
+            )}
+          </div>
+        );
+      })}
 
     </div>
   );

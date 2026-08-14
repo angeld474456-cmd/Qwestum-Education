@@ -27,17 +27,28 @@ export default function PublicQuestResults({
   result,
   onRetry,
 }: PublicQuestResultsProps) {
+  const resultsRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const resultsByTaskId = new Map(
     result.taskResults.map((taskResult) => [taskResult.taskId, taskResult])
   );
 
   useEffect(() => {
-    headingRef.current?.focus();
+    resultsRef.current?.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+      block: "start",
+    });
+    headingRef.current?.focus({ preventScroll: true });
   }, []);
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6" aria-labelledby="public-runtime-results-heading">
+    <section
+      ref={resultsRef}
+      className="scroll-mt-6 mx-auto max-w-3xl space-y-6"
+      aria-labelledby="public-runtime-results-heading"
+    >
       <div className="rounded-lg border border-slate-800 bg-[#111827] p-6 sm:p-8">
         <h1
           id="public-runtime-results-heading"
