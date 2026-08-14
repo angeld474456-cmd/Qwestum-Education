@@ -159,11 +159,24 @@ export default function QuestTasksClient({
         ? "auto"
         : "smooth";
 
-      const selectionTarget = window.matchMedia("(min-width: 1280px)").matches
-        ? taskRowRefs.current.get(selectedTaskIdRef.current ?? "")
-        : editorPanelRef.current;
+      if (window.matchMedia("(min-width: 1280px)").matches) {
+        const taskRow = taskRowRefs.current.get(
+          selectedTaskIdRef.current ?? ""
+        );
+        const editorPanel = editorPanelRef.current;
 
-      selectionTarget?.scrollIntoView({
+        if (!taskRow || !editorPanel) return;
+
+        window.scrollBy({
+          top:
+            taskRow.getBoundingClientRect().top -
+            editorPanel.getBoundingClientRect().top,
+          behavior,
+        });
+        return;
+      }
+
+      editorPanelRef.current?.scrollIntoView({
         behavior,
         block: "start",
       });
