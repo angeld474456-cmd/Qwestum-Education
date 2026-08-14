@@ -11,6 +11,7 @@ import {
   SESSION_EXPIRED_MESSAGE,
 } from "@/lib/auth/session-expired.client";
 import {
+  getQuestLanguageLabel,
   QUEST_LANGUAGE_OPTIONS,
   type QuestLanguageCode,
 } from "@/services/quest-language";
@@ -76,17 +77,6 @@ function formatSubjectOption(subject: SubjectOption) {
   }
 
   return `${subject.name} — ${subject.grade} класс`;
-}
-
-function formatLanguageOption(code: QuestLanguageCode) {
-  switch (code) {
-    case "ru":
-      return "Русский";
-    case "kk":
-      return "Казахский";
-    case "en":
-      return "Английский";
-  }
 }
 
 export default function QuestSettingsForm({
@@ -336,7 +326,7 @@ export default function QuestSettingsForm({
             <option value="">Язык не указан</option>
             {QUEST_LANGUAGE_OPTIONS.map((language) => (
               <option key={language.code} value={language.code}>
-                {formatLanguageOption(language.code)}
+                {getQuestLanguageLabel(language.code)}
               </option>
             ))}
           </select>
