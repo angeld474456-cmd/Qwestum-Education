@@ -17,6 +17,10 @@ interface TaskListProps {
     element: HTMLButtonElement | null
   ) => void;
   renderSelectedEditor?: (task: QuestTask) => ReactNode;
+  onRegisterSelectedRow?: (
+    taskId: string,
+    element: HTMLDivElement | null
+  ) => void;
 }
 
 export default function TaskList({
@@ -28,6 +32,7 @@ export default function TaskList({
   reorderBusy,
   onRegisterTaskPencil,
   renderSelectedEditor,
+  onRegisterSelectedRow,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return (
@@ -72,7 +77,15 @@ export default function TaskList({
         );
 
         return (
-          <div key={task.id}>
+          <div
+            key={task.id}
+            ref={
+              isSelected
+                ? (element) => onRegisterSelectedRow?.(task.id, element)
+                : undefined
+            }
+            className={isSelected ? "scroll-mt-6" : undefined}
+          >
             {isSelected && renderSelectedEditor ? (
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
                 {taskCard}

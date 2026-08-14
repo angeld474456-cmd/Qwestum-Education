@@ -47,11 +47,13 @@ export default function QuestTasksClient({
   const [selectedTask, setSelectedTask] = useState<QuestTask | null>(
     initialTasks[0] ?? null
   );
+  const [selectedRowScrollRequest, setSelectedRowScrollRequest] = useState(0);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const selectedTaskIdRef = useRef<string | null>(initialTasks[0]?.id ?? null);
+  const selectedRowRef = useRef<HTMLDivElement | null>(null);
   const taskPencilRefs = useRef(new Map<string, HTMLButtonElement>());
   const taskListHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const pendingFocusTargetRef = useRef<PendingFocusTarget | null>(null);
@@ -132,7 +134,32 @@ export default function QuestTasksClient({
   function handleSelectTask(task: QuestTask) {
     selectedTaskIdRef.current = task.id;
     setSelectedTask(task);
+    setSelectedRowScrollRequest((currentRequest) => currentRequest + 1);
   }
+
+  const registerSelectedRow = useCallback(
+    (taskId: string, element: HTMLDivElement | null) => {
+      if (selectedTaskIdRef.current === taskId) {
+        selectedRowRef.current = element;
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (selectedRowScrollRequest === 0) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      selectedRowRef.current?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+        block: "start",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [selectedRowScrollRequest]);
 
   function syncSelectedTask(loadedTasks: QuestTask[]) {
     setSelectedTask((currentTask) => {
@@ -593,6 +620,7 @@ export default function QuestTasksClient({
                 onMoveTask={handleMoveTask}
                 reorderBusy={busy}
                 onRegisterTaskPencil={registerTaskPencil}
+                onRegisterSelectedRow={registerSelectedRow}
                 renderSelectedEditor={(task) => (
                   <TaskEditor
                     task={selectedTask?.id === task.id ? selectedTask : task}
