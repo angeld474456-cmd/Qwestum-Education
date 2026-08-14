@@ -87,7 +87,7 @@ export default function TaskList({
             className={isSelected ? "scroll-mt-6" : undefined}
           >
             {isSelected && renderSelectedEditor ? (
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+              <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
                 {taskCard}
                 <div className="min-w-0">{renderSelectedEditor(task)}</div>
               </div>
