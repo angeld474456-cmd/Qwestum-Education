@@ -188,37 +188,6 @@ function getConfiguredLimiter() {
   return configuredLimiter;
 }
 
-function isPresent(value: string | undefined) {
-  return typeof value === "string" && value.trim().length > 0;
-}
-
-function logPreviewUnavailable(input: {
-  reason:
-    | "missing-client-identity"
-    | "limiter-not-configured"
-    | "limiter-runtime-unavailable";
-  request: Request;
-  clientIdentityResolved: boolean;
-  limiterConfigured: boolean;
-}) {
-  if (process.env.VERCEL_ENV !== "preview") return;
-
-  const forwardedFor = input.request.headers.get("x-forwarded-for");
-  const environment = getEnvironment();
-
-  console.warn("[public-submit-rate-limit-unavailable]", {
-    event: "public-submit-rate-limit-unavailable",
-    reason: input.reason,
-    headerPresent: forwardedFor !== null,
-    containsComma: forwardedFor?.includes(",") ?? false,
-    clientIdentityResolved: input.clientIdentityResolved,
-    redisUrlPresent: isPresent(environment.redisUrl),
-    redisTokenPresent: isPresent(environment.redisToken),
-    hmacSecretPresent: isPresent(environment.hmacSecret),
-    limiterConfigured: input.limiterConfigured,
-  });
-}
-
 export async function checkPublicSubmitRateLimit(
   request: Request,
   questId: string
@@ -226,28 +195,7 @@ export async function checkPublicSubmitRateLimit(
   const clientIdentity = getTrustedClientIdentity(request);
   const limiter = getConfiguredLimiter();
 
-  if (!clientIdentity || !limiter) {
-    logPreviewUnavailable({
-      reason: !clientIdentity
-        ? "missing-client-identity"
-        : "limiter-not-configured",
-      request,
-      clientIdentityResolved: Boolean(clientIdentity),
-      limiterConfigured: Boolean(limiter),
-    });
-    return { status: "unavailable" };
-  }
+  if (!clientIdentity || !limiter) return { status: "unavailable" };
 
-  const result = await limiter.check({ clientIdentity, questId });
-
-  if (result.status === "unavailable") {
-    logPreviewUnavailable({
-      reason: "limiter-runtime-unavailable",
-      request,
-      clientIdentityResolved: true,
-      limiterConfigured: true,
-    });
-  }
-
-  return result;
+  return limiter.check({ clientIdentity, questId });
 }
