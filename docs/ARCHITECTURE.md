@@ -903,6 +903,12 @@ Migration 036 extends only `public.is_public_runtime_eligible(uuid)`: it rejects
 
 Migration 038 extends only `public.get_public_runtime_quest(uuid)` with nullable `image_url` task data. It projects a stored URL only when it matches the existing private trusted origin and exact owner/quest/task-bound `quest-images` public path; missing config and legacy or malformed values project `null` without making the quest ineligible. The server-only public mapper converts this to `imageUrl: string | null` for Text, Single Choice, and Multiple Choice, while `PublicTaskImage` renders it responsively with `object-contain`, lazy loading, and a quiet load-error fallback. No scorer, catalog, publication eligibility, RLS, or Storage-policy contract changes.
 
+## P1 Polished Quest Interaction Model
+
+The teacher task workspace keeps task cards in a compact independent list and renders exactly one standalone editor in the adjacent desktop column. The editor panel is sticky within that column; an explicit task selection registers and scrolls only the selected task row, using the editor's measured viewport position near the sticky boundary. Narrow layouts retain the stacked editor flow. This is presentation-only: task CRUD, images, ordering, validation, and RPC boundaries are unchanged.
+
+`PublicQuestRunner` positions only explicit active-task transitions. Start, Next, Back, and retry use the existing task-section scroll/focus effect with reduced-motion-aware behavior; results use their own result-section scroll/focus effect. Retry re-arms the task transition before resetting to task 1. These interactions do not change answers, scoring, result DTOs, submit behavior, or persistence.
+
 ## Current Publication Architecture
 
 The teacher publication authority chain is:

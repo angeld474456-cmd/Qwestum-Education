@@ -538,7 +538,14 @@ Sprint 12.20.31 - Owner-Safe Quest Creation Boundary
 
 - Completed in `9559869` (`Add public task image delivery`). Live Migration 038 extends only `get_public_runtime_quest(uuid)` to return nullable canonical task `image_url` data for Text, Single Choice, and Multiple Choice. The trusted private origin plus exact owner/quest/task object-path rule projects legacy/noncanonical values as `null` and leaves public eligibility unchanged.
 - The public DTO maps this to `imageUrl: string | null`; the shared public image renderer uses responsive `object-contain`, lazy loading, title fallback alt text, and a quiet load-error fallback. Preview public-runtime QA passed with correct image display, preserved aspect ratio, and no layout regression; the test quest returned to Draft afterward.
-- No scorer, catalog boundary, publication eligibility, RLS, Storage policy, provider configuration, Production merge, or PR changed. The next content milestone is controlled authoring and publication QA for the first polished public quest; keep authoring-scale UX, dashboard static-metrics cleanup, localization cleanup, student identity, and persisted attempts separate.
+- No scorer, catalog boundary, publication eligibility, RLS, Storage policy, provider configuration, Production merge, or PR changed. The following controlled authoring and publication QA is complete; keep authoring-scale UX, dashboard static-metrics cleanup, broader localization cleanup, student identity, and persisted attempts separate.
+
+### P1 First Polished Public Quest Authoring and Publication QA
+
+- Completed Preview-only QA for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`): 10 real mixed Single Choice/Multiple Choice tasks, quest cover, task images, teacher Preview, Teacher Play/Test, publication readiness, and Draft-to-Published transition passed.
+- Anonymous public catalog detail/start and all task-image rendering passed. Server-side public scoring and per-task results passed with a recorded result of `65 / 125`, `6` correct, `4` incorrect, `0` unanswered, and `0` not scored. This is controlled Preview evidence only; it does not mark all quests or Production QA-complete.
+- Completed UX polish retains a compact teacher task list with one independent editor, explicit selected-task alignment, and no editor-created list gaps. Public runner Start, Next, Back, Results, and retry-to-task-1 positioning passed. Temporary Preview rate-limit diagnostics were removed after successful submit verification; the one historical Preview `503` cause remains unproven and the normal fail-closed limiter configuration is unchanged.
+- Next smallest launch-quality planning item: **P1 Public Quest Metadata Presentation Polish**, beginning with the existing language-label path so public metadata displays a user-facing label rather than a raw code. No implementation is approved by this roadmap entry.
 
 Historical P0 records:
 

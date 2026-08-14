@@ -2,18 +2,20 @@
 
 ## Milestone
 
-P1 First Polished Public Quest Authoring and Publication QA
+P1 Public Quest Metadata Presentation Polish
 
 ## Next Task
 
-Plan a controlled teacher-owned Draft-to-Public QA pass for the first polished public quest, including catalog and anonymous-runtime verification plus an explicit unpublish rollback plan. Do not create or publish content without separate approval.
+Plan the smallest safe public metadata presentation improvement, starting with rendering the existing quest language label instead of raw language code such as `ru`. Confirm all affected public and teacher display boundaries, reuse the established language mapping where appropriate, and keep this planning-only until separately approved.
 
 ## Objective
 
-Resume deliberate Core MVP planning after the first Production release while preserving the anonymous-public plus authenticated-teacher Model A boundary.
+Preserve the anonymous-public plus authenticated-teacher Model A boundary while closing the observed first-polished-quest presentation gap without widening into broader localization or new product scope.
 
 ## Constraints
 
+- P1 First Polished Public Quest Authoring and Publication QA is complete for Preview quest `638b728a-baac-460c-b671-43a4bde104a0`: the 10-task mixed Single Choice/Multiple Choice path, cover/task images, teacher authoring/Preview/Play, publication, anonymous runtime, scoring, results, and retry navigation passed. It is controlled Preview QA only, not all-content or Production certification.
+- The one historical Preview submit `503` did not establish a conclusive root cause. Temporary diagnostics have been removed; retain the current fail-closed limiter with x-forwarded-for-only identity trust, no alternate-header fallback, 250 ms timeout, existing buckets, and existing `429`/`503` Retry-After contracts.
 - Teacher task creation, reorder, deletion, metadata/content updates, and image SET/CLEAR now use owner-safe RPC boundaries; direct `quest_tasks` INSERT, UPDATE, and DELETE policies are absent while SELECT remains retained. M036 makes duplicate normalized choice-option text fail public eligibility; M037 allows intentional `content: null` choice drafts while readiness remains fail-closed until complete valid content exists. M038 delivers only canonical optional task images through the public runtime; malformed or legacy image references project `null`.
 - Migration 034 makes creation RPC-only through `create_owned_quest`; Migration 035 removes the final direct `public.quests` INSERT policy. Quest metadata, cover SET/CLEAR, publication, and deletion remain on their existing dedicated RPC boundaries. `public.quests` retains only its authenticated owner SELECT policy.
 - Preserve the current anonymous-public plus authenticated-teacher Model A boundary. Do not prematurely add student identity, attempts/history, assignments, payments, AI generation, exports, or organizations without a separately approved plan.

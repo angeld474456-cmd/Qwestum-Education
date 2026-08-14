@@ -1,5 +1,11 @@
 # Changelog
 
+## P1 First Polished Public Quest Authoring and Publication QA
+
+- Completed controlled Preview authoring and anonymous runtime QA for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`): 10 mixed Single Choice/Multiple Choice tasks, quest cover, public task images, teacher Preview/Play, readiness, and the Draft-to-Published transition passed.
+- Public catalog detail/start, task-image rendering, Single Choice, Multiple Choice, server-side scoring, and result statuses passed. A successful result recorded `65 / 125` points, `6` correct, `4` incorrect, `0` unanswered, and `0` not scored. This is Preview-only evidence; the quest remains published for controlled QA.
+- Teacher task editor now uses a compact list plus independent editor with explicit selected-task alignment; public runtime positioning passed for Start, Next, Back, Results, and retry to task 1. Temporary Preview rate-limit diagnostics were removed in `bc81289`; the one historical Preview `503` cause was not conclusively proven, and normal fail-closed limiter behavior is unchanged.
+
 ## P1 Public Task Image Delivery
 
 - Completed in `9559869c8228ec84a30f32603eec9c2bf7aebc44` (`Add public task image delivery`). Live Migration 038 extends only `get_public_runtime_quest(uuid)` to project nullable canonical task-image URLs for Text, Single Choice, and Multiple Choice; trusted canonical URLs pass through while legacy/noncanonical values project `null`.
