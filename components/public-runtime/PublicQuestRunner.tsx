@@ -259,6 +259,12 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
     submissionInFlightRef.current = false;
+    taskScrollBehaviorRef.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+      ? "auto"
+      : "smooth";
+    shouldPositionTaskRef.current = true;
     setCurrentTaskIndex(0);
     setSelectedOptionIds({});
     setSelectedMultipleChoiceOptionIds({});
