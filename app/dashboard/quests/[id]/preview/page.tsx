@@ -126,7 +126,9 @@ export default async function TeacherQuestPreviewPage({
 
   const [tasks, subjects] = await Promise.all([
     getOwnedQuestTasks(id),
-    getTeacherSubjects(),
+    getTeacherSubjects({
+      includeSubjectIds: quest.subject_id ? [quest.subject_id] : [],
+    }),
   ]);
 
   if (!tasks) {

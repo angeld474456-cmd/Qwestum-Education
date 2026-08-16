@@ -47,11 +47,14 @@ export default function QuestTasksClient({
   const [selectedTask, setSelectedTask] = useState<QuestTask | null>(
     initialTasks[0] ?? null
   );
+  const [selectedRowScrollRequest, setSelectedRowScrollRequest] = useState(0);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const selectedTaskIdRef = useRef<string | null>(initialTasks[0]?.id ?? null);
+  const taskRowRefs = useRef(new Map<string, HTMLDivElement>());
+  const editorPanelRef = useRef<HTMLDivElement>(null);
   const taskPencilRefs = useRef(new Map<string, HTMLButtonElement>());
   const taskListHeadingRef = useRef<HTMLHeadingElement | null>(null);
   const pendingFocusTargetRef = useRef<PendingFocusTarget | null>(null);
@@ -132,7 +135,55 @@ export default function QuestTasksClient({
   function handleSelectTask(task: QuestTask) {
     selectedTaskIdRef.current = task.id;
     setSelectedTask(task);
+    setSelectedRowScrollRequest((currentRequest) => currentRequest + 1);
   }
+
+  const registerTaskRow = useCallback(
+    (taskId: string, element: HTMLDivElement | null) => {
+      if (element) {
+        taskRowRefs.current.set(taskId, element);
+      } else {
+        taskRowRefs.current.delete(taskId);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (selectedRowScrollRequest === 0) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      const behavior = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches
+        ? "auto"
+        : "smooth";
+
+      if (window.matchMedia("(min-width: 1280px)").matches) {
+        const taskRow = taskRowRefs.current.get(
+          selectedTaskIdRef.current ?? ""
+        );
+        const editorPanel = editorPanelRef.current;
+
+        if (!taskRow || !editorPanel) return;
+
+        window.scrollBy({
+          top:
+            taskRow.getBoundingClientRect().top -
+            editorPanel.getBoundingClientRect().top,
+          behavior,
+        });
+        return;
+      }
+
+      editorPanelRef.current?.scrollIntoView({
+        behavior,
+        block: "start",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [selectedRowScrollRequest]);
 
   function syncSelectedTask(loadedTasks: QuestTask[]) {
     setSelectedTask((currentTask) => {
@@ -184,7 +235,7 @@ export default function QuestTasksClient({
     hint: string;
     points: number;
     taskType: string;
-    content?: TaskContent;
+    content: TaskContent | null;
   }): Promise<boolean> {
     if (busy) return false;
 
@@ -205,7 +256,7 @@ export default function QuestTasksClient({
           hint: task.hint,
           points: task.points,
           task_type: task.taskType,
-          ...(task.content ? { content: task.content } : {}),
+          content: task.content,
         }),
       });
 
@@ -570,16 +621,17 @@ export default function QuestTasksClient({
           <TaskForm onSave={handleCreateTask} />
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-12">
-          <div className="xl:col-span-4">
-            <h2
-              ref={taskListHeadingRef}
-              tabIndex={-1}
-              className="mb-4 text-2xl font-bold"
-            >
-              Задания
-            </h2>
+        <div className="mt-10">
+          <h2
+            ref={taskListHeadingRef}
+            tabIndex={-1}
+            className="mb-4 text-2xl font-bold"
+          >
+            {"\u0417\u0430\u0434\u0430\u043d\u0438\u044f"}
+          </h2>
 
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <div>
             {loading ? (
               <div className="rounded-xl bg-[#111827] p-8">
                 Загрузка...
@@ -593,6 +645,7 @@ export default function QuestTasksClient({
                 onMoveTask={handleMoveTask}
                 reorderBusy={busy}
                 onRegisterTaskPencil={registerTaskPencil}
+                onRegisterTaskRow={registerTaskRow}
               />
             )}
 
@@ -606,14 +659,20 @@ export default function QuestTasksClient({
             </button>
           </div>
 
-          <div className="xl:col-span-8">
-            <TaskEditor
-              task={selectedTask}
-              onSave={handleSaveTask}
-              onUploadImage={handleUploadImage}
-              onRemoveImage={handleRemoveImage}
-            />
+          <div>
+            <div
+              ref={editorPanelRef}
+              className="scroll-mt-6 xl:sticky xl:top-6"
+            >
+              <TaskEditor
+                task={selectedTask}
+                onSave={handleSaveTask}
+                onUploadImage={handleUploadImage}
+                onRemoveImage={handleRemoveImage}
+              />
+            </div>
           </div>
+        </div>
         </div>
       </div>
     </section>

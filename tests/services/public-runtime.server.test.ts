@@ -47,12 +47,14 @@ describe("public runtime server service", () => {
           taskType: "text",
           title: task.title,
           description: task.description,
+          imageUrl: task.image_url,
         })),
         {
           id: publicRuntimeQuestRow.tasks[4].id,
           taskType: "single_choice",
           title: publicRuntimeQuestRow.tasks[4].title,
           description: publicRuntimeQuestRow.tasks[4].description,
+          imageUrl: publicRuntimeQuestRow.tasks[4].image_url,
           options: publicRuntimeQuestRow.tasks[4].options.map((option) => ({
             id: option.id,
             text: option.text,
@@ -60,9 +62,10 @@ describe("public runtime server service", () => {
         },
         {
           id: publicRuntimeQuestRow.tasks[5].id,
-          taskType: "single_choice",
+          taskType: "multiple_choice",
           title: publicRuntimeQuestRow.tasks[5].title,
           description: publicRuntimeQuestRow.tasks[5].description,
+          imageUrl: publicRuntimeQuestRow.tasks[5].image_url,
           options: publicRuntimeQuestRow.tasks[5].options.map((option) => ({
             id: option.id,
             text: option.text,
@@ -75,6 +78,7 @@ describe("public runtime server service", () => {
     });
     expect(JSON.stringify(quest)).not.toContain("private answer");
     expect(JSON.stringify(quest)).not.toContain("correctOptionId");
+    expect(JSON.stringify(quest)).not.toContain("correctOptionIds");
   });
 
   it("returns null for an unavailable runtime quest", async () => {
@@ -93,6 +97,32 @@ describe("public runtime server service", () => {
       data: [malformedRuntimeQuestRow],
       error: null,
     });
+    await expect(getPublicRuntimeQuest(runtimeQuestId)).rejects.toThrow(
+      "Public runtime fetch returned invalid data."
+    );
+
+    const missingImageUrlRow = {
+      ...publicRuntimeQuestRow,
+      tasks: publicRuntimeQuestRow.tasks.map((task, index) => {
+        if (index !== 0) return task;
+
+        const taskWithoutImageUrl = { ...task };
+        delete taskWithoutImageUrl.image_url;
+        return taskWithoutImageUrl;
+      }),
+    };
+    mocks.rpc.mockResolvedValueOnce({ data: [missingImageUrlRow], error: null });
+    await expect(getPublicRuntimeQuest(runtimeQuestId)).rejects.toThrow(
+      "Public runtime fetch returned invalid data."
+    );
+
+    const invalidImageUrlRow = {
+      ...publicRuntimeQuestRow,
+      tasks: publicRuntimeQuestRow.tasks.map((task, index) =>
+        index === 0 ? { ...task, image_url: 1 } : task
+      ),
+    };
+    mocks.rpc.mockResolvedValueOnce({ data: [invalidImageUrlRow], error: null });
     await expect(getPublicRuntimeQuest(runtimeQuestId)).rejects.toThrow(
       "Public runtime fetch returned invalid data."
     );

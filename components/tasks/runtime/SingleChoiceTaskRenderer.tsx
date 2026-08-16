@@ -75,7 +75,7 @@ export default function SingleChoiceTaskRenderer({
                 onChange={() => handleOptionChange(option.id)}
               />
 
-              <span>
+              <span className="min-w-0 flex-1 whitespace-normal break-words [overflow-wrap:anywhere]">
                 {option.text || "Вариант ответа"}
               </span>
             </label>

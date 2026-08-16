@@ -527,7 +527,35 @@ Sprint 12.20.31 - Owner-Safe Quest Creation Boundary
 - Live Migration 035 removes `Teachers can insert own quests`. `public.quests` now retains only authenticated owner SELECT; direct INSERT, UPDATE, and DELETE are absent. Creation, metadata, cover SET/CLEAR, publication, and deletion use their dedicated owner-safe RPC boundaries.
 - Browser verification passed for creation through the Settings redirect and owned library, initial Draft/catalog behavior, metadata and cover regressions, publication guards, publication after adding a task, and creation after policy removal. Focused 2-file/27-test and full 34-file/284-test suites, lint, build, and `git diff --check` passed.
 
-Next:
+### P1 Production Content Authoring Safety Pass
+
+- Completed in `abf45dd` and follow-up UI commit `fae9dff`. Live Migration 036 makes duplicate normalized choice-option text an authoritative public-eligibility blocker; Live Migration 037 permits `content: null` Single Choice and Multiple Choice drafts through the owner-safe update RPC while preserving malformed non-null rejection.
+- New choice tasks start incomplete without default Multiple Choice options or implicit correct IDs. Type-specific creation no longer exposes generic Answer/Hint fields; Text remains open-response and `not_scored`. Choice draft persistence is separate from publication readiness, which stays fail-closed until complete valid content exists.
+- Preview QA passed for SC/MC null-draft metadata save and refresh persistence with readiness blocked while incomplete. Fresh shared-database preflight found no affected public or draft duplicate-content tasks. The full 35-file / 302-test suite, lint, build, and `git diff --check` passed; at this pass's completion, public DTOs, scoring, hints, and public task-image delivery were unchanged.
+- Next content-readiness decision: plan the smallest safe path for public task-image delivery before authoring image-dependent public quests. Keep authoring-scale UX, dashboard static-metrics cleanup, localization cleanup, student identity, and persisted attempts as separate follow-on work.
+
+### P1 Public Task Image Delivery
+
+- Completed in `9559869` (`Add public task image delivery`). Live Migration 038 extends only `get_public_runtime_quest(uuid)` to return nullable canonical task `image_url` data for Text, Single Choice, and Multiple Choice. The trusted private origin plus exact owner/quest/task object-path rule projects legacy/noncanonical values as `null` and leaves public eligibility unchanged.
+- The public DTO maps this to `imageUrl: string | null`; the shared public image renderer uses responsive `object-contain`, lazy loading, title fallback alt text, and a quiet load-error fallback. Preview public-runtime QA passed with correct image display, preserved aspect ratio, and no layout regression; the test quest returned to Draft afterward.
+- No scorer, catalog boundary, publication eligibility, RLS, Storage policy, provider configuration, Production merge, or PR changed. The following controlled authoring and publication QA is complete; keep authoring-scale UX, dashboard static-metrics cleanup, broader localization cleanup, student identity, and persisted attempts separate.
+
+### P1 First Polished Public Quest Authoring and Publication QA
+
+- Completed Preview-only QA for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`): 10 real mixed Single Choice/Multiple Choice tasks, quest cover, task images, teacher Preview, Teacher Play/Test, publication readiness, and Draft-to-Published transition passed.
+- Anonymous public catalog detail/start and all task-image rendering passed. Server-side public scoring and per-task results passed with a recorded result of `65 / 125`, `6` correct, `4` incorrect, `0` unanswered, and `0` not scored. This is controlled Preview evidence only; it does not mark all quests or Production QA-complete.
+- Completed UX polish retains a compact teacher task list with one independent editor, explicit selected-task alignment, and no editor-created list gaps. Public runner Start, Next, Back, Results, and retry-to-task-1 positioning passed. Temporary Preview rate-limit diagnostics were removed after successful submit verification; the one historical Preview `503` cause remains unproven and the normal fail-closed limiter configuration is unchanged.
+- Public language-label polish is complete. **P1 Program-Aware Teacher Subject Lookup Planning** is also complete and deferred: the sole `kz-school-general` profile needs no implementation now. Before a second profile, persist authoritative quest program context, resolve stable code server-side, filter canonical subjects by `education_program_id`, and enforce membership in the owner-safe metadata boundary without broad taxonomy SELECT RLS.
+- The next launch-critical planning item is **P1 Production Public Quest Release Gate Planning**. The first polished quest has controlled Preview-only evidence; before exposing real content in Production, reconcile actual catalog/publication state and define the required Production catalog/detail/runtime/submit smoke, approval, and rollback record. No content mutation is approved by this roadmap entry.
+
+### P1 Education Taxonomy and Teacher Subject Cleanup
+
+- Complete and live-verified. Migration 039 added additive `education_programs` and `disciplines` identities plus nullable paired program/discipline references on `subjects`, retaining all existing subject and quest compatibility. Taxonomy tables have RLS enabled and no broad SELECT policies.
+- Migration 040 seeded `kz-school-general` (`Общеобразовательная школа Казахстана`, `KZ`) and 26 Kazakhstan school disciplines. Migration 041 classified all 45 legacy subject rows without changing subject UUIDs or quest references. Migration 042 (`037cdf16e625c9c520247b7e769e1a73c569b30c`) added 12 missing grade-null canonical offerings, producing 57 total subjects and 26 verified canonical offerings with no broken quest references.
+- Teacher cleanup (`3d900f21dcc3a8af26490010ea400ccfc849ee67`) now presents canonical grade-null offerings for normal authoring and retains explicitly selected legacy IDs for compatibility. New authoring shows 25 choices: 26 canonical offerings minus legacy generic `Литература`; `Казахская литература` and `Русская литература` are the new Kazakhstan choices. Localhost and Preview QA, focused tests, lint, and build passed.
+- Do not create subject-by-grade rows going forward. Quest grade applicability remains on `quests.grade_min` / `quests.grade_max`. Translation tables, countries, levels, institutions, and richer offering abstractions remain deferred rather than complete.
+
+Historical P0 records:
 
 - Sprint 12.20.33 - Production Readiness Inventory.
   - Completed read-only Vercel/Supabase/Upstash inventory. Current Production is a Ready but stale Jul 31 deployment from `feature/next-work` commit `7282256` (`Document public surface hardening`); `main` remains the intended Production branch. `qwestum-education.vercel.app` is valid, no user custom domain was observed, and the old deployment is not an approved release.
@@ -548,7 +576,8 @@ Next:
 - First Production Release Verification.
   - PR #1 merged the RC to `main` as `bfe773a66024d60d6824209290f5990d9c551225`; Vercel created the first intentional Production deployment. The first smoke attempt exposed a Production `NEXT_PUBLIC_SUPABASE_URL` value containing `/rest/v1`, which formed `/rest/v1/rest/v1/rpc/list_public_catalog_quests` for `/catalog`. Correcting the value to the Supabase Project URL and redeploying the same source resolved the issue without code or schema changes.
   - The replacement Production deployment is Ready and Current. Smoke verification passed for `/`, `/catalog`, `/login`, magic-link login, `/dashboard`, `/dashboard/quests`, logout, and unauthenticated dashboard redirect. The catalog is intentionally empty at launch; no migration newer than 035 exists or was required.
-  - Next approved milestone: read-only **P1 Post-Launch Observability and Rollback Baseline Review**.
+  - P1 post-launch observability and rollback baseline review is complete. The known-good Production rollback target is deployment `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` at `qwestum-education-gskc2mem9-qwestum.vercel.app`, Ready/Current in Production from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment with the malformed URL is excluded. Urgent rollback promotes this deployment; a normal code regression uses a reviewed `git revert` on `main`; rollback never rewinds database/data state or uses force-push/reset.
+  - Hobby/free observability remains manual through Vercel deployment status, runtime logs, and basic Observability. Monitor public entry/catalog/runtime/submit and auth/dashboard/logout routes; investigate repeated 5xx, unexpected auth failures, catalog/runtime RPC errors, and submit `503`. A controlled submit `429` remains expected limiter behavior. Next: **Core MVP Next Milestone Planning**.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.
   - Fixed the create-form data-loss path where `TaskForm` reset after `onSave` resolved although `QuestTasksClient` had handled a failed create internally.

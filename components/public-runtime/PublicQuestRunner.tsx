@@ -176,7 +176,8 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
   const [result, setResult] = useState<PublicRuntimeResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const taskContainerRef = useRef<HTMLElement>(null);
-  const focusTaskOnChangeRef = useRef(false);
+  const shouldPositionTaskRef = useRef(true);
+  const taskScrollBehaviorRef = useRef<ScrollBehavior>("auto");
   const submissionInFlightRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
@@ -192,10 +193,15 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
   }, []);
 
   useEffect(() => {
-    if (!focusTaskOnChangeRef.current) return;
+    if (!shouldPositionTaskRef.current) return;
 
-    taskContainerRef.current?.focus();
-    focusTaskOnChangeRef.current = false;
+    const taskContainer = taskContainerRef.current;
+    taskContainer?.scrollIntoView({
+      behavior: taskScrollBehaviorRef.current,
+      block: "start",
+    });
+    taskContainer?.focus({ preventScroll: true });
+    shouldPositionTaskRef.current = false;
   }, [currentTaskIndex]);
 
   if (!questIsValid) {
@@ -222,7 +228,12 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
   function moveToTask(index: number) {
     if (isSubmitting || index < 0 || index >= quest.tasks.length) return;
 
-    focusTaskOnChangeRef.current = true;
+    taskScrollBehaviorRef.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+      ? "auto"
+      : "smooth";
+    shouldPositionTaskRef.current = true;
     setCurrentTaskIndex(index);
   }
 
@@ -248,6 +259,12 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
     submissionInFlightRef.current = false;
+    taskScrollBehaviorRef.current = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+      ? "auto"
+      : "smooth";
+    shouldPositionTaskRef.current = true;
     setCurrentTaskIndex(0);
     setSelectedOptionIds({});
     setSelectedMultipleChoiceOptionIds({});
@@ -351,7 +368,7 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
       <section
         ref={taskContainerRef}
         tabIndex={-1}
-        className="rounded-lg border border-slate-800 bg-[#111827] p-6 outline-none focus-visible:ring-2 focus-visible:ring-violet-500 sm:p-8"
+        className="scroll-mt-6 rounded-lg border border-slate-800 bg-[#111827] p-6 outline-none focus-visible:ring-2 focus-visible:ring-violet-500 sm:p-8"
       >
         <PublicTaskRenderer
           task={currentTask}

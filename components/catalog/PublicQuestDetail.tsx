@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import PublicQuestCover from "@/components/catalog/PublicQuestCover";
 import PublicQuestShareButton from "@/components/catalog/PublicQuestShareButton";
+import { getQuestLanguageLabel } from "@/services/quest-language";
 import type { PublicCatalogQuest } from "@/types/public-catalog";
 
 type PublicQuestDetailProps = {
@@ -32,6 +33,7 @@ function formatCreatedAt(value: string | null) {
 
 export default function PublicQuestDetail({ quest }: PublicQuestDetailProps) {
   const gradeLabel = formatGradeRange(quest);
+  const languageLabel = getQuestLanguageLabel(quest.languageCode);
   const createdAt = formatCreatedAt(quest.createdAt);
 
   return (
@@ -88,11 +90,11 @@ export default function PublicQuestDetail({ quest }: PublicQuestDetailProps) {
             </dd>
           </div>
         ) : null}
-        {quest.languageCode ? (
+        {languageLabel ? (
           <div className="rounded-lg border border-slate-800 bg-[#111827] p-4">
             <dt className="text-sm text-slate-400">Язык</dt>
             <dd className="mt-1 font-semibold text-white">
-              {quest.languageCode}
+              {languageLabel}
             </dd>
           </div>
         ) : null}

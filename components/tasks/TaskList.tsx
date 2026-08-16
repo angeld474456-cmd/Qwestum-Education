@@ -14,6 +14,10 @@ interface TaskListProps {
     taskId: string,
     element: HTMLButtonElement | null
   ) => void;
+  onRegisterTaskRow: (
+    taskId: string,
+    element: HTMLDivElement | null
+  ) => void;
 }
 
 export default function TaskList({
@@ -24,6 +28,7 @@ export default function TaskList({
   onMoveTask,
   reorderBusy,
   onRegisterTaskPencil,
+  onRegisterTaskRow,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return (
@@ -43,17 +48,14 @@ export default function TaskList({
     <div className="space-y-4">
 
       {tasks.map((task, index) => (
-
         <div
           key={task.id}
+          ref={(element) => onRegisterTaskRow(task.id, element)}
           onClick={() => onSelectTask(task)}
-          className={`cursor-pointer rounded-2xl transition ${
-            selectedTaskId === task.id
-              ? "ring-2 ring-violet-500"
-              : ""
+          className={`scroll-mt-6 cursor-pointer rounded-2xl transition ${
+            selectedTaskId === task.id ? "ring-2 ring-violet-500" : ""
           }`}
         >
-
           <TaskCard
             index={index}
             task={task}
@@ -67,9 +69,7 @@ export default function TaskList({
             reorderBusy={reorderBusy}
             onRegisterPencil={onRegisterTaskPencil}
           />
-
         </div>
-
       ))}
 
     </div>

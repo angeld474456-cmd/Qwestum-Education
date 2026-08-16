@@ -3,15 +3,15 @@ export type QuestLanguageCode = "ru" | "kk" | "en";
 export const QUEST_LANGUAGE_OPTIONS = [
   {
     code: "ru",
-    label: "Russian",
+    label: "Русский",
   },
   {
     code: "kk",
-    label: "Kazakh",
+    label: "Казахский",
   },
   {
     code: "en",
-    label: "English",
+    label: "Английский",
   },
 ] as const satisfies ReadonlyArray<{
   code: QuestLanguageCode;

@@ -21,9 +21,9 @@ export default function Header() {
           <a href="#">Контакты</a>
         </nav>
 
-        <button className="rounded-xl bg-violet-600 px-5 py-3 font-semibold">
+        <Link href="/login" className="rounded-xl bg-violet-600 px-5 py-3 font-semibold">
           Войти
-        </button>
+        </Link>
 
       </div>
     </header>

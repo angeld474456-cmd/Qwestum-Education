@@ -1,5 +1,43 @@
 # Changelog
 
+## P1 Program-Aware Teacher Subject Lookup Planning
+
+- Completed read-only. The current single-profile `kz-school-general` lookup is correct and no implementation is required now. New authoring continues to use canonical grade-null subjects, preserve explicitly selected legacy IDs, and hide generic legacy `Литература` from normal choices.
+- Before any second education profile, quest program context must be persisted and authoritative; lookup must filter `subjects.education_program_id`; the owner-safe metadata boundary must reject cross-program subjects; and stable program code must resolve server-side to its generated UUID. No broad taxonomy SELECT RLS or program-selector UI is approved while there is only one meaningful program.
+- Next: read-only **P1 Production Public Quest Release Gate Planning** to reconcile actual catalog/publication state and define deliberate Production content-promotion, smoke, approval, and rollback evidence before real content moves beyond controlled Preview QA.
+
+## P1 Education Taxonomy and Teacher Subject Cleanup
+
+- Live Migration 039 added `public.education_programs` and `public.disciplines`, plus nullable paired program/discipline references on `public.subjects`; existing subject and quest compatibility was preserved. The new taxonomy tables have RLS enabled with no broad taxonomy SELECT policies.
+- Live Migration 040 seeded `kz-school-general` (`Общеобразовательная школа Казахстана`, `KZ`) and 26 approved Kazakhstan school discipline identities. Live Migration 041 classified all 45 existing subjects without changing subject UUIDs, quest subject references, or the first polished quest.
+- Live Migration 042, committed in `037cdf16e625c9c520247b7e769e1a73c569b30c` (`Seed missing Kazakhstan school subjects`), inserted 12 missing grade-null canonical offerings. Verification passed with 57 total subjects, 26 canonical `kz-school-general` subjects, all 26 program/discipline mappings valid, and no broken quest references.
+- `3d900f21dcc3a8af26490010ea400ccfc849ee67` (`Clean up teacher subject selection`) now serves canonical grade-null subjects for normal authoring while explicitly retaining selected legacy IDs for existing quests. Legacy generic `Литература` is excluded from new choices but remains compatible when already selected; new authoring shows 25 visible subjects. Localhost and Vercel Preview browser QA, focused tests, lint, and build passed.
+- Grade range remains quest metadata, not subject identity. Translation tables, country catalog, levels, institutions, and richer offering models remain deferred.
+
+## P1 First Polished Public Quest Authoring and Publication QA
+
+- Completed controlled Preview authoring and anonymous runtime QA for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`): 10 mixed Single Choice/Multiple Choice tasks, quest cover, public task images, teacher Preview/Play, readiness, and the Draft-to-Published transition passed.
+- Public catalog detail/start, task-image rendering, Single Choice, Multiple Choice, server-side scoring, and result statuses passed. A successful result recorded `65 / 125` points, `6` correct, `4` incorrect, `0` unanswered, and `0` not scored. This is Preview-only evidence; the quest remains published for controlled QA.
+- Teacher task editor now uses a compact list plus independent editor with explicit selected-task alignment; public runtime positioning passed for Start, Next, Back, Results, and retry to task 1. Temporary Preview rate-limit diagnostics were removed in `bc81289`; the one historical Preview `503` cause was not conclusively proven, and normal fail-closed limiter behavior is unchanged.
+
+## P1 Public Task Image Delivery
+
+- Completed in `9559869c8228ec84a30f32603eec9c2bf7aebc44` (`Add public task image delivery`). Live Migration 038 extends only `get_public_runtime_quest(uuid)` to project nullable canonical task-image URLs for Text, Single Choice, and Multiple Choice; trusted canonical URLs pass through while legacy/noncanonical values project `null`.
+- The public DTO now maps `image_url` to required nullable `imageUrl`. Shared `PublicTaskImage` uses responsive `object-contain`, lazy loading, title fallback alt text, and quiet hide-on-error behavior. It exposes no answer keys, content, owner IDs, or Storage metadata.
+- Preview browser QA passed for public `/catalog/[id]/start` image rendering with preserved aspect ratio and intact runtime layout. The QA quest was returned to Draft. Scoring, catalog, publication eligibility, RLS, Storage policies, provider configuration, and Production state were unchanged.
+
+## P1 Production Content Authoring Safety Pass
+
+- Completed in `abf45dd2a7691d58d9429d58d07c835f7a5572dc` and `fae9dff8cfe0675e83d7ba90cb3aeae78c15bed3`. Type-specific task creation now omits generic Answer/Hint fields; Text remains open-response, while new Single Choice and Multiple Choice tasks begin as safe `content: null` drafts with no default MC options or implicit correct IDs.
+- Live Migration 036 makes duplicate normalized choice-option text (`lower(btrim(option text))`) an authoritative publication-eligibility blocker. Live Migration 037 allows nullable choice drafts through the owner-safe update RPC while retaining malformed non-null rejection, parent-first ownership checks, and authenticated-only execution.
+- Shared validation and explicit SC/MC readiness preserve fail-closed publication. Preview browser QA passed for null-draft metadata saves and refresh persistence; incomplete drafts remained blocked from readiness and no permanent test content was published. The full suite passed 35 files / 302 tests with lint, build, and `git diff --check` passing. No scorer, public DTO, answer-key exposure, public task-image, or learner-hint behavior changed.
+
+## P1 Post-Launch Observability and Rollback Baseline
+
+- Recorded the current known-good Vercel Production rollback deployment: `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y`, `qwestum-education-gskc2mem9-qwestum.vercel.app`, Ready/Current from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment affected by the malformed `NEXT_PUBLIC_SUPABASE_URL` is explicitly not a rollback baseline.
+- Operational rollback order is now defined: urgently promote the recorded known-good Vercel deployment; use a reviewed `git revert` on `main` for a normal code regression; never force-push or reset `main`. Deployment rollback does not revert database or data state; schema remains frozen through Migration 035.
+- Current first-launch monitoring is manual on Hobby/free: inspect Vercel deployment status, runtime logs, and basic Observability for public entry/catalog/runtime/submit and auth/dashboard/logout routes. Repeated 5xx, unexpected authentication failures, catalog/runtime RPC failures, and submit `503` require investigation; a threshold `429` is expected rate-limiter behavior.
+
 ## First Production Release Verification
 
 - PR #1 (`Prepare first Qwestum Production release`) merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` to `main` as `bfe773a66024d60d6824209290f5990d9c551225`, producing the first intentional Vercel Production deployment.

@@ -7,6 +7,7 @@ import {
   POINTS_VALIDATION_MESSAGE,
   parsePositiveSafeInteger,
 } from "@/lib/task-points";
+import { parseSingleChoiceContent } from "@/lib/task-choice-content";
 import { QuestTask } from "@/services/quest.service";
 import { getTaskTypeLabel, TextTaskEditorProps } from "./TextTaskEditor";
 
@@ -63,6 +64,13 @@ function createOption(): SingleChoiceOption {
   };
 }
 
+function autoSizeOptionTextarea(textarea: HTMLTextAreaElement | null) {
+  if (!textarea) return;
+
+  textarea.style.height = "auto";
+  textarea.style.height = `${textarea.scrollHeight}px`;
+}
+
 export default function SingleChoiceTaskEditor({
   task,
   onSave,
@@ -85,6 +93,14 @@ export default function SingleChoiceTaskEditor({
   );
   const parsedPoints = parsePositiveSafeInteger(points);
   const isPointsValid = parsedPoints !== null;
+  const choiceContent = parseSingleChoiceContent({
+    options,
+    correctOptionId,
+  });
+  const isNullDraft =
+    task.content === null &&
+    options.length === 0 &&
+    correctOptionId === "";
   const validationMessages = [
     options.length < 2 ? "Добавьте минимум два варианта ответа." : null,
     !hasCorrectOption ? "Выберите один правильный ответ." : null,
@@ -93,7 +109,11 @@ export default function SingleChoiceTaskEditor({
       : null,
     !isPointsValid ? POINTS_VALIDATION_MESSAGE : null,
   ].filter((message): message is string => Boolean(message));
-  const isValid = validationMessages.length === 0;
+  const canSave = Boolean(
+    title.trim() &&
+      isPointsValid &&
+      (isNullDraft || choiceContent)
+  );
 
   function handleAddOption() {
     setOptions((currentOptions) => [
@@ -167,7 +187,7 @@ export default function SingleChoiceTaskEditor({
           {options.map((option) => (
             <div
               key={option.id}
-              className="grid grid-cols-[auto_1fr_auto] items-center gap-3"
+              className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto]"
             >
               <input
                 type="radio"
@@ -179,19 +199,22 @@ export default function SingleChoiceTaskEditor({
                 aria-label="Правильный ответ"
               />
 
-              <input
+              <textarea
+                rows={3}
                 value={option.text}
+                ref={autoSizeOptionTextarea}
+                onInput={(event) => autoSizeOptionTextarea(event.currentTarget)}
                 onChange={(e) =>
                   handleOptionTextChange(option.id, e.target.value)
                 }
-                className="w-full rounded-xl bg-[#1B2435] p-4"
+                className="min-h-24 min-w-0 w-full resize-y overflow-x-hidden break-words rounded-xl bg-[#1B2435] p-4"
                 aria-label="Вариант ответа"
               />
 
               <button
                 type="button"
                 onClick={() => handleRemoveOption(option.id)}
-                className="rounded-lg bg-red-600 px-4 py-3 hover:bg-red-700 transition"
+                className="col-start-2 justify-self-start rounded-lg bg-red-600 px-4 py-3 transition hover:bg-red-700 md:col-auto md:justify-self-end md:self-start"
                 aria-label="Удалить вариант"
               >
                 Удалить вариант
@@ -299,13 +322,16 @@ export default function SingleChoiceTaskEditor({
 
       <div className="pt-4">
         <button
-          disabled={!isValid}
+          disabled={!canSave}
           onClick={() => {
             if (parsedPoints !== null) {
-              onSave(task.id, title, description, parsedPoints, {
-                options,
-                correctOptionId,
-              });
+              onSave(
+                task.id,
+                title,
+                description,
+                parsedPoints,
+                isNullDraft ? null : choiceContent
+              );
             }
           }}
           className="rounded-xl bg-violet-600 px-8 py-4 font-semibold hover:bg-violet-700 disabled:opacity-50 transition"

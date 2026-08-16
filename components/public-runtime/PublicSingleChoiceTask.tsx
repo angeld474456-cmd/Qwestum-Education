@@ -1,5 +1,7 @@
 import type { PublicRuntimeSingleChoiceTask } from "@/types/public-runtime";
 
+import PublicTaskImage from "./PublicTaskImage";
+
 type PublicSingleChoiceTaskProps = {
   task: PublicRuntimeSingleChoiceTask;
   selectedOptionId?: string;
@@ -23,6 +25,7 @@ export default function PublicSingleChoiceTask({
           {task.description}
         </p>
       ) : null}
+      <PublicTaskImage imageUrl={task.imageUrl} title={task.title} />
       <div className="space-y-3">
         {task.options.map((option, index) => {
           const inputId = `public-runtime-${task.id}-option-${index}`;
@@ -43,7 +46,7 @@ export default function PublicSingleChoiceTask({
                 onChange={() => onSelectOption(option.id)}
                 className="mt-1 size-4 border-slate-600 bg-slate-950 text-violet-500 focus:ring-violet-500"
               />
-              <span className="leading-6">{option.text}</span>
+              <span className="min-w-0 flex-1 whitespace-normal break-words leading-6 [overflow-wrap:anywhere]">{option.text}</span>
             </label>
           );
         })}

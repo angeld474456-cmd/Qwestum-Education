@@ -30,7 +30,7 @@ export default function MultipleChoiceTaskRenderer({ title, description, imageUr
         const checked = mode === "preview" ? correctOptionIds.includes(option.id) : answer.includes(option.id);
         return <label key={option.id} className="flex cursor-pointer items-center gap-3 rounded-xl bg-[#1B2435] p-4">
           <input type="checkbox" checked={checked} onChange={() => toggleOption(option.id)} disabled={mode === "preview"} />
-          <span>{option.text}</span>
+          <span className="min-w-0 flex-1 whitespace-normal break-words [overflow-wrap:anywhere]">{option.text}</span>
         </label>;
       })}
     </fieldset>
