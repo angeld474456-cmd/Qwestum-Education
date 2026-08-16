@@ -28,8 +28,8 @@ export default function MultipleChoiceTaskRenderer({ title, description, imageUr
       <legend className="sr-only">Multiple choice options</legend>
       {options.map((option) => {
         const checked = mode === "preview" ? correctOptionIds.includes(option.id) : answer.includes(option.id);
-        return <label key={option.id} className="flex cursor-pointer items-center gap-3 rounded-xl bg-[#1B2435] p-4">
-          <input type="checkbox" checked={checked} onChange={() => toggleOption(option.id)} disabled={mode === "preview"} />
+        return <label key={option.id} className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-slate-100 transition has-[:checked]:border-violet-400 has-[:checked]:bg-violet-500/15">
+          <input type="checkbox" checked={checked} onChange={() => toggleOption(option.id)} disabled={mode === "preview"} className="size-4 border-slate-600 bg-slate-950 text-violet-500 focus:ring-violet-500" />
           <span className="min-w-0 flex-1 whitespace-normal break-words [overflow-wrap:anywhere]">{option.text}</span>
         </label>;
       })}
