@@ -1,5 +1,13 @@
 # Changelog
 
+## P1 Education Taxonomy and Teacher Subject Cleanup
+
+- Live Migration 039 added `public.education_programs` and `public.disciplines`, plus nullable paired program/discipline references on `public.subjects`; existing subject and quest compatibility was preserved. The new taxonomy tables have RLS enabled with no broad taxonomy SELECT policies.
+- Live Migration 040 seeded `kz-school-general` (`Общеобразовательная школа Казахстана`, `KZ`) and 26 approved Kazakhstan school discipline identities. Live Migration 041 classified all 45 existing subjects without changing subject UUIDs, quest subject references, or the first polished quest.
+- Live Migration 042, committed in `037cdf16e625c9c520247b7e769e1a73c569b30c` (`Seed missing Kazakhstan school subjects`), inserted 12 missing grade-null canonical offerings. Verification passed with 57 total subjects, 26 canonical `kz-school-general` subjects, all 26 program/discipline mappings valid, and no broken quest references.
+- `3d900f21dcc3a8af26490010ea400ccfc849ee67` (`Clean up teacher subject selection`) now serves canonical grade-null subjects for normal authoring while explicitly retaining selected legacy IDs for existing quests. Legacy generic `Литература` is excluded from new choices but remains compatible when already selected; new authoring shows 25 visible subjects. Localhost and Vercel Preview browser QA, focused tests, lint, and build passed.
+- Grade range remains quest metadata, not subject identity. Translation tables, country catalog, levels, institutions, and richer offering models remain deferred.
+
 ## P1 First Polished Public Quest Authoring and Publication QA
 
 - Completed controlled Preview authoring and anonymous runtime QA for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`): 10 mixed Single Choice/Multiple Choice tasks, quest cover, public task images, teacher Preview/Play, readiness, and the Draft-to-Published transition passed.

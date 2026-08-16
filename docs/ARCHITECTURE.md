@@ -168,8 +168,8 @@ Quest metadata:
 - Generic teacher-facing publication-readiness copy uses `хотя бы одно задание`; `вопрос` remains reserved for actual question-prompt semantics.
 - `QuestCoverImageManager` uses Russian teacher-visible copy for `Обложка`, optional 16:9 guidance, upload/replace/remove actions, empty state, alt text, success messages, and client-only fallback errors.
 - Protected API/storage boundaries are unchanged: server response shapes, HTTP status handling, server error contracts, `SESSION_EXPIRED_MESSAGE`, Supabase/internal technical errors, Storage passthrough errors, and returned `result.error` display behavior remain intact.
-- The subject selector uses a server-only authenticated lookup from `public.subjects` and selects only `id`, `name`, and `grade`, ordered by name, grade, and id.
-- No service role or hardcoded subject UUID mapping is used for subject selection.
+- The subject selector uses a server-only authenticated lookup from `public.subjects` and selects only `id`, `name`, and `grade`, ordered by name, grade, and id. New authoring receives grade-null canonical offerings, excluding the one legacy generic Literature subject; explicitly requested current subject IDs are merged back for existing-quest compatibility.
+- No service role or taxonomy-table join is used for subject selection. `education_programs` and `disciplines` intentionally have RLS enabled with no broad authenticated SELECT policy; the current lookup is correct for the sole `kz-school-general` profile and must be made program-aware before a second profile is introduced.
 - `No subject` submits `null`; omitted `subject_id` preserves the current value.
 - The settings API validates subject UUID shape and subject existence before saving. Invalid UUID and missing subject UUID inputs return safe `400` responses by implementation review; real lookup/database failures return safe `500` responses with server-side logging.
 - A shared `QuestLanguageCode` helper provides language codes, labels, validation, and safe label resolution. Unknown or null language values render without a placeholder.
@@ -902,6 +902,16 @@ The supported task types are `text`, `single_choice`, and `multiple_choice`. Dra
 Migration 036 extends only `public.is_public_runtime_eligible(uuid)`: it rejects duplicate Single Choice and Multiple Choice option text after `lower(btrim(option text))`, without rewriting stored display text. Migration 037 extends only `public.update_owned_quest_task_content(...)`: it permits nullable choice drafts while preserving malformed non-null rejection, owner checks, parent-first locks, and the existing result DTO. Multiple Choice scoring remains exact-set with no partial credit, and learner hints remain unsupported.
 
 Migration 038 extends only `public.get_public_runtime_quest(uuid)` with nullable `image_url` task data. It projects a stored URL only when it matches the existing private trusted origin and exact owner/quest/task-bound `quest-images` public path; missing config and legacy or malformed values project `null` without making the quest ineligible. The server-only public mapper converts this to `imageUrl: string | null` for Text, Single Choice, and Multiple Choice, while `PublicTaskImage` renders it responsively with `object-contain`, lazy loading, and a quiet load-error fallback. No scorer, catalog, publication eligibility, RLS, or Storage-policy contract changes.
+
+## Education Taxonomy and Subject Compatibility
+
+Migrations 039-042 establish the first additive taxonomy profile without changing `quests.subject_id` or existing subject IDs. `education_programs` holds stable program codes, and `disciplines` holds stable discipline codes; `subjects` may reference both through nullable, paired `education_program_id` and `discipline_id`. `kz-school-general` (`Общеобразовательная школа Казахстана`, `KZ`) and 26 approved discipline identities are live.
+
+All 45 legacy subject rows were classified under that program and their canonical disciplines without changing any subject UUID or quest reference. Migration 042 then added 12 missing grade-null canonical offerings, resulting in 57 subjects total and exactly 26 canonical Kazakhstan offerings with verified program/discipline mappings and no broken quest references.
+
+Subject grade is not taxonomy identity. New offerings must not be duplicated by grade: quest applicability remains `quests.grade_min` / `quests.grade_max`. Existing grade-specific rows remain legacy compatibility only. New authoring queries grade-null subjects, while an already selected legacy ID is explicitly retained so an old quest can load and save unchanged. Generic `Литература` is a legacy-only compatibility offering; new Kazakhstan authoring uses `Казахская литература` and `Русская литература` instead.
+
+Program, discipline, subject offering, quest grade range, and quest language are separate concepts. Stable codes remain independent of localized display names. Translation tables, a country catalog, levels, institutions, and richer offering models are deliberately deferred until a real requirement demands them; this model can grow to other school systems, exams, higher education, vocational, professional, and corporate learning without returning to subject-by-grade duplication.
 
 ## P1 Polished Quest Interaction Model
 
