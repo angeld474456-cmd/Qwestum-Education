@@ -95,11 +95,15 @@ function getUniqueSortedValues(values: string[]) {
 export default async function TeacherQuestLibraryPage({
   searchParams,
 }: TeacherQuestLibraryPageProps) {
-  const [quests, tasks, subjects] = await Promise.all([
+  const [quests, tasks] = await Promise.all([
     getOwnedQuests(),
     getOwnedQuestTaskSummary(),
-    getTeacherSubjects(),
   ]);
+  const subjects = await getTeacherSubjects({
+    includeSubjectIds: quests.flatMap((quest) =>
+      quest.subject_id ? [quest.subject_id] : []
+    ),
+  });
   const resolvedSearchParams = (await searchParams) ?? {};
   const activeSearch = getTeacherQuestLibrarySearchParam(resolvedSearchParams.q);
   const activeCategory = getTeacherQuestLibrarySearchParam(

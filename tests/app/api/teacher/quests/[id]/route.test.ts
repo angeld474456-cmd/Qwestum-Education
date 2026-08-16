@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const questId = "11111111-1111-4111-8111-111111111111";
+const legacySubjectId = "22222222-2222-4222-8222-222222222222";
+const canonicalSubjectId = "33333333-3333-4333-8333-333333333333";
 const mocks = vi.hoisted(() => ({ deleteOwnedQuest: vi.fn(), updateOwnedQuestMetadata: vi.fn() }));
 
 vi.mock("@/services/teacher-quest-deletion.server", () => ({ deleteOwnedQuest: mocks.deleteOwnedQuest }));
@@ -51,6 +53,24 @@ describe("quest settings PATCH", () => {
       gradeMin: { provided: true, value: null }, gradeMax: { provided: true, value: null },
       estimatedDurationMinutes: { provided: true, value: null },
     }));
+  });
+
+  it("preserves an unchanged legacy subject UUID and accepts an explicit canonical switch", async () => {
+    mocks.updateOwnedQuestMetadata.mockResolvedValue({ status: "ok", quest });
+
+    await PATCH(request({ ...body, subject_id: legacySubjectId }), context);
+    expect(mocks.updateOwnedQuestMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        subjectId: { provided: true, value: legacySubjectId },
+      })
+    );
+
+    await PATCH(request({ ...body, subject_id: canonicalSubjectId }), context);
+    expect(mocks.updateOwnedQuestMetadata).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        subjectId: { provided: true, value: canonicalSubjectId },
+      })
+    );
   });
 
   it("passes partial grade updates to the authoritative final-state validator", async () => {

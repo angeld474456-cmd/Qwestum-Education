@@ -73,7 +73,7 @@ function formatTagsInput(tags: string[] | null | undefined): string {
 
 function formatSubjectOption(subject: SubjectOption) {
   if (subject.grade === null) {
-    return `${subject.name} — все классы`;
+    return subject.name;
   }
 
   return `${subject.name} — ${subject.grade} класс`;

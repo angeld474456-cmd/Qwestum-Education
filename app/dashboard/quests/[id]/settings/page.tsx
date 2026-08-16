@@ -33,15 +33,18 @@ export default async function TeacherQuestSettingsPage({
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const isNewlyCreated =
     getFirstSearchParam(resolvedSearchParams.created) === "1";
-  const [quest, subjects, taskCount] = await Promise.all([
-    getOwnedQuest(id),
-    getTeacherSubjects(),
-    getOwnedQuestTaskCount(id),
-  ]);
+  const quest = await getOwnedQuest(id);
 
   if (!quest) {
     notFound();
   }
+
+  const [subjects, taskCount] = await Promise.all([
+    getTeacherSubjects({
+      includeSubjectIds: quest.subject_id ? [quest.subject_id] : [],
+    }),
+    getOwnedQuestTaskCount(id),
+  ]);
 
   return (
     <section className="space-y-8 text-white">
