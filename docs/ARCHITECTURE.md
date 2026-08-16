@@ -913,6 +913,8 @@ Subject grade is not taxonomy identity. New offerings must not be duplicated by 
 
 Program, discipline, subject offering, quest grade range, and quest language are separate concepts. Stable codes remain independent of localized display names. Translation tables, a country catalog, levels, institutions, and richer offering models are deliberately deferred until a real requirement demands them; this model can grow to other school systems, exams, higher education, vocational, professional, and corporate learning without returning to subject-by-grade duplication.
 
+Program-aware lookup planning is complete and intentionally deferred. The single `kz-school-general` profile needs no selector or code change. Before a second profile is introduced, program context must be persisted on the quest and enforced by the owner-safe metadata boundary; canonical lookup can then filter `subjects.education_program_id` directly. Stable program code must be resolved server-side to its generated UUID, with no unnecessary broad taxonomy-table SELECT policy. Explicitly selected legacy and future cross-program IDs must remain loadable only for the quest that already references them.
+
 ## P1 Polished Quest Interaction Model
 
 The teacher task workspace keeps task cards in a compact independent list and renders exactly one standalone editor in the adjacent desktop column. The editor panel is sticky within that column; an explicit task selection registers and scrolls only the selected task row, using the editor's measured viewport position near the sticky boundary. Narrow layouts retain the stacked editor flow. This is presentation-only: task CRUD, images, ordering, validation, and RPC boundaries are unchanged.

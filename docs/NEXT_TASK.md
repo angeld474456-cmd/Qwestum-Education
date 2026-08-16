@@ -2,15 +2,15 @@
 
 ## Milestone
 
-P1 Program-Aware Teacher Subject Lookup Planning
+P1 Production Public Quest Release Gate Planning
 
 ## Next Task
 
-Perform a read-only architecture and gap review for a program-aware teacher subject lookup before adding a second education profile. The current authenticated lookup intentionally reads only `public.subjects`, because `education_programs` and `disciplines` have RLS enabled with no broad authenticated SELECT policies. It is correct for the sole current profile, `kz-school-general`, but must not silently mix subjects across profiles when future country, examination, college, university, vocational, professional, or corporate contexts are introduced.
+Perform a read-only Production public-content release-gate review before exposing a polished quest beyond controlled Preview QA. Establish the actual public catalog state, the intended quest publication state, Production catalog/detail/runtime/submit smoke evidence, operational rollback treatment for a content change, and the minimum approval record. Do not publish, unpublish, or otherwise mutate content in this planning pass.
 
 ## Objective
 
-Preserve the anonymous-public plus authenticated-teacher Model A boundary while defining the smallest future-safe selector boundary. Keep current canonical Kazakhstan authoring and legacy compatibility unchanged; do not broaden taxonomy reads, add policies, create a new schema layer, or implement a second profile without a separately approved plan.
+Preserve the anonymous-public plus authenticated-teacher Model A boundary while ensuring the first real public content is intentionally released and verified in Production, rather than relying on Preview-only evidence or an assumed catalog state.
 
 ## Constraints
 
@@ -25,4 +25,5 @@ Preserve the anonymous-public plus authenticated-teacher Model A boundary while 
 - The first intentional Production release is complete: PR #1 merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` through merge commit `bfe773a66024d60d6824209290f5990d9c551225`, then passed Production smoke verification after correcting the Production Supabase Project URL value. The initial `/catalog` failure formed `/rest/v1/rest/v1/rpc/list_public_catalog_quests`; no application code or schema change was needed. The public catalog intentionally remains empty because test/demo quests were unpublished before release.
 - The P1 post-launch operational baseline is documented. The known-good Production rollback deployment is `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` (`qwestum-education-gskc2mem9-qwestum.vercel.app`), Ready/Current in Production from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment with the malformed Supabase URL is not a rollback target. For urgent operations, promote this exact known-good Vercel deployment; for a normal code regression, use a reviewed `git revert` on `main`; never force-push or reset `main`. Rollback does not revert database or data state. Shared schema is now live through Migration 042.
 - Migrations 039-042 are live and verified: the first Kazakhstan school taxonomy profile, its 26 disciplines, legacy-subject classification, and the 12 missing canonical subject offerings. New authoring shows 25 canonical subjects: all 26 grade-null offerings except legacy generic `Литература`; explicitly selected legacy IDs remain available for existing quests.
+- Program-Aware Teacher Subject Lookup Planning is complete and deferred: the one-profile `kz-school-general` lookup remains correct. Before a second profile, a quest's program context must be persisted and authoritative, subject lookup must filter `subjects.education_program_id`, and the owner-safe metadata write boundary must reject cross-program subjects. Program code must resolve server-side to a generated UUID without broad taxonomy SELECT RLS. No code or UI selector is needed while only one meaningful program exists.
 - Current Hobby/free monitoring is manual: review Vercel deployment status, runtime logs and basic Observability for `/`, `/catalog`, `/login`, `/auth/callback`, `/auth/logout`, `/dashboard`, `/dashboard/quests`, and public runtime/submit routes. Investigate repeated 5xx, unexpected auth failures, catalog/runtime RPC failures, and submit `503`; `429` is expected only at limiter threshold. The smoke checklist remains `/`, `/catalog`, login, protected dashboard redirect, teacher dashboard/library, logout, and public runtime/submit only when approved public content exists.

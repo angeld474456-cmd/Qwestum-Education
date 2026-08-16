@@ -1,5 +1,11 @@
 # Changelog
 
+## P1 Program-Aware Teacher Subject Lookup Planning
+
+- Completed read-only. The current single-profile `kz-school-general` lookup is correct and no implementation is required now. New authoring continues to use canonical grade-null subjects, preserve explicitly selected legacy IDs, and hide generic legacy `Литература` from normal choices.
+- Before any second education profile, quest program context must be persisted and authoritative; lookup must filter `subjects.education_program_id`; the owner-safe metadata boundary must reject cross-program subjects; and stable program code must resolve server-side to its generated UUID. No broad taxonomy SELECT RLS or program-selector UI is approved while there is only one meaningful program.
+- Next: read-only **P1 Production Public Quest Release Gate Planning** to reconcile actual catalog/publication state and define deliberate Production content-promotion, smoke, approval, and rollback evidence before real content moves beyond controlled Preview QA.
+
 ## P1 Education Taxonomy and Teacher Subject Cleanup
 
 - Live Migration 039 added `public.education_programs` and `public.disciplines`, plus nullable paired program/discipline references on `public.subjects`; existing subject and quest compatibility was preserved. The new taxonomy tables have RLS enabled with no broad taxonomy SELECT policies.
