@@ -38,6 +38,8 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
           result={result}
           query={query}
           basePath="/learn"
+          questHref={(questId) => `/learn/quests/${questId}/start`}
+          disableQuestPrefetch
         />
       </div>
     </main>

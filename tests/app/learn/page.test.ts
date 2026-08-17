@@ -43,6 +43,8 @@ describe("learn page catalog pagination", () => {
     });
     expect(results.props.basePath).toBe("/learn");
     expect(results.props.query.offset).toBe(24);
+    expect(results.props.questHref("quest-id")).toBe("/learn/quests/quest-id/start");
+    expect(results.props.disableQuestPrefetch).toBe(true);
   });
 
   it.each([undefined, "-1", "1.5", "not-a-number"]) (

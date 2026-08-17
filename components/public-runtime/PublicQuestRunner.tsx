@@ -15,6 +15,9 @@ import PublicTaskRenderer from "./PublicTaskRenderer";
 
 type PublicQuestRunnerProps = {
   quest: PublicRuntimeQuest;
+  submitUrl?: string;
+  retryHref?: string;
+  catalogHref?: string;
 };
 
 type RunnerStatus = "active" | "submitting" | "completed" | "submission_error";
@@ -168,7 +171,12 @@ function mapResult(value: unknown, quest: PublicRuntimeQuest): PublicRuntimeResu
   };
 }
 
-export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
+export default function PublicQuestRunner({
+  quest,
+  submitUrl,
+  retryHref,
+  catalogHref,
+}: PublicQuestRunnerProps) {
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [selectedOptionIds, setSelectedOptionIds] = useState<Record<string, string>>({});
   const [selectedMultipleChoiceOptionIds, setSelectedMultipleChoiceOptionIds] = useState<Record<string, string[]>>({});
@@ -300,7 +308,7 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
     setErrorMessage(null);
 
     try {
-      const response = await fetch(`/api/public/quests/${quest.id}/submit`, {
+      const response = await fetch(submitUrl ?? `/api/public/quests/${quest.id}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submission),
@@ -342,7 +350,15 @@ export default function PublicQuestRunner({ quest }: PublicQuestRunnerProps) {
   }
 
   if (status === "completed" && result) {
-    return <PublicQuestResults quest={quest} result={result} onRetry={resetRunner} />;
+    return (
+      <PublicQuestResults
+        quest={quest}
+        result={result}
+        onRetry={resetRunner}
+        retryHref={retryHref}
+        catalogHref={catalogHref}
+      />
+    );
   }
 
   return (

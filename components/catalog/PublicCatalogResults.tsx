@@ -12,6 +12,8 @@ type PublicCatalogResultsProps = {
   result: PublicCatalogListResult;
   query: PublicCatalogListQuery;
   basePath?: string;
+  questHref?: (questId: string) => string;
+  disableQuestPrefetch?: boolean;
 };
 
 function formatGradeRange(quest: PublicCatalogQuest) {
@@ -62,6 +64,8 @@ export default function PublicCatalogResults({
   result,
   query,
   basePath = "/catalog",
+  questHref = (questId) => `/catalog/${questId}`,
+  disableQuestPrefetch = false,
 }: PublicCatalogResultsProps) {
   if (result.quests.length === 0) {
     if (result.offset > 0) {
@@ -145,7 +149,8 @@ export default function PublicCatalogResults({
           return (
             <Link
               key={quest.id}
-              href={`/catalog/${quest.id}`}
+              href={questHref(quest.id)}
+              prefetch={disableQuestPrefetch ? false : undefined}
               className="group flex min-w-0 flex-col rounded-lg border border-slate-800 bg-[#111827] p-5 outline-none transition hover:border-violet-500 focus-visible:ring-2 focus-visible:ring-violet-500"
             >
               <PublicQuestCover
