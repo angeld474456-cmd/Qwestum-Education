@@ -34,9 +34,12 @@ describe("getCurrentActor", () => {
     configure({ id: userId, email: "user@example.test" }, { id: userId, role });
 
     await expect(getCurrentActor()).resolves.toEqual({
-      id: userId,
-      email: "user@example.test",
-      role,
+      status: "authenticated",
+      actor: {
+        id: userId,
+        email: "user@example.test",
+        role,
+      },
     });
     expect(mocks.from).toHaveBeenCalledWith("profiles");
     expect(mocks.select).toHaveBeenCalledWith("id, role");
@@ -46,7 +49,7 @@ describe("getCurrentActor", () => {
   it("returns null without an authenticated user", async () => {
     configure(null, null);
 
-    await expect(getCurrentActor()).resolves.toBeNull();
+    await expect(getCurrentActor()).resolves.toEqual({ status: "unauthenticated" });
     expect(mocks.from).not.toHaveBeenCalled();
   });
 
@@ -58,6 +61,8 @@ describe("getCurrentActor", () => {
   ])("fails closed for missing, malformed, or unreadable profiles", async (profile, error) => {
     configure({ id: userId, email: "user@example.test" }, profile, error);
 
-    await expect(getCurrentActor()).resolves.toBeNull();
+    await expect(getCurrentActor()).resolves.toEqual({
+      status: "profile_unavailable",
+    });
   });
 });

@@ -3,10 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   exchangeCodeForSession: vi.fn(),
+  getCurrentActor: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: mocks.createClient,
+}));
+vi.mock("@/services/current-actor.server", () => ({
+  getCurrentActor: mocks.getCurrentActor,
 }));
 
 import { GET } from "@/app/auth/callback/route";
@@ -25,15 +29,23 @@ function createCallbackRequest(next: string | undefined, code = "auth-code") {
   return new Request(url);
 }
 
-function mockSuccessfulExchange() {
+function mockSuccessfulExchange(
+  actor: unknown = {
+    status: "authenticated",
+    actor: { id: "teacher", email: "teacher@example.test", role: "teacher" },
+  }
+) {
+  mocks.createClient.mockClear();
+  mocks.exchangeCodeForSession.mockClear();
   mocks.exchangeCodeForSession.mockResolvedValue({ error: null });
+  mocks.getCurrentActor.mockResolvedValue(actor);
   mocks.createClient.mockResolvedValue({
     auth: { exchangeCodeForSession: mocks.exchangeCodeForSession },
   });
 }
 
-async function expectSuccessfulRedirect(next: string | undefined) {
-  mockSuccessfulExchange();
+async function expectSuccessfulRedirect(next: string | undefined, actor?: unknown) {
+  mockSuccessfulExchange(actor);
 
   const response = await GET(createCallbackRequest(next));
 
@@ -63,6 +75,58 @@ describe("auth callback redirects", () => {
     ["/dashboard#account", "https://app.example/dashboard#account"],
   ])("preserves the safe local destination %s", async (next, expected) => {
     await expect(expectSuccessfulRedirect(next)).resolves.toBe(expected);
+  });
+
+  it("uses role-compatible homes and destinations for students", async () => {
+    const student = {
+      status: "authenticated",
+      actor: { id: "student", email: "student@example.test", role: "student" },
+    };
+
+    await expect(expectSuccessfulRedirect(undefined, student)).resolves.toBe(
+      "https://app.example/learn"
+    );
+    await expect(expectSuccessfulRedirect("/learn/progress", student)).resolves.toBe(
+      "https://app.example/learn/progress"
+    );
+    await expect(expectSuccessfulRedirect("/dashboard", student)).resolves.toBe(
+      "https://app.example/learn"
+    );
+  });
+
+  it("rejects role-incompatible and non-page destinations", async () => {
+    await expect(expectSuccessfulRedirect("/learn")).resolves.toBe(
+      "https://app.example/dashboard"
+    );
+
+    for (const next of ["/api/public/quests", "/auth/logout", "/login"]) {
+      await expect(expectSuccessfulRedirect(next)).resolves.toBe(
+        "https://app.example/dashboard"
+      );
+    }
+  });
+
+  it("rejects prefix-confusion destinations", async () => {
+    const student = {
+      status: "authenticated",
+      actor: { id: "student", email: "student@example.test", role: "student" },
+    };
+
+    await expect(expectSuccessfulRedirect("/dashboard-evil")).resolves.toBe(
+      "https://app.example/dashboard"
+    );
+    await expect(expectSuccessfulRedirect("/learn-evil", student)).resolves.toBe(
+      "https://app.example/learn"
+    );
+    await expect(expectSuccessfulRedirect("/catalogue")).resolves.toBe(
+      "https://app.example/dashboard"
+    );
+  });
+
+  it("redirects an authenticated account with an unavailable profile safely", async () => {
+    await expect(
+      expectSuccessfulRedirect("/dashboard", { status: "profile_unavailable" })
+    ).resolves.toBe("https://app.example/account-unavailable");
   });
 
   it.each([

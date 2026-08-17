@@ -11,6 +11,7 @@ import type {
 type PublicCatalogResultsProps = {
   result: PublicCatalogListResult;
   query: PublicCatalogListQuery;
+  basePath?: string;
 };
 
 function formatGradeRange(quest: PublicCatalogQuest) {
@@ -37,7 +38,11 @@ function formatCreatedAt(value: string | null) {
   }).format(date);
 }
 
-function buildCatalogHref(query: PublicCatalogListQuery, offset: number) {
+function buildCatalogHref(
+  query: PublicCatalogListQuery,
+  offset: number,
+  basePath: string
+) {
   const params = new URLSearchParams();
 
   if (query.search) params.set("search", query.search);
@@ -50,12 +55,13 @@ function buildCatalogHref(query: PublicCatalogListQuery, offset: number) {
 
   const search = params.toString();
 
-  return search ? `/catalog?${search}` : "/catalog";
+  return search ? `${basePath}?${search}` : basePath;
 }
 
 export default function PublicCatalogResults({
   result,
   query,
+  basePath = "/catalog",
 }: PublicCatalogResultsProps) {
   if (result.quests.length === 0) {
     if (result.offset > 0) {
@@ -64,19 +70,19 @@ export default function PublicCatalogResults({
         previousOffset === 0
           ? [
               {
-                href: buildCatalogHref(query, 0),
+                href: buildCatalogHref(query, 0, basePath),
                 label: "\u0412 \u043d\u0430\u0447\u0430\u043b\u043e \u043a\u0430\u0442\u0430\u043b\u043e\u0433\u0430",
                 primary: true,
               },
             ]
           : [
               {
-                href: buildCatalogHref(query, previousOffset),
+                href: buildCatalogHref(query, previousOffset, basePath),
                 label: "\u041d\u0430\u0437\u0430\u0434",
                 primary: true,
               },
               {
-                href: buildCatalogHref(query, 0),
+                href: buildCatalogHref(query, 0, basePath),
                 label: "\u0412 \u043d\u0430\u0447\u0430\u043b\u043e \u043a\u0430\u0442\u0430\u043b\u043e\u0433\u0430",
               },
             ];
@@ -116,7 +122,7 @@ export default function PublicCatalogResults({
           hasActiveFilters
             ? [
                 {
-                  href: "/catalog",
+                  href: basePath,
                   label: "\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0444\u0438\u043b\u044c\u0442\u0440\u044b",
                   primary: true,
                 },
@@ -210,7 +216,7 @@ export default function PublicCatalogResults({
           </span>
         ) : (
           <Link
-            href={buildCatalogHref(query, previousOffset)}
+            href={buildCatalogHref(query, previousOffset, basePath)}
             className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
           >
             Назад
@@ -219,7 +225,7 @@ export default function PublicCatalogResults({
 
         {result.hasNext && result.offset < 10_000 ? (
           <Link
-            href={buildCatalogHref(query, nextOffset)}
+            href={buildCatalogHref(query, nextOffset, basePath)}
             className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700"
           >
             Далее

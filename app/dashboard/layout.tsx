@@ -1,6 +1,7 @@
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { createClient } from "@/lib/supabase/server";
+import { getProtectedAreaRedirect } from "@/services/actor-routing";
+import { getCurrentActor } from "@/services/current-actor.server";
 import { redirect } from "next/navigation";
 
 export default async function DashboardLayout({
@@ -8,21 +9,22 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const actorResult = await getCurrentActor();
+  const redirectPath = getProtectedAreaRedirect(actorResult, "dashboard");
 
-  if (!user) {
-    redirect("/login");
+  if (redirectPath) redirect(redirectPath);
+  if (actorResult.status !== "authenticated") {
+    redirect("/account-unavailable");
   }
+
+  const actor = actorResult.actor;
 
   return (
     <div className="flex min-h-screen bg-[#070B14]">
       <Sidebar />
 
       <div className="flex flex-1 flex-col">
-        <DashboardHeader teacherEmail={user.email ?? undefined} />
+        <DashboardHeader teacherEmail={actor.email} />
 
         <main className="flex-1 p-8">
           {children}
