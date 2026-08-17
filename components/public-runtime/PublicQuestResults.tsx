@@ -96,9 +96,9 @@ export default function PublicQuestResults({
 
       <div className="flex flex-wrap gap-3">
         {retryHref ? (
-          <Link href={retryHref} prefetch={false} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
+          <a href={retryHref} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
             {"\u041f\u0440\u043e\u0439\u0442\u0438 \u0435\u0449\u0451 \u0440\u0430\u0437"}
-          </Link>
+          </a>
         ) : (
           <button type="button" onClick={onRetry} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
             {"\u041f\u0440\u043e\u0439\u0442\u0438 \u0435\u0449\u0451 \u0440\u0430\u0437"}

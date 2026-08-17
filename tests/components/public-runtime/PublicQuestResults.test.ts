@@ -2,6 +2,11 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("next/link", () => ({
+  default: ({ children, ...props }: { children: React.ReactNode }) =>
+    createElement("a", { ...props, "data-next-link": "true" }, children),
+}));
+
 import PublicQuestResults from "@/components/public-runtime/PublicQuestResults";
 import type {
   PublicRuntimeQuest,
@@ -48,7 +53,10 @@ describe("PublicQuestResults", () => {
       })
     );
 
-    expect(markup).toContain(`href="/learn/quests/${questId}/start"`);
+    expect(markup).toContain(`<a href="/learn/quests/${questId}/start"`);
+    expect(markup).not.toContain(
+      `data-next-link="true" href="/learn/quests/${questId}/start"`
+    );
     expect(markup).toContain('href="/learn"');
     expect(markup).not.toContain(`href="/catalog/${questId}"`);
     expect(markup).not.toContain("<button");
