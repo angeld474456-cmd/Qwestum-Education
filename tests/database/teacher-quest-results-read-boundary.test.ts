@@ -92,11 +92,15 @@ describe("M048 teacher quest results read boundary contract", () => {
     expect(detailFunction).toContain("INNER JOIN public.quest_attempt_answers AS qaa ON qaa.attempt_id = qa.id");
     expect(detailFunction).toContain("qaa.task_snapshot");
     expect(detailFunction).toContain("qaa.answer_snapshot");
-    expect(detailFunction).toContain("qaa.status");
+    expect(migration).toContain("('public.quest_attempt_answers'::pg_catalog.regclass, 'status')");
+    expect(migration).not.toContain("('public.quest_attempt_answers'::pg_catalog.regclass, 'result_status')");
+    expect(detailFunction).toContain("qaa.status AS result_status");
+    expect(detailReturnShape).toContain("result_status text");
     expect(detailFunction).toContain("ORDER BY qaa.task_order ASC");
     expect(detailFunction).not.toContain("correctOptionId");
     expect(detailFunction).not.toContain("correctOptionIds");
     expect(detailReturnShape).not.toContain("student_id");
+    expect(detailReturnShape).not.toContain("source_task_id");
     expect(detailFunction).not.toContain("email");
     expect(detailFunction).not.toContain("SELECT *");
   });

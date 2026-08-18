@@ -222,7 +222,7 @@ BEGIN
     qaa.task_type,
     qaa.task_snapshot,
     qaa.answer_snapshot,
-    qaa.status,
+    qaa.status AS result_status,
     qaa.earned_points,
     qaa.possible_points
   FROM public.quest_attempts AS qa
