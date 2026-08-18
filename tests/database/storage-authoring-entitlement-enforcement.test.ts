@@ -18,6 +18,9 @@ const policyNames = [
   "Teachers can delete own quest covers",
 ];
 
+const coverPathRegex =
+  "/quests/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cover/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](jpg|png|webp)$";
+
 type PolicyCommand = "a" | "d";
 
 type PredecessorPolicyContract = {
@@ -162,6 +165,30 @@ describe("M047 storage authoring entitlement enforcement contract", () => {
     }
   });
 
+  it("uses an unambiguous SQL literal for the exact cover regex and keeps every dollar quote balanced", () => {
+    const exactCoverRegexLiteral = `'${coverPathRegex}'`;
+    const dollarQuoteTags = migration.match(/\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/g) ?? [];
+    const tagCounts = new Map<string, number>();
+
+    for (const tag of dollarQuoteTags) {
+      tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }
+
+    expect(preflight.split(exactCoverRegexLiteral)).toHaveLength(5);
+    expect(preflight).toContain(
+      `AND position(\n        ${exactCoverRegexLiteral}\n        IN pg_catalog.pg_get_expr(p.polwithcheck, p.polrelid)`
+    );
+    expect(preflight).toContain(
+      `AND position(\n        ${exactCoverRegexLiteral}\n        IN pg_catalog.pg_get_expr(p.polqual, p.polrelid)`
+    );
+    expect(migration).not.toContain("$cover_regex$");
+    expect(migration).not.toContain("$$cover_regex$");
+
+    for (const count of tagCounts.values()) {
+      expect(count % 2).toBe(0);
+    }
+  });
+
   it("creates a narrow authenticated Storage RLS predicate wrapper", () => {
     const wrapper = migration.slice(
       migration.indexOf("CREATE FUNCTION public.current_actor_can_author_storage()"),
@@ -259,7 +286,7 @@ describe("M047 storage authoring entitlement enforcement contract", () => {
       expect(normalized).toContain("storage.foldernamename[4]<>''");
       expect(normalized).toContain("storage.foldernamename[5]='cover'");
       expect(normalized).toContain("storage.foldernamename[6]isnull");
-      expect(coverContract.predicate).toContain("[.](jpg|png|webp)$'");
+      expect(coverContract.predicate).toContain(coverPathRegex);
     }
   });
 

@@ -100,7 +100,7 @@ BEGIN
         )
       $cover_insert$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))
       AND position(
-        $cover_regex$/quests/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cover/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](jpg|png|webp)$$cover_regex$
+        '/quests/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cover/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](jpg|png|webp)$'
         IN pg_catalog.pg_get_expr(p.polwithcheck, p.polrelid)
       ) > 0
   ) THEN
@@ -134,7 +134,7 @@ BEGIN
         )
       $cover_delete$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))
       AND position(
-        $cover_regex$/quests/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cover/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](jpg|png|webp)$$cover_regex$
+        '/quests/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cover/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](jpg|png|webp)$'
         IN pg_catalog.pg_get_expr(p.polqual, p.polrelid)
       ) > 0
   ) THEN
