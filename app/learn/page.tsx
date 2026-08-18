@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 
 import PublicCatalogResults from "@/components/catalog/PublicCatalogResults";
+import LearnerAttemptHistory from "@/components/learn/LearnerAttemptHistory";
 import {
   parsePublicCatalogQuery,
   type PublicCatalogSearchParams,
 } from "@/services/public-catalog-query";
 import { listPublicCatalogQuests } from "@/services/public-catalog.server";
+import { listStudentAttemptHistory } from "@/services/student-attempt-history.server";
 
 export const metadata: Metadata = {
   title: "\u041c\u043e\u0438 \u043a\u0432\u0435\u0441\u0442\u044b",
@@ -18,6 +20,11 @@ type LearnPageProps = {
 export default async function LearnPage({ searchParams }: LearnPageProps) {
   const query = parsePublicCatalogQuery(await searchParams);
   const result = await listPublicCatalogQuests(query);
+  let history = null;
+
+  try {
+    history = await listStudentAttemptHistory();
+  } catch {}
 
   return (
     <main className="min-h-screen bg-[#070B14] px-6 py-12 text-white">
@@ -41,6 +48,7 @@ export default async function LearnPage({ searchParams }: LearnPageProps) {
           questHref={(questId) => `/learn/quests/${questId}/start`}
           disableQuestPrefetch
         />
+        <LearnerAttemptHistory history={history} />
       </div>
     </main>
   );
