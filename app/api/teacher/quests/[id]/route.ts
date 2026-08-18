@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { deleteOwnedQuest } from "@/services/teacher-quest-deletion.server";
+import { getTeacherAuthoringAccess } from "@/services/teacher-authoring-access.server";
 import { isQuestLanguageCode } from "@/services/quest-language";
 import { updateOwnedQuestMetadata } from "@/services/teacher-quest-metadata-update.server";
 
@@ -541,6 +542,19 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
   if (!uuidPattern.test(id)) {
     return NextResponse.json({ error: "Invalid quest id." }, { status: 400 });
+  }
+
+  const access = await getTeacherAuthoringAccess();
+
+  if (access.status === "unauthenticated") {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (access.status !== "allowed") {
+    return NextResponse.json(
+      { error: "Authoring access unavailable." },
+      { status: 403 }
+    );
   }
 
   const result = await deleteOwnedQuest(id);

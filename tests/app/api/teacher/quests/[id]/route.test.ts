@@ -3,9 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const questId = "11111111-1111-4111-8111-111111111111";
 const legacySubjectId = "22222222-2222-4222-8222-222222222222";
 const canonicalSubjectId = "33333333-3333-4333-8333-333333333333";
-const mocks = vi.hoisted(() => ({ deleteOwnedQuest: vi.fn(), updateOwnedQuestMetadata: vi.fn() }));
+const mocks = vi.hoisted(() => ({ deleteOwnedQuest: vi.fn(), getTeacherAuthoringAccess: vi.fn(), updateOwnedQuestMetadata: vi.fn() }));
 
 vi.mock("@/services/teacher-quest-deletion.server", () => ({ deleteOwnedQuest: mocks.deleteOwnedQuest }));
+vi.mock("@/services/teacher-authoring-access.server", () => ({
+  getTeacherAuthoringAccess: mocks.getTeacherAuthoringAccess,
+}));
 vi.mock("@/services/teacher-quest-metadata-update.server", () => ({ updateOwnedQuestMetadata: mocks.updateOwnedQuestMetadata }));
 
 import { DELETE, PATCH } from "@/app/api/teacher/quests/[id]/route";
@@ -120,7 +123,33 @@ describe("quest settings PATCH", () => {
 });
 
 describe("quest deletion DELETE", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({
+      status: "allowed",
+      userId: "owner",
+    });
+  });
+
+  it("denies inactive authoring access before quest deletion and Storage cleanup", async () => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "entitlement_inactive" });
+
+    const response = await DELETE(new Request("http://example.test"), context);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "Authoring access unavailable." });
+    expect(mocks.deleteOwnedQuest).not.toHaveBeenCalled();
+  });
+
+  it("preserves the unauthenticated response before quest deletion", async () => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "unauthenticated" });
+
+    const response = await DELETE(new Request("http://example.test"), context);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized." });
+    expect(mocks.deleteOwnedQuest).not.toHaveBeenCalled();
+  });
 
   it("preserves deletion response semantics", async () => {
     mocks.deleteOwnedQuest.mockResolvedValue({ status: "ok" });

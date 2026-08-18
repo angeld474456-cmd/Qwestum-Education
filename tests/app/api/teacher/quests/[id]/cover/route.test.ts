@@ -6,7 +6,7 @@ const previousPath = `teachers/${userId}/quests/${questId}/cover/33333333-3333-4
 const objectPath = `teachers/${userId}/quests/${questId}/cover/44444444-4444-4444-8444-444444444444.png`;
 
 const mocks = vi.hoisted(() => ({
-  clear: vi.fn(), createClient: vi.fn(), getExtension: vi.fn(), getPublicUrl: vi.fn(), getSafePath: vi.fn(), remove: vi.fn(), set: vi.fn(), storageFrom: vi.fn(), upload: vi.fn(),
+  clear: vi.fn(), createClient: vi.fn(), getExtension: vi.fn(), getPublicUrl: vi.fn(), getSafePath: vi.fn(), getTeacherAuthoringAccess: vi.fn(), remove: vi.fn(), set: vi.fn(), storageFrom: vi.fn(), upload: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
@@ -22,6 +22,9 @@ vi.mock("@/services/teacher-quest-cover-mutation.server", () => ({
   clearOwnedQuestCoverImage: mocks.clear,
   setOwnedQuestCoverImage: mocks.set,
 }));
+vi.mock("@/services/teacher-authoring-access.server", () => ({
+  getTeacherAuthoringAccess: mocks.getTeacherAuthoringAccess,
+}));
 
 import { DELETE, POST } from "@/app/api/teacher/quests/[id]/cover/route";
 
@@ -35,6 +38,7 @@ function query(quest: { id: string; cover_image_path: string | null } | null) {
 }
 
 function configure(coverImagePath: string | null) {
+  mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "allowed", userId });
   mocks.getExtension.mockReturnValue("png");
   mocks.getPublicUrl.mockImplementation((path) => path ? `https://example.test/${path}` : null);
   mocks.getSafePath.mockReturnValue("old.png");
@@ -66,6 +70,34 @@ describe("teacher quest cover route", () => {
     expect(response.status).toBe(200);
     expect(mocks.set).toHaveBeenCalledWith({ questId, expectedCoverImagePath: previousPath, newObjectPath: objectPath });
     expect(mocks.remove).toHaveBeenCalledWith(["old.png"]);
+  });
+
+  it.each(["POST", "DELETE"] as const)("denies inactive authoring access before %s ownership, Storage, or reference mutation", async (method) => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "entitlement_inactive" });
+
+    const response = method === "POST"
+      ? await POST(uploadRequest(), context)
+      : await DELETE(new Request("http://example.test", { method }), context);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "Authoring access unavailable." });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.upload).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.set).not.toHaveBeenCalled();
+    expect(mocks.clear).not.toHaveBeenCalled();
+  });
+
+  it.each(["POST", "DELETE"] as const)("preserves the unauthenticated %s response", async (method) => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "unauthenticated" });
+
+    const response = method === "POST"
+      ? await POST(uploadRequest(), context)
+      : await DELETE(new Request("http://example.test", { method }), context);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized." });
+    expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
   it("cleans only the uploaded orphan when SET is stale or fails", async () => {

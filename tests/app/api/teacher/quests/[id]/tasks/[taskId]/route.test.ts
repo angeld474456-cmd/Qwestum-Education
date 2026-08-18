@@ -5,6 +5,7 @@ const taskId = "22222222-2222-4222-8222-222222222222";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   deleteOwnedQuestTask: vi.fn(),
+  getTeacherAuthoringAccess: vi.fn(),
   updateOwnedQuestTask: vi.fn(),
   getSafeQuestImageObjectPath: vi.fn(),
   remove: vi.fn(),
@@ -14,6 +15,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/services/teacher-task-deletion.server", () => ({
   deleteOwnedQuestTask: mocks.deleteOwnedQuestTask,
+}));
+vi.mock("@/services/teacher-authoring-access.server", () => ({
+  getTeacherAuthoringAccess: mocks.getTeacherAuthoringAccess,
 }));
 vi.mock("@/services/teacher-task-update.server", () => ({
   updateOwnedQuestTask: mocks.updateOwnedQuestTask,
@@ -99,7 +103,36 @@ function taskDto(overrides: Record<string, unknown> = {}) {
 }
 
 describe("teacher task mutation route DELETE", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({
+      status: "allowed",
+      userId: "owner",
+    });
+  });
+
+  it("denies inactive authoring access before task deletion and Storage cleanup", async () => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "entitlement_inactive" });
+
+    const response = await DELETE(deleteRequest(), context);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "Authoring access unavailable." });
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
+  });
+
+  it("preserves the unauthenticated response before task deletion", async () => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "unauthenticated" });
+
+    const response = await DELETE(deleteRequest(), context);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized." });
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
 
   it("maps unauthenticated, missing, public-final-task, and error outcomes safely", async () => {
     const cases = [

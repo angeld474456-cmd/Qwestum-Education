@@ -11,6 +11,7 @@ import {
 } from "@/lib/task-choice-content";
 import { MAX_TASK_POINTS } from "@/lib/task-points";
 import { deleteOwnedQuestTask } from "@/services/teacher-task-deletion.server";
+import { getTeacherAuthoringAccess } from "@/services/teacher-authoring-access.server";
 import { updateOwnedQuestTask } from "@/services/teacher-task-update.server";
 
 const uuidPattern =
@@ -305,6 +306,19 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
   if (!uuidPattern.test(id) || !uuidPattern.test(taskId)) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
+  }
+
+  const access = await getTeacherAuthoringAccess();
+
+  if (access.status === "unauthenticated") {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  if (access.status !== "allowed") {
+    return NextResponse.json(
+      { error: "Authoring access unavailable." },
+      { status: 403 }
+    );
   }
 
   const result = await deleteOwnedQuestTask(id, taskId);
