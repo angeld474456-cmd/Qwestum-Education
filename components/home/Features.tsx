@@ -2,88 +2,30 @@ import Card from "@/components/ui/Card";
 import Container from "@/components/ui/Container";
 
 const features = [
-  {
-    icon: "🎯",
-    title: "Обучение через игру",
-    text: "Каждый урок превращается в увлекательное приключение, которое удерживает внимание учеников."
-  },
-  {
-    icon: "🤖",
-    title: "Искусственный интеллект",
-    text: "AI помогает создавать новые образовательные квесты за считанные секунды."
-  },
-  {
-    icon: "📚",
-    title: "321 готовый квест",
-    text: "Библиотека постоянно расширяется и охватывает все основные предметы."
-  },
-  {
-    icon: "📈",
-    title: "Аналитика",
-    text: "Учитель видит результаты прохождения, статистику и прогресс каждого ученика."
-  },
-  {
-    icon: "🏫",
-    title: "Для школ",
-    text: "Единая система для всей школы с кабинетами учителей, учеников и администрации."
-  },
-  {
-    icon: "☁️",
-    title: "Работает в браузере",
-    text: "Никаких установок. Любое устройство — компьютер, планшет или смартфон."
-  }
+  { step: "01", title: "Выберите или создайте квест", text: "Откройте готовый учебный квест из каталога или подготовьте свой для урока." },
+  { step: "02", title: "Пройдите задания", text: "Выбирайте ответы, работайте с текстовыми заданиями и изучайте материалы с изображениями." },
+  { step: "03", title: "Получите результат", text: "После завершения сразу виден результат; в личном кабинете ученика сохраняется история прохождений." },
 ];
 
 export default function Features() {
   return (
-    <section className="py-32">
-
+    <section id="how-it-works" className="border-t border-slate-800 py-16 sm:py-24">
       <Container>
-
-        <div className="mb-20 text-center">
-
-          <div className="text-violet-400 font-semibold uppercase tracking-[0.3em]">
-            Возможности
-          </div>
-
-          <h2 className="mt-6 text-5xl font-black">
-            Почему школы выбирают Questum
-          </h2>
-
-          <p className="mx-auto mt-6 max-w-3xl text-xl leading-9 text-gray-400">
-            Мы объединяем игровой формат обучения,
-            искусственный интеллект и современную платформу
-            в одном продукте.
-          </p>
-
+        <div className="mx-auto mb-10 max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-wide text-violet-300">Как это работает</p>
+          <h2 className="mt-3 text-3xl font-black sm:text-4xl">От идеи до результата за несколько шагов</h2>
+          <p className="mt-4 text-lg leading-8 text-slate-400">Всё необходимое для первого интерактивного занятия — в одном месте.</p>
         </div>
-
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-
+        <div className="grid gap-5 md:grid-cols-3">
           {features.map((feature) => (
-
             <Card key={feature.title}>
-
-              <div className="text-6xl">
-                {feature.icon}
-              </div>
-
-              <h3 className="mt-8 text-3xl font-bold">
-                {feature.title}
-              </h3>
-
-              <p className="mt-5 leading-8 text-gray-400">
-                {feature.text}
-              </p>
-
+              <p className="text-sm font-bold text-violet-300">{feature.step}</p>
+              <h3 className="mt-4 text-xl font-bold">{feature.title}</h3>
+              <p className="mt-3 leading-7 text-slate-300">{feature.text}</p>
             </Card>
-
           ))}
-
         </div>
-
       </Container>
-
     </section>
   );
 }
