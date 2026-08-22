@@ -2,7 +2,9 @@ import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
 import type {
+  PublicRuntimeNarrativeTask,
   PublicRuntimeQuest,
+  PublicRuntimeQuestV2,
   PublicRuntimeResult,
   PublicRuntimeSingleChoiceOption,
   PublicRuntimeSubmission,
@@ -76,6 +78,29 @@ function mapSingleChoiceOption(
   if (!isPlainObject(value)) return null;
 
   if (!isNonBlankString(value.id) || !isNonBlankString(value.text)) {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    text: value.text,
+  };
+}
+
+function mapRuntimeV2Option(
+  value: unknown
+): PublicRuntimeSingleChoiceOption | null {
+  if (!isPlainObject(value)) return null;
+
+  const keys = Object.keys(value);
+
+  if (
+    keys.length !== 2 ||
+    !keys.includes("id") ||
+    !keys.includes("text") ||
+    !isNonBlankString(value.id) ||
+    !isNonBlankString(value.text)
+  ) {
     return null;
   }
 
@@ -164,6 +189,106 @@ function mapPublicRuntimeQuestRow(value: unknown): PublicRuntimeQuest | null {
     id: value.id,
     title: value.title,
     description: value.description,
+    tasks: mappedTasks,
+  };
+}
+
+function mapRuntimeV2Task(value: unknown): PublicRuntimeNarrativeTask | null {
+  if (!isPlainObject(value)) return null;
+
+  if (
+    !Object.prototype.hasOwnProperty.call(value, "narrative_intro") ||
+    !Object.prototype.hasOwnProperty.call(value, "narrative_success") ||
+    !isNullableString(value.narrative_intro) ||
+    !isNullableString(value.narrative_success)
+  ) {
+    return null;
+  }
+
+  const baseKeys = [
+    "description",
+    "id",
+    "image_url",
+    "narrative_intro",
+    "narrative_success",
+    "task_type",
+    "title",
+  ];
+  const choiceKeys = [...baseKeys, "options"];
+  const expectedKeys = value.task_type === "text" ? baseKeys : choiceKeys;
+
+  if (!hasOnlyKeys(value, expectedKeys)) return null;
+
+  const task = mapRuntimeTask(value);
+
+  if (!task) return null;
+
+  if (task.taskType === "text") {
+    return {
+      ...task,
+      narrativeIntro: value.narrative_intro,
+      narrativeSuccess: value.narrative_success,
+    };
+  }
+
+  if (!Array.isArray(value.options)) return null;
+
+  const options = value.options.map(mapRuntimeV2Option);
+
+  if (options.some((option) => option === null)) return null;
+
+  const mappedOptions = options as PublicRuntimeSingleChoiceOption[];
+
+  if (new Set(mappedOptions.map((option) => option.id)).size !== mappedOptions.length) {
+    return null;
+  }
+
+  return {
+    ...task,
+    options: mappedOptions,
+    narrativeIntro: value.narrative_intro,
+    narrativeSuccess: value.narrative_success,
+  };
+}
+
+function mapPublicRuntimeQuestV2Row(value: unknown): PublicRuntimeQuestV2 | null {
+  if (
+    !isPlainObject(value) ||
+    !hasOnlyKeys(value, [
+      "description",
+      "id",
+      "mission_intro",
+      "mission_outro",
+      "tasks",
+      "title",
+    ]) ||
+    !isUuid(value.id) ||
+    !isNonBlankString(value.title) ||
+    !isNullableString(value.description) ||
+    !isNullableString(value.mission_intro) ||
+    !isNullableString(value.mission_outro) ||
+    !Array.isArray(value.tasks) ||
+    value.tasks.length < 1 ||
+    value.tasks.length > MAX_TASKS
+  ) {
+    return null;
+  }
+
+  const tasks = value.tasks.map(mapRuntimeV2Task);
+
+  if (tasks.some((task) => task === null)) return null;
+
+  const mappedTasks = tasks as PublicRuntimeNarrativeTask[];
+  const taskIds = new Set(mappedTasks.map((task) => task.id));
+
+  if (taskIds.size !== mappedTasks.length) return null;
+
+  return {
+    id: value.id,
+    title: value.title,
+    description: value.description,
+    missionIntro: value.mission_intro,
+    missionOutro: value.mission_outro,
     tasks: mappedTasks,
   };
 }
@@ -328,6 +453,35 @@ export async function getPublicRuntimeQuest(
   }
 
   const quest = mapPublicRuntimeQuestRow(data[0]);
+
+  if (!quest) {
+    runtimeError("Public runtime fetch returned invalid data.");
+  }
+
+  return quest;
+}
+
+export async function getPublicRuntimeQuestV2(
+  id: string
+): Promise<PublicRuntimeQuestV2 | null> {
+  assertValidQuestId(id);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("get_public_runtime_quest_v2", {
+    p_quest_id: id,
+  });
+
+  if (error || !Array.isArray(data)) {
+    runtimeError("Public runtime fetch failed.");
+  }
+
+  if (data.length === 0) return null;
+
+  if (data.length !== 1) {
+    runtimeError("Public runtime fetch returned invalid data.");
+  }
+
+  const quest = mapPublicRuntimeQuestV2Row(data[0]);
 
   if (!quest) {
     runtimeError("Public runtime fetch returned invalid data.");

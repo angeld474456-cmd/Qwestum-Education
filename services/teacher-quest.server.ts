@@ -12,6 +12,8 @@ export type TeacherQuest = {
   id: string;
   title: string;
   description: string | null;
+  mission_intro?: string | null;
+  mission_outro?: string | null;
   subject_id: string | null;
   language_code: QuestLanguageCode | null;
   cover_image_path: string | null;
@@ -31,6 +33,8 @@ export type TeacherQuestTask = {
   quest_id: string;
   title: string;
   description: string | null;
+  narrative_intro?: string | null;
+  narrative_success?: string | null;
   answer: string | null;
   hint: string | null;
   image_url: string | null;

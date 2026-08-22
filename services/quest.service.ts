@@ -5,6 +5,8 @@ export interface QuestTask {
   quest_id: string;
   title: string;
   description: string | null;
+  narrative_intro?: string | null;
+  narrative_success?: string | null;
   answer: string | null;
   hint: string | null;
   image_url: string | null;

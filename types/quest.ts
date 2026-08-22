@@ -5,6 +5,10 @@ export interface Quest {
 
   description: string | null;
 
+  mission_intro?: string | null;
+
+  mission_outro?: string | null;
+
   subject_id: string | null;
 
   language_code: "ru" | "kk" | "en" | null;

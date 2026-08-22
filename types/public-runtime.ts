@@ -41,6 +41,17 @@ export type PublicRuntimeQuest = {
   tasks: PublicRuntimeTask[];
 };
 
+export type PublicRuntimeNarrativeTask = PublicRuntimeTask & {
+  narrativeIntro: string | null;
+  narrativeSuccess: string | null;
+};
+
+export type PublicRuntimeQuestV2 = Omit<PublicRuntimeQuest, "tasks"> & {
+  missionIntro: string | null;
+  missionOutro: string | null;
+  tasks: PublicRuntimeNarrativeTask[];
+};
+
 export type PublicRuntimeSubmissionAnswer =
   | {
       taskId: string;
