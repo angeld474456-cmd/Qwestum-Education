@@ -71,4 +71,28 @@ describe("PublicQuestResults", () => {
     expect(markup).toContain(`href="/catalog/${questId}"`);
     expect(markup).toContain('href="/catalog"');
   });
+
+  it("renders an optional mission conclusion without replacing measured results", () => {
+    const narrativeQuest = {
+      ...quest,
+      missionIntro: null,
+      missionOutro: "Mission complete.",
+      tasks: quest.tasks.map((task) => ({
+        ...task,
+        narrativeIntro: null,
+        narrativeSuccess: null,
+      })),
+    };
+    const markup = renderToStaticMarkup(
+      createElement(PublicQuestResults, {
+        quest: narrativeQuest,
+        result,
+        onRetry: vi.fn(),
+      })
+    );
+
+    expect(markup).toContain("Миссия завершена");
+    expect(markup).toContain("Mission complete.");
+    expect(markup).toContain("Не оценивается");
+  });
 });

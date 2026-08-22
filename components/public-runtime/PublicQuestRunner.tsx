@@ -4,8 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
   PublicRuntimeQuest,
+  PublicRuntimeQuestV2,
   PublicRuntimeResult,
   PublicRuntimeSubmission,
+  PublicRuntimeTask,
   PublicRuntimeTaskResult,
   PublicRuntimeTaskStatus,
 } from "@/types/public-runtime";
@@ -13,14 +15,24 @@ import type {
 import PublicQuestResults from "./PublicQuestResults";
 import PublicTaskRenderer from "./PublicTaskRenderer";
 
+type PublicRuntimeQuestForRunner = PublicRuntimeQuest | PublicRuntimeQuestV2;
+type PublicRuntimeTaskForRunner = PublicRuntimeTask | PublicRuntimeQuestV2["tasks"][number];
+
 type PublicQuestRunnerProps = {
-  quest: PublicRuntimeQuest;
+  quest: PublicRuntimeQuestForRunner;
   submitUrl?: string;
   retryHref?: string;
   catalogHref?: string;
 };
 
-type RunnerStatus = "active" | "submitting" | "completed" | "submission_error";
+export type PublicQuestRunnerPhase =
+  | "mission"
+  | "active"
+  | "transition"
+  | "submitting"
+  | "completed"
+  | "submission_error";
+
 type PlainObject = Record<string, unknown>;
 
 const MAX_TASKS = 100;
@@ -32,10 +44,9 @@ const allowedStatuses = new Set<PublicRuntimeTaskStatus>([
   "unanswered",
   "not_scored",
 ]);
-const unavailableQuestMessage =
-  "\u041a\u0432\u0435\u0441\u0442 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u0434\u043b\u044f \u043f\u0440\u043e\u0445\u043e\u0436\u0434\u0435\u043d\u0438\u044f";
+const unavailableQuestMessage = "Квест недоступен для прохождения";
 const submissionErrorMessage =
-  "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043e\u0442\u0432\u0435\u0442\u044b. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0451 \u0440\u0430\u0437";
+  "Не удалось проверить ответы. Попробуйте ещё раз";
 
 function isPlainObject(value: unknown): value is PlainObject {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
@@ -43,7 +54,6 @@ function isPlainObject(value: unknown): value is PlainObject {
   }
 
   const prototype = Object.getPrototypeOf(value);
-
   return prototype === Object.prototype || prototype === null;
 }
 
@@ -59,8 +69,74 @@ function isSafeNonNegativeInteger(value: unknown): value is number {
   );
 }
 
-function isValidQuest(quest: PublicRuntimeQuest) {
-  if (!Array.isArray(quest.tasks) || quest.tasks.length < 1 || quest.tasks.length > MAX_TASKS) {
+function isNarrativeText(value: unknown): value is string {
+  return typeof value === "string" && /\S/.test(value);
+}
+
+function getMissionIntro(quest: PublicRuntimeQuestForRunner) {
+  return "missionIntro" in quest && isNarrativeText(quest.missionIntro)
+    ? quest.missionIntro
+    : null;
+}
+
+function getTaskNarrativeIntro(task: PublicRuntimeTaskForRunner) {
+  return "narrativeIntro" in task && isNarrativeText(task.narrativeIntro)
+    ? task.narrativeIntro
+    : null;
+}
+
+function getTaskNarrativeSuccess(task: PublicRuntimeTaskForRunner) {
+  return "narrativeSuccess" in task && isNarrativeText(task.narrativeSuccess)
+    ? task.narrativeSuccess
+    : null;
+}
+
+export function getInitialPublicQuestRunnerPhase(
+  quest: PublicRuntimeQuestForRunner
+): PublicQuestRunnerPhase {
+  return getMissionIntro(quest) ? "mission" : "active";
+}
+
+export function shouldShowPublicQuestTransition(
+  task: PublicRuntimeTaskForRunner,
+  isFinalTask: boolean
+) {
+  return !isFinalTask && Boolean(getTaskNarrativeSuccess(task));
+}
+
+export function createPublicRuntimeSubmission(
+  quest: Pick<PublicRuntimeQuestForRunner, "tasks">,
+  selectedOptionIds: Record<string, string>,
+  selectedMultipleChoiceOptionIds: Record<string, string[]>
+): PublicRuntimeSubmission {
+  return {
+    answers: quest.tasks.map((task) => {
+      const selectedOptionId = selectedOptionIds[task.id];
+      const selectedOptionIdsForTask = selectedMultipleChoiceOptionIds[task.id];
+
+      if (task.taskType === "single_choice" && selectedOptionId) {
+        return { taskId: task.id, selectedOptionId };
+      }
+
+      if (
+        task.taskType === "multiple_choice" &&
+        selectedOptionIdsForTask &&
+        selectedOptionIdsForTask.length > 0
+      ) {
+        return { taskId: task.id, selectedOptionIds: selectedOptionIdsForTask };
+      }
+
+      return { taskId: task.id };
+    }),
+  };
+}
+
+function isValidQuest(quest: PublicRuntimeQuestForRunner) {
+  if (
+    !Array.isArray(quest.tasks) ||
+    quest.tasks.length < 1 ||
+    quest.tasks.length > MAX_TASKS
+  ) {
     return false;
   }
 
@@ -74,7 +150,8 @@ function isValidQuest(quest: PublicRuntimeQuest) {
     if (task.taskType === "text") continue;
 
     if (
-      (task.taskType !== "single_choice" && task.taskType !== "multiple_choice") ||
+      (task.taskType !== "single_choice" &&
+        task.taskType !== "multiple_choice") ||
       !Array.isArray(task.options) ||
       task.options.length < 2 ||
       task.options.length > MAX_TASKS
@@ -85,7 +162,11 @@ function isValidQuest(quest: PublicRuntimeQuest) {
     const optionIds = new Set<string>();
 
     for (const option of task.options) {
-      if (typeof option.id !== "string" || option.id.length === 0 || optionIds.has(option.id)) {
+      if (
+        typeof option.id !== "string" ||
+        option.id.length === 0 ||
+        optionIds.has(option.id)
+      ) {
         return false;
       }
 
@@ -112,7 +193,10 @@ function mapTaskResult(value: unknown): PublicRuntimeTaskResult | null {
   };
 }
 
-function mapResult(value: unknown, quest: PublicRuntimeQuest): PublicRuntimeResult | null {
+function mapResult(
+  value: unknown,
+  quest: PublicRuntimeQuestForRunner
+): PublicRuntimeResult | null {
   if (
     !isPlainObject(value) ||
     !isSafeNonNegativeInteger(value.earnedPoints) ||
@@ -135,7 +219,9 @@ function mapResult(value: unknown, quest: PublicRuntimeQuest): PublicRuntimeResu
   if (taskResults.some((taskResult) => taskResult === null)) return null;
 
   const mappedTaskResults = taskResults as PublicRuntimeTaskResult[];
-  const resultTaskIds = new Set(mappedTaskResults.map((taskResult) => taskResult.taskId));
+  const resultTaskIds = new Set(
+    mappedTaskResults.map((taskResult) => taskResult.taskId)
+  );
   const questTaskIds = new Set(quest.tasks.map((task) => task.id));
   const statusCounts = {
     correct: 0,
@@ -171,6 +257,44 @@ function mapResult(value: unknown, quest: PublicRuntimeQuest): PublicRuntimeResu
   };
 }
 
+export function PublicQuestTransition({
+  questTitle,
+  narrativeSuccess,
+  currentTaskIndex,
+  taskCount,
+  onContinue,
+}: {
+  questTitle: string;
+  narrativeSuccess: string;
+  currentTaskIndex: number;
+  taskCount: number;
+  onContinue: () => void;
+}) {
+  return (
+    <main className="mx-auto max-w-3xl">
+      <section className="rounded-lg border border-violet-500/30 bg-[#111827] p-6 sm:p-8">
+        <p className="text-sm font-semibold uppercase tracking-wide text-violet-300">
+          Путь
+        </p>
+        <h1 className="mt-3 text-2xl font-bold text-white">{questTitle}</h1>
+        <p className="mt-6 text-sm text-slate-400">
+          Этап {currentTaskIndex + 1} из {taskCount}
+        </p>
+        <p className="mt-4 whitespace-pre-wrap leading-7 text-slate-200">
+          {narrativeSuccess}
+        </p>
+        <button
+          type="button"
+          onClick={onContinue}
+          className="mt-8 rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 focus-visible:ring-2 focus-visible:ring-violet-400"
+        >
+          Продолжить путь
+        </button>
+      </section>
+    </main>
+  );
+}
+
 export default function PublicQuestRunner({
   quest,
   submitUrl,
@@ -178,9 +302,14 @@ export default function PublicQuestRunner({
   catalogHref,
 }: PublicQuestRunnerProps) {
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
-  const [selectedOptionIds, setSelectedOptionIds] = useState<Record<string, string>>({});
-  const [selectedMultipleChoiceOptionIds, setSelectedMultipleChoiceOptionIds] = useState<Record<string, string[]>>({});
-  const [status, setStatus] = useState<RunnerStatus>("active");
+  const [selectedOptionIds, setSelectedOptionIds] = useState<
+    Record<string, string>
+  >({});
+  const [selectedMultipleChoiceOptionIds, setSelectedMultipleChoiceOptionIds] =
+    useState<Record<string, string[]>>({});
+  const [phase, setPhase] = useState<PublicQuestRunnerPhase>(() =>
+    getInitialPublicQuestRunnerPhase(quest)
+  );
   const [result, setResult] = useState<PublicRuntimeResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const taskContainerRef = useRef<HTMLElement>(null);
@@ -201,16 +330,19 @@ export default function PublicQuestRunner({
   }, []);
 
   useEffect(() => {
-    if (!shouldPositionTaskRef.current) return;
+    if (phase !== "active" || !shouldPositionTaskRef.current) return;
 
     const taskContainer = taskContainerRef.current;
-    taskContainer?.scrollIntoView({
+
+    if (!taskContainer) return;
+
+    taskContainer.scrollIntoView({
       behavior: taskScrollBehaviorRef.current,
       block: "start",
     });
-    taskContainer?.focus({ preventScroll: true });
+    taskContainer.focus({ preventScroll: true });
     shouldPositionTaskRef.current = false;
-  }, [currentTaskIndex]);
+  }, [currentTaskIndex, phase]);
 
   if (!questIsValid) {
     return (
@@ -230,19 +362,43 @@ export default function PublicQuestRunner({
     );
   }
 
-  const isSubmitting = status === "submitting";
+  const isSubmitting = phase === "submitting";
   const isFinalTask = currentTaskIndex === quest.tasks.length - 1;
+  const taskNarrativeIntro = getTaskNarrativeIntro(currentTask);
+  const taskNarrativeSuccess = getTaskNarrativeSuccess(currentTask);
+  const missionIntro = getMissionIntro(quest);
 
-  function moveToTask(index: number) {
-    if (isSubmitting || index < 0 || index >= quest.tasks.length) return;
-
+  function positionCurrentTask() {
     taskScrollBehaviorRef.current = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches
       ? "auto"
       : "smooth";
     shouldPositionTaskRef.current = true;
+  }
+
+  function moveToTask(index: number) {
+    if (isSubmitting || index < 0 || index >= quest.tasks.length) return;
+
+    positionCurrentTask();
     setCurrentTaskIndex(index);
+    setPhase("active");
+  }
+
+  function startMission() {
+    positionCurrentTask();
+    setPhase("active");
+  }
+
+  function advanceCurrentTask() {
+    if (isSubmitting) return;
+
+    if (shouldShowPublicQuestTransition(currentTask, isFinalTask)) {
+      setPhase("transition");
+      return;
+    }
+
+    moveToTask(currentTaskIndex + 1);
   }
 
   function selectOption(optionId: string) {
@@ -256,9 +412,15 @@ export default function PublicQuestRunner({
 
   function toggleOption(optionId: string) {
     if (isSubmitting || currentTask.taskType !== "multiple_choice") return;
+
     setSelectedMultipleChoiceOptionIds((current) => {
       const selected = current[currentTask.id] ?? [];
-      return { ...current, [currentTask.id]: selected.includes(optionId) ? selected.filter((id) => id !== optionId) : [...selected, optionId] };
+      return {
+        ...current,
+        [currentTask.id]: selected.includes(optionId)
+          ? selected.filter((id) => id !== optionId)
+          : [...selected, optionId],
+      };
     });
   }
 
@@ -267,16 +429,11 @@ export default function PublicQuestRunner({
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
     submissionInFlightRef.current = false;
-    taskScrollBehaviorRef.current = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches
-      ? "auto"
-      : "smooth";
-    shouldPositionTaskRef.current = true;
+    positionCurrentTask();
     setCurrentTaskIndex(0);
     setSelectedOptionIds({});
     setSelectedMultipleChoiceOptionIds({});
-    setStatus("active");
+    setPhase(getInitialPublicQuestRunnerPhase(quest));
     setResult(null);
     setErrorMessage(null);
   }
@@ -292,29 +449,25 @@ export default function PublicQuestRunner({
     abortControllerRef.current?.abort();
     abortControllerRef.current = controller;
 
-    const submission: PublicRuntimeSubmission = {
-      answers: quest.tasks.map((task) => {
-        const selectedOptionId = selectedOptionIds[task.id];
-        const selectedOptionIdsForTask = selectedMultipleChoiceOptionIds[task.id];
-
-        return task.taskType === "single_choice" && selectedOptionId
-          ? { taskId: task.id, selectedOptionId }
-          : task.taskType === "multiple_choice" && selectedOptionIdsForTask && selectedOptionIdsForTask.length > 0
-            ? { taskId: task.id, selectedOptionIds: selectedOptionIdsForTask }
-          : { taskId: task.id };
-        }),
-    };
-    setStatus("submitting");
+    const submission = createPublicRuntimeSubmission(
+      quest,
+      selectedOptionIds,
+      selectedMultipleChoiceOptionIds
+    );
+    setPhase("submitting");
     setErrorMessage(null);
 
     try {
-      const response = await fetch(submitUrl ?? `/api/public/quests/${quest.id}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submission),
-        cache: "no-store",
-        signal: controller.signal,
-      });
+      const response = await fetch(
+        submitUrl ?? `/api/public/quests/${quest.id}/submit`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submission),
+          cache: "no-store",
+          signal: controller.signal,
+        }
+      );
       const payload: unknown = await response.json();
 
       if (!response.ok || !isPlainObject(payload)) {
@@ -330,13 +483,17 @@ export default function PublicQuestRunner({
       if (!mountedRef.current || requestIdRef.current !== requestId) return;
 
       setResult(mappedResult);
-      setStatus("completed");
+      setPhase("completed");
     } catch {
-      if (!mountedRef.current || requestIdRef.current !== requestId || controller.signal.aborted) {
+      if (
+        !mountedRef.current ||
+        requestIdRef.current !== requestId ||
+        controller.signal.aborted
+      ) {
         return;
       }
 
-      setStatus("submission_error");
+      setPhase("submission_error");
       setErrorMessage(submissionErrorMessage);
     } finally {
       if (requestIdRef.current === requestId) {
@@ -349,7 +506,7 @@ export default function PublicQuestRunner({
     }
   }
 
-  if (status === "completed" && result) {
+  if (phase === "completed" && result) {
     return (
       <PublicQuestResults
         quest={quest}
@@ -361,11 +518,54 @@ export default function PublicQuestRunner({
     );
   }
 
+  if (phase === "mission" && missionIntro) {
+    return (
+      <main className="mx-auto max-w-3xl">
+        <section className="rounded-lg border border-violet-500/30 bg-[#111827] p-6 sm:p-8">
+          <p className="text-sm font-semibold uppercase tracking-wide text-violet-300">
+            Квест
+          </p>
+          <h1 className="mt-3 text-3xl font-bold text-white">{quest.title}</h1>
+          <h2 className="mt-8 text-xl font-semibold text-violet-100">
+            Твоя миссия
+          </h2>
+          <p className="mt-3 whitespace-pre-wrap leading-7 text-slate-200">
+            {missionIntro}
+          </p>
+          <p className="mt-6 text-sm text-slate-400">
+            Этапов: {quest.tasks.length}
+          </p>
+          <button
+            type="button"
+            onClick={startMission}
+            className="mt-8 rounded-lg bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 focus-visible:ring-2 focus-visible:ring-violet-400"
+          >
+            Начать миссию
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  if (phase === "transition" && taskNarrativeSuccess) {
+    return (
+      <PublicQuestTransition
+        questTitle={quest.title}
+        narrativeSuccess={taskNarrativeSuccess}
+        currentTaskIndex={currentTaskIndex}
+        taskCount={quest.tasks.length}
+        onContinue={() => moveToTask(currentTaskIndex + 1)}
+      />
+    );
+  }
+
+  const progressPercent = ((currentTaskIndex + 1) / quest.tasks.length) * 100;
+
   return (
     <main className="mx-auto max-w-3xl space-y-6">
       <header className="rounded-lg border border-slate-800 bg-[#111827] p-6 sm:p-8">
         <p className="text-sm font-semibold uppercase tracking-wide text-violet-300">
-          {"\u041f\u0440\u043e\u0445\u043e\u0436\u0434\u0435\u043d\u0438\u0435 \u043a\u0432\u0435\u0441\u0442\u0430"}
+          Квест
         </p>
         <h1 className="mt-3 text-3xl font-bold text-white">{quest.title}</h1>
         {quest.description ? (
@@ -373,11 +573,22 @@ export default function PublicQuestRunner({
             {quest.description}
           </p>
         ) : null}
-        <p className="mt-6 text-sm text-slate-300" aria-live="polite">
-          {"\u0417\u0430\u0434\u0430\u043d\u0438\u0435"} {currentTaskIndex + 1} {"\u0438\u0437"} {quest.tasks.length}
-        </p>
-        <p className="mt-2 text-sm text-slate-500">
-          {"\u041f\u0440\u043e\u0433\u0440\u0435\u0441\u0441 \u043d\u0435 \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u0435\u0442\u0441\u044f \u043f\u043e\u0441\u043b\u0435 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u044f \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u044b"}
+        <div className="mt-6" aria-live="polite">
+          <div className="flex items-center justify-between gap-4 text-sm text-slate-300">
+            <span>
+              Путь · Этап {currentTaskIndex + 1} из {quest.tasks.length}
+            </span>
+            <span>{Math.round(progressPercent)}%</span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-800">
+            <div
+              className="h-full rounded-full bg-violet-600 transition-[width]"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-slate-500">
+          Прогресс не сохраняется после обновления страницы
         </p>
       </header>
 
@@ -386,10 +597,22 @@ export default function PublicQuestRunner({
         tabIndex={-1}
         className="scroll-mt-6 rounded-lg border border-slate-800 bg-[#111827] p-6 outline-none focus-visible:ring-2 focus-visible:ring-violet-500 sm:p-8"
       >
+        {taskNarrativeIntro ? (
+          <aside className="mb-6 rounded-md border border-violet-500/30 bg-violet-500/10 p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-violet-200">
+              Сцена
+            </h2>
+            <p className="mt-2 whitespace-pre-wrap leading-7 text-slate-200">
+              {taskNarrativeIntro}
+            </p>
+          </aside>
+        ) : null}
         <PublicTaskRenderer
           task={currentTask}
           selectedOptionId={selectedOptionIds[currentTask.id]}
-          selectedOptionIds={selectedMultipleChoiceOptionIds[currentTask.id] ?? []}
+          selectedOptionIds={
+            selectedMultipleChoiceOptionIds[currentTask.id] ?? []
+          }
           disabled={isSubmitting}
           onSelectOption={selectOption}
           onToggleOption={toggleOption}
@@ -398,26 +621,47 @@ export default function PublicQuestRunner({
 
       {isSubmitting ? (
         <p role="status" aria-live="polite" className="text-sm text-slate-300">
-          {"\u041f\u0440\u043e\u0432\u0435\u0440\u044f\u0435\u043c \u043e\u0442\u0432\u0435\u0442\u044b..."}
+          Проверяем ответы...
         </p>
       ) : null}
-      {status === "submission_error" && errorMessage ? (
-        <p role="alert" className="rounded-md border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+      {phase === "submission_error" && errorMessage ? (
+        <p
+          role="alert"
+          className="rounded-md border border-red-500/50 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+        >
           {errorMessage}
         </p>
       ) : null}
 
-      <nav className="flex flex-wrap items-center justify-between gap-3" aria-label="\u041d\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u044f \u043f\u043e \u0437\u0430\u0434\u0430\u043d\u0438\u044f\u043c">
-        <button type="button" onClick={() => moveToTask(currentTaskIndex - 1)} disabled={isSubmitting || currentTaskIndex === 0} className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
-          {"\u041d\u0430\u0437\u0430\u0434"}
+      <nav
+        className="flex flex-wrap items-center justify-between gap-3"
+        aria-label="Навигация по заданиям"
+      >
+        <button
+          type="button"
+          onClick={() => moveToTask(currentTaskIndex - 1)}
+          disabled={isSubmitting || currentTaskIndex === 0}
+          className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Назад
         </button>
         {isFinalTask ? (
-          <button type="button" onClick={submit} disabled={isSubmitting} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50">
-            {status === "submission_error" ? "\u041f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u044c" : "\u0417\u0430\u0432\u0435\u0440\u0448\u0438\u0442\u044c"}
+          <button
+            type="button"
+            onClick={submit}
+            disabled={isSubmitting}
+            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {phase === "submission_error" ? "Повторить" : "Завершить"}
           </button>
         ) : (
-          <button type="button" onClick={() => moveToTask(currentTaskIndex + 1)} disabled={isSubmitting} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50">
-            {"\u0414\u0430\u043b\u0435\u0435"}
+          <button
+            type="button"
+            onClick={advanceCurrentTask}
+            disabled={isSubmitting}
+            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Далее
           </button>
         )}
       </nav>

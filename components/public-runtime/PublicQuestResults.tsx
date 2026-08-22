@@ -5,12 +5,13 @@ import { useEffect, useRef } from "react";
 
 import type {
   PublicRuntimeQuest,
+  PublicRuntimeQuestV2,
   PublicRuntimeResult,
   PublicRuntimeTaskStatus,
 } from "@/types/public-runtime";
 
 type PublicQuestResultsProps = {
-  quest: PublicRuntimeQuest;
+  quest: PublicRuntimeQuest | PublicRuntimeQuestV2;
   result: PublicRuntimeResult;
   onRetry: () => void;
   retryHref?: string;
@@ -36,6 +37,12 @@ export default function PublicQuestResults({
   const resultsByTaskId = new Map(
     result.taskResults.map((taskResult) => [taskResult.taskId, taskResult])
   );
+  const missionOutro =
+    "missionOutro" in quest &&
+    typeof quest.missionOutro === "string" &&
+    /\S/.test(quest.missionOutro)
+      ? quest.missionOutro
+      : null;
 
   useEffect(() => {
     resultsRef.current?.scrollIntoView({
@@ -60,8 +67,13 @@ export default function PublicQuestResults({
           tabIndex={-1}
           className="text-3xl font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
         >
-          {"\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442"}
+          {missionOutro ? "Миссия завершена" : "Результат"}
         </h1>
+        {missionOutro ? (
+          <p className="mt-4 whitespace-pre-wrap leading-7 text-slate-200">
+            {missionOutro}
+          </p>
+        ) : null}
         {result.possiblePoints > 0 ? (
           <p className="mt-4 text-lg text-slate-200">
             {"\u0411\u0430\u043b\u043b\u044b"}: {result.earnedPoints} / {result.possiblePoints}

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getPublicRuntimeQuest: vi.fn(),
+  getPublicRuntimeQuestV2: vi.fn(),
   startStudentQuestAttempt: vi.fn(),
   runner: vi.fn(() => null),
 }));
@@ -10,7 +10,7 @@ vi.mock("@/components/public-runtime/PublicQuestRunner", () => ({
   default: mocks.runner,
 }));
 vi.mock("@/services/public-runtime.server", () => ({
-  getPublicRuntimeQuest: mocks.getPublicRuntimeQuest,
+  getPublicRuntimeQuestV2: mocks.getPublicRuntimeQuestV2,
 }));
 vi.mock("@/services/student-attempt.server", () => ({
   startStudentQuestAttempt: mocks.startStudentQuestAttempt,
@@ -25,7 +25,9 @@ const quest = {
   id: questId,
   title: "Quest",
   description: null,
-  tasks: [{ id: "d6db30c3-2d00-47d8-9a9c-2f879c8c36fe", taskType: "text" as const, title: "Task", description: null, imageUrl: null }],
+  missionIntro: null,
+  missionOutro: null,
+  tasks: [{ id: "d6db30c3-2d00-47d8-9a9c-2f879c8c36fe", taskType: "text" as const, title: "Task", description: null, imageUrl: null, narrativeIntro: null, narrativeSuccess: null }],
 };
 
 function pageFor(id: string) {
@@ -36,7 +38,7 @@ beforeEach(() => vi.clearAllMocks());
 
 describe("learner quest start page", () => {
   it("composes the sanitized runtime quest with the persisted attempt configuration", async () => {
-    mocks.getPublicRuntimeQuest.mockResolvedValue(quest);
+    mocks.getPublicRuntimeQuestV2.mockResolvedValue(quest);
     mocks.startStudentQuestAttempt.mockResolvedValue({
       attemptId,
       questId,
@@ -47,7 +49,7 @@ describe("learner quest start page", () => {
     const page = await pageFor(questId);
     const runner = page.props.children;
 
-    expect(mocks.getPublicRuntimeQuest).toHaveBeenCalledWith(questId);
+    expect(mocks.getPublicRuntimeQuestV2).toHaveBeenCalledWith(questId);
     expect(mocks.startStudentQuestAttempt).toHaveBeenCalledWith(questId);
     expect(runner.type).toBe(mocks.runner);
     expect(runner.props).toEqual({
@@ -61,14 +63,14 @@ describe("learner quest start page", () => {
 
   it("renders the unavailable boundary without attempting persistence for invalid or unavailable quests", async () => {
     await pageFor("not-a-uuid");
-    expect(mocks.getPublicRuntimeQuest).not.toHaveBeenCalled();
+    expect(mocks.getPublicRuntimeQuestV2).not.toHaveBeenCalled();
     expect(mocks.startStudentQuestAttempt).not.toHaveBeenCalled();
 
-    mocks.getPublicRuntimeQuest.mockResolvedValue(null);
+    mocks.getPublicRuntimeQuestV2.mockResolvedValue(null);
     await pageFor(questId);
     expect(mocks.startStudentQuestAttempt).not.toHaveBeenCalled();
 
-    mocks.getPublicRuntimeQuest.mockResolvedValue(quest);
+    mocks.getPublicRuntimeQuestV2.mockResolvedValue(quest);
     mocks.startStudentQuestAttempt.mockResolvedValue(null);
     await pageFor(questId);
     expect(mocks.startStudentQuestAttempt).toHaveBeenCalledWith(questId);

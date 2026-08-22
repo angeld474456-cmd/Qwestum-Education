@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import PublicQuestRunner from "@/components/public-runtime/PublicQuestRunner";
-import { getPublicRuntimeQuest } from "@/services/public-runtime.server";
+import { getPublicRuntimeQuestV2 } from "@/services/public-runtime.server";
 import { startStudentQuestAttempt } from "@/services/student-attempt.server";
 
 export const dynamic = "force-dynamic";
@@ -45,7 +45,7 @@ export default async function LearnerQuestStartPage({ params }: PageProps) {
   let attempt = null;
 
   try {
-    quest = await getPublicRuntimeQuest(id);
+    quest = await getPublicRuntimeQuestV2(id);
     attempt = quest ? await startStudentQuestAttempt(id) : null;
   } catch {}
 
