@@ -1,5 +1,14 @@
 # Changelog
 
+## Narrative MVP Browser QA
+
+- Narrative MVP browser QA passed on `feature/next-work` for `Тайна Великого шёлкового пути`. The dedicated `Твоя миссия` opening rendered the quest title and task count, and kept task 1 hidden until `Начать миссию`.
+- Task 1 rendered its narrative intro in a distinct `Сцена` block without changing its content, image, or options. Its narrative-success copy rendered on a separate neutral `Путь` transition with `Этап 1 из 10`; `Продолжить путь` advanced normally and made no correctness claim.
+- Task 2, which has null narrative fields, opened normally without an empty scene block. Progress displayed `Путь • Этап 2 из 10` and `20%`.
+- The finale rendered `Миссия завершена` and the mission outro while preserving the real result and per-task list: `50 / 125`, `5` correct, `5` incorrect, `0` unanswered, and `0` not scored. Refreshing after completion returned the public flow to the mission opening.
+- The first final submit displayed `Не удалось проверить ответы. Попробуйте ещё раз`; an immediate `Повторить` succeeded and rendered results. This is a QA observation for follow-up, not a confirmed Narrative Layer defect or a claimed root cause.
+- A second fully runtime-eligible public quest without narrative was unavailable for standalone browser QA; one published-looking legacy quest returned `Квест недоступен для прохождения`. Null-narrative compatibility is therefore evidenced by task 2 and existing automated regressions, not a full legacy-quest browser run.
+
 ## P1 Program-Aware Teacher Subject Lookup Planning
 
 - Completed read-only. The current single-profile `kz-school-general` lookup is correct and no implementation is required now. New authoring continues to use canonical grade-null subjects, preserve explicitly selected legacy IDs, and hide generic legacy `Литература` from normal choices.
