@@ -12,7 +12,7 @@ import {
 import { MAX_TASK_POINTS } from "@/lib/task-points";
 import { deleteOwnedQuestTask } from "@/services/teacher-task-deletion.server";
 import { getTeacherAuthoringAccess } from "@/services/teacher-authoring-access.server";
-import { updateOwnedQuestTask } from "@/services/teacher-task-update.server";
+import { updateOwnedQuestTaskV2 } from "@/services/teacher-task-update.server";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -30,6 +30,8 @@ type UpdateTaskPayload = {
   points?: unknown;
   content?: unknown;
   image_url?: unknown;
+  narrative_intro?: unknown;
+  narrative_success?: unknown;
 };
 
 type OwnedTaskImage = {
@@ -39,6 +41,8 @@ type OwnedTaskImage = {
   description: string | null;
   points: number;
   content: Record<string, unknown> | null;
+  narrative_intro: string | null;
+  narrative_success: string | null;
 };
 
 async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>, questId: string) {
@@ -85,7 +89,14 @@ function parseUpdateTaskPayload(body: unknown) {
   }
 
   const payload = body as UpdateTaskPayload;
-  const metadataKeys = ["title", "description", "points", "content"] as const;
+  const metadataKeys = [
+    "title",
+    "description",
+    "points",
+    "content",
+    "narrative_intro",
+    "narrative_success",
+  ] as const;
   const hasMetadata = metadataKeys.some((key) => key in payload);
   const hasImageUrl = "image_url" in payload;
 
@@ -157,6 +168,25 @@ function parseUpdateTaskPayload(body: unknown) {
     updates.content = payload.content;
   }
 
+  for (const fieldName of ["narrative_intro", "narrative_success"] as const) {
+    if (!(fieldName in payload)) continue;
+
+    const value = payload[fieldName];
+
+    if (
+      value !== null &&
+      (typeof value !== "string" ||
+        Array.from(value).length > 4000 ||
+        /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(value))
+    ) {
+      return {
+        error: "Narrative text is invalid.",
+      };
+    }
+
+    updates[fieldName] = value;
+  }
+
   if (Object.keys(updates).length === 0) {
     return {
       error: "No editable fields provided.",
@@ -164,6 +194,17 @@ function parseUpdateTaskPayload(body: unknown) {
   }
 
   return { kind: "metadata" as const, data: updates };
+}
+
+function getNarrativeValue(
+  updates: Record<string, unknown>,
+  fieldName: "narrative_intro" | "narrative_success",
+  currentValue: string | null
+) {
+  if (!(fieldName in updates)) return currentValue;
+
+  const value = updates[fieldName];
+  return typeof value === "string" || value === null ? value : currentValue;
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
@@ -217,7 +258,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   if (parsed.kind === "metadata") {
     const { data: currentTask, error: currentTaskError } = await supabase
       .from("quest_tasks")
-      .select("id, task_type, title, description, points, content")
+      .select(
+        "id, task_type, title, description, points, content, narrative_intro, narrative_success"
+      )
       .eq("id", taskId)
       .eq("quest_id", id)
       .maybeSingle<OwnedTaskImage>();
@@ -261,7 +304,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     }
 
     if (parsed.kind === "metadata") {
-      const result = await updateOwnedQuestTask({
+      const result = await updateOwnedQuestTaskV2({
         questId: id,
         taskId,
         title: typeof parsed.data.title === "string" ? parsed.data.title : currentTask.title,
@@ -271,6 +314,16 @@ export async function PATCH(request: Request, { params }: RouteContext) {
             : currentTask.description ?? "",
         points: typeof parsed.data.points === "number" ? parsed.data.points : currentTask.points,
         content: content as Record<string, unknown> | null,
+        narrativeIntro: getNarrativeValue(
+          parsed.data,
+          "narrative_intro",
+          currentTask.narrative_intro
+        ),
+        narrativeSuccess: getNarrativeValue(
+          parsed.data,
+          "narrative_success",
+          currentTask.narrative_success
+        ),
       });
 
       if (result.status === "unauthorized") {

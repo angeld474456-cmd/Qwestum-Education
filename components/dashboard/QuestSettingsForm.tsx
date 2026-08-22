@@ -21,6 +21,8 @@ type QuestSettingsFormProps = {
     id: string;
     title: string;
     description: string | null;
+    mission_intro?: string | null;
+    mission_outro?: string | null;
     subject_id: string | null;
     language_code: QuestLanguageCode | null;
     category: string | null;
@@ -40,6 +42,8 @@ type QuestSettingsResponse = {
     id: string;
     title: string;
     description: string | null;
+    mission_intro?: string | null;
+    mission_outro?: string | null;
     subject_id: string | null;
     language_code: QuestLanguageCode | null;
     category: string | null;
@@ -86,6 +90,8 @@ export default function QuestSettingsForm({
 }: QuestSettingsFormProps) {
   const [title, setTitle] = useState(quest.title ?? "");
   const [description, setDescription] = useState(quest.description ?? "");
+  const [missionIntro, setMissionIntro] = useState(quest.mission_intro ?? "");
+  const [missionOutro, setMissionOutro] = useState(quest.mission_outro ?? "");
   const [subjectId, setSubjectId] = useState(quest.subject_id ?? "");
   const [languageCode, setLanguageCode] = useState(quest.language_code ?? "");
   const [category, setCategory] = useState(quest.category ?? "");
@@ -207,6 +213,8 @@ export default function QuestSettingsForm({
         body: JSON.stringify({
           title: normalizedTitle,
           description,
+          mission_intro: missionIntro,
+          mission_outro: missionOutro,
           subject_id: subjectId || null,
           language_code: languageCode || null,
           category,
@@ -233,6 +241,8 @@ export default function QuestSettingsForm({
 
       setTitle(result.quest.title ?? "");
       setDescription(result.quest.description ?? "");
+      setMissionIntro(result.quest.mission_intro ?? "");
+      setMissionOutro(result.quest.mission_outro ?? "");
       setSubjectId(result.quest.subject_id ?? "");
       setLanguageCode(result.quest.language_code ?? "");
       setCategory(result.quest.category ?? "");
@@ -271,6 +281,57 @@ export default function QuestSettingsForm({
             className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
           />
         </div>
+
+        <section className="space-y-5 rounded-xl border border-slate-700 bg-slate-900/30 p-5">
+          <div>
+            <h2 className="text-base font-semibold text-slate-200">
+              История квеста
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Необязательно. До 4000 символов в каждом поле.
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="quest-mission-intro"
+              className="mb-2 block text-sm font-semibold text-slate-300"
+            >
+              Вступление миссии
+            </label>
+            <textarea
+              id="quest-mission-intro"
+              rows={5}
+              maxLength={4000}
+              value={missionIntro}
+              onChange={(event) => setMissionIntro(event.target.value)}
+              className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+            />
+            <p className="mt-2 text-sm text-slate-400">
+              Коротко объясните ученику его роль, цель и начало приключения.
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="quest-mission-outro"
+              className="mb-2 block text-sm font-semibold text-slate-300"
+            >
+              Финал миссии
+            </label>
+            <textarea
+              id="quest-mission-outro"
+              rows={5}
+              maxLength={4000}
+              value={missionOutro}
+              onChange={(event) => setMissionOutro(event.target.value)}
+              className="w-full rounded-xl border border-slate-700 bg-[#1B2435] p-4 text-white outline-none transition focus:border-violet-500"
+            />
+            <p className="mt-2 text-sm text-slate-400">
+              Завершите историю после прохождения квеста.
+            </p>
+          </div>
+        </section>
 
         <div>
           <label

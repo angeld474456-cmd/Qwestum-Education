@@ -77,7 +77,7 @@ export async function getOwnedQuests(): Promise<TeacherQuest[]> {
   const { data, error } = await supabase
     .from("quests")
     .select(
-      "id, title, description, subject_id, language_code, cover_image_path, category, tags, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
+      "id, title, description, mission_intro, mission_outro, subject_id, language_code, cover_image_path, category, tags, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
     )
     .eq("author_id", user.id)
     .order("created_at", { ascending: false });
@@ -99,7 +99,7 @@ export async function getOwnedQuest(id: string): Promise<TeacherQuest | null> {
   const { data, error } = await supabase
     .from("quests")
     .select(
-      "id, title, description, subject_id, language_code, cover_image_path, category, tags, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
+      "id, title, description, mission_intro, mission_outro, subject_id, language_code, cover_image_path, category, tags, difficulty, is_public, grade_min, grade_max, estimated_duration_minutes, created_at, author_id"
     )
     .eq("id", id)
     .eq("author_id", user.id)

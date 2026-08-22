@@ -367,7 +367,9 @@ export default function QuestTasksClient({
     title: string,
     description: string,
     points: number,
-    content?: TaskContent | null
+    content?: TaskContent | null,
+    narrativeIntro?: string | null,
+    narrativeSuccess?: string | null
   ) {
     if (busy) return;
 
@@ -388,6 +390,12 @@ export default function QuestTasksClient({
             description,
             points,
             ...(content !== undefined ? { content } : {}),
+            ...(narrativeIntro !== undefined
+              ? { narrative_intro: narrativeIntro }
+              : {}),
+            ...(narrativeSuccess !== undefined
+              ? { narrative_success: narrativeSuccess }
+              : {}),
           }),
         }
       );

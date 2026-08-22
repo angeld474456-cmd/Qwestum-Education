@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { deleteOwnedQuest } from "@/services/teacher-quest-deletion.server";
 import { getTeacherAuthoringAccess } from "@/services/teacher-authoring-access.server";
 import { isQuestLanguageCode } from "@/services/quest-language";
-import { updateOwnedQuestMetadata } from "@/services/teacher-quest-metadata-update.server";
+import { updateOwnedQuestMetadataV2 } from "@/services/teacher-quest-metadata-update.server";
 
 const allowedDifficulties = new Set([1, 2, 3]);
 const uuidPattern =
@@ -20,6 +20,8 @@ type QuestPayload = {
   grade_min?: unknown;
   grade_max?: unknown;
   estimated_duration_minutes?: unknown;
+  mission_intro?: unknown;
+  mission_outro?: unknown;
 };
 
 type RouteContext = {
@@ -361,6 +363,34 @@ function parseTagsField(body: QuestPayload): TagsFieldResult {
   };
 }
 
+function parseNarrativeField(
+  body: QuestPayload,
+  fieldName: "mission_intro" | "mission_outro"
+): OptionalStringFieldResult {
+  if (!(fieldName in body)) {
+    return { provided: false };
+  }
+
+  const value = body[fieldName];
+
+  if (value === null) {
+    return { provided: true, value };
+  }
+
+  if (
+    typeof value === "string" &&
+    Array.from(value).length <= 4000 &&
+    !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(value)
+  ) {
+    return { provided: true, value };
+  }
+
+  return {
+    provided: true,
+    error: "Narrative text is invalid.",
+  };
+}
+
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { id } = await params;
 
@@ -425,6 +455,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const languageCode = parseLanguageCodeField(body);
   const category = parseCategoryField(body);
   const tags = parseTagsField(body);
+  const missionIntro = parseNarrativeField(body, "mission_intro");
+  const missionOutro = parseNarrativeField(body, "mission_outro");
 
   if (gradeMin.error) {
     return NextResponse.json({ error: gradeMin.error }, { status: 400 });
@@ -473,7 +505,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: tags.error }, { status: 400 });
   }
 
-  const result = await updateOwnedQuestMetadata({
+  if (missionIntro.error) {
+    return NextResponse.json({ error: missionIntro.error }, { status: 400 });
+  }
+
+  if (missionOutro.error) {
+    return NextResponse.json({ error: missionOutro.error }, { status: 400 });
+  }
+
+  const result = await updateOwnedQuestMetadataV2({
     questId: id,
     ...parsed.data,
     subjectId: {
@@ -505,6 +545,14 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       value: estimatedDuration.provided
         ? estimatedDuration.value ?? null
         : null,
+    },
+    missionIntro: {
+      provided: missionIntro.provided,
+      value: missionIntro.provided ? missionIntro.value ?? null : null,
+    },
+    missionOutro: {
+      provided: missionOutro.provided,
+      value: missionOutro.provided ? missionOutro.value ?? null : null,
     },
   });
 
