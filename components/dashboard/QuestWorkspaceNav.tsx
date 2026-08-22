@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-type QuestWorkspaceNavActive = "settings" | "preview" | "play" | "tasks";
+type QuestWorkspaceNavActive = "settings" | "preview" | "play" | "results" | "tasks";
 
 type QuestWorkspaceNavProps = {
   questId: string;
@@ -56,6 +56,12 @@ export default function QuestWorkspaceNav({
         className={getLinkClass(active, "play")}
       >
         Тестирование
+      </Link>
+      <Link
+        href={`/dashboard/quests/${questId}/results`}
+        className={getLinkClass(active, "results")}
+      >
+        {"\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b"}
       </Link>
     </nav>
   );

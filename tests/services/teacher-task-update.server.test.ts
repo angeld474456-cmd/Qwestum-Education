@@ -11,7 +11,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 
-import { updateOwnedQuestTask } from "@/services/teacher-task-update.server";
+import {
+  updateOwnedQuestTask,
+  updateOwnedQuestTaskV2,
+} from "@/services/teacher-task-update.server";
 
 const input = {
   questId,
@@ -37,6 +40,15 @@ function updatedTask(overrides: Record<string, unknown> = {}) {
     points: input.points,
     task_type: "text",
     sort_order: 1,
+    ...overrides,
+  };
+}
+
+function updatedTaskV2(overrides: Record<string, unknown> = {}) {
+  return {
+    ...updatedTask(),
+    narrative_intro: null,
+    narrative_success: "Task complete.",
     ...overrides,
   };
 }
@@ -110,5 +122,55 @@ describe("updateOwnedQuestTask", () => {
 
     configure([updatedTask(), updatedTask()]);
     await expect(updateOwnedQuestTask(input)).resolves.toEqual({ status: "error" });
+  });
+});
+
+describe("updateOwnedQuestTaskV2", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("uses the versioned owner-safe RPC and maps nullable narrative fields", async () => {
+    configure([updatedTaskV2()]);
+    const v2Input = {
+      ...input,
+      narrativeIntro: "  ",
+      narrativeSuccess: "Task complete.",
+    };
+
+    await expect(updateOwnedQuestTaskV2(v2Input)).resolves.toEqual({
+      status: "updated",
+      task: expect.objectContaining({
+        id: taskId,
+        narrative_intro: null,
+        narrative_success: "Task complete.",
+      }),
+    });
+    expect(mocks.rpc).toHaveBeenCalledWith("update_owned_quest_task_content_v2", {
+      p_quest_id: questId,
+      p_task_id: taskId,
+      p_title: input.title,
+      p_description: input.description,
+      p_points: input.points,
+      p_content: input.content,
+      p_narrative_intro: "  ",
+      p_narrative_success: "Task complete.",
+    });
+  });
+
+  it("fails closed for malformed or private v2 task fields", async () => {
+    const v2Input = {
+      ...input,
+      narrativeIntro: null,
+      narrativeSuccess: null,
+    };
+
+    configure([updatedTaskV2({ owner_id: "private" })]);
+    await expect(updateOwnedQuestTaskV2(v2Input)).resolves.toEqual({
+      status: "error",
+    });
+
+    configure([updatedTaskV2({ narrative_success: 1 })]);
+    await expect(updateOwnedQuestTaskV2(v2Input)).resolves.toEqual({
+      status: "error",
+    });
   });
 });

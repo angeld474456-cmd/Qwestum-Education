@@ -1,5 +1,6 @@
 import LoginForm from "@/components/auth/LoginForm";
-import { createClient } from "@/lib/supabase/server";
+import { getLoginRedirect } from "@/services/actor-routing";
+import { getCurrentActor } from "@/services/current-actor.server";
 import { redirect } from "next/navigation";
 
 type LoginPageProps = {
@@ -53,14 +54,9 @@ function getLoginFeedback(searchParams: Awaited<NonNullable<LoginPageProps["sear
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const redirectPath = getLoginRedirect(await getCurrentActor());
 
-  if (user) {
-    redirect("/dashboard");
-  }
+  if (redirectPath) redirect(redirectPath);
 
   const feedback = getLoginFeedback((await searchParams) ?? {});
 

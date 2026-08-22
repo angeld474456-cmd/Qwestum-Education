@@ -13,6 +13,7 @@ import {
   clearOwnedQuestCoverImage,
   setOwnedQuestCoverImage,
 } from "@/services/teacher-quest-cover-mutation.server";
+import { getTeacherAuthoringAccess } from "@/services/teacher-authoring-access.server";
 
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -27,6 +28,10 @@ type OwnedQuestCover = {
   id: string;
   cover_image_path: string | null;
 };
+
+async function requireMediaAuthoringAccess() {
+  return getTeacherAuthoringAccess();
+}
 
 async function removeCoverObject(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -63,19 +68,25 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Quest not found." }, { status: 404 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const access = await requireMediaAuthoringAccess();
 
-  if (!user) {
+  if (access.status === "unauthenticated") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  if (access.status !== "allowed") {
+    return NextResponse.json(
+      { error: "Authoring access unavailable." },
+      { status: 403 }
+    );
+  }
+
+  const supabase = await createClient();
 
   const { data: quest, error: questError } = await getOwnedQuestCover(
     supabase,
     id,
-    user.id
+    access.userId
   );
 
   if (questError) {
@@ -146,7 +157,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
 
   const objectPath = createQuestCoverImageObjectPath(
-    user.id,
+    access.userId,
     id,
     extension
   );
@@ -229,7 +240,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   const previousObjectPath = getSafeQuestCoverImageObjectPath(
     result.previousCoverImagePath,
-    user.id,
+    access.userId,
     id
   );
 
@@ -257,19 +268,25 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Quest not found." }, { status: 404 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const access = await requireMediaAuthoringAccess();
 
-  if (!user) {
+  if (access.status === "unauthenticated") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  if (access.status !== "allowed") {
+    return NextResponse.json(
+      { error: "Authoring access unavailable." },
+      { status: 403 }
+    );
+  }
+
+  const supabase = await createClient();
 
   const { data: quest, error: questError } = await getOwnedQuestCover(
     supabase,
     id,
-    user.id
+    access.userId
   );
 
   if (questError) {
@@ -323,7 +340,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
   const objectPath = getSafeQuestCoverImageObjectPath(
     result.previousCoverImagePath,
-    user.id,
+    access.userId,
     id
   );
 

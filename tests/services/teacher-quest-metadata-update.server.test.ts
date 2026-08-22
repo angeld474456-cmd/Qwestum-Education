@@ -8,7 +8,10 @@ const mocks = vi.hoisted(() => ({ auth: vi.fn(), createClient: vi.fn(), rpc: vi.
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 
-import { updateOwnedQuestMetadata } from "@/services/teacher-quest-metadata-update.server";
+import {
+  updateOwnedQuestMetadata,
+  updateOwnedQuestMetadataV2,
+} from "@/services/teacher-quest-metadata-update.server";
 
 const input = {
   questId,
@@ -58,6 +61,23 @@ function emptyOutcome(outcome: "invalid" | "subject_not_found") {
     grade_min: null,
     grade_max: null,
     estimated_duration_minutes: null,
+  };
+}
+
+function updatedV2Row(overrides: Record<string, unknown> = {}) {
+  return {
+    ...updatedRow(),
+    mission_intro: "Mission briefing",
+    mission_outro: null,
+    ...overrides,
+  };
+}
+
+function emptyV2Outcome(outcome: "invalid" | "subject_not_found") {
+  return {
+    ...emptyOutcome(outcome),
+    mission_intro: null,
+    mission_outro: null,
   };
 }
 
@@ -152,5 +172,69 @@ describe("updateOwnedQuestMetadata", () => {
 
     configure([{ ...emptyOutcome("invalid"), extra: true }]);
     await expect(updateOwnedQuestMetadata(input)).resolves.toEqual({ status: "error" });
+  });
+});
+
+describe("updateOwnedQuestMetadataV2", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("uses the versioned RPC and preserves narrative presence semantics", async () => {
+    configure([updatedV2Row()]);
+    const v2Input = {
+      ...input,
+      missionIntro: { provided: true, value: "   " },
+      missionOutro: { provided: false, value: null },
+    };
+
+    await expect(updateOwnedQuestMetadataV2(v2Input)).resolves.toEqual({
+      status: "ok",
+      quest: expect.objectContaining({
+        id: questId,
+        mission_intro: "Mission briefing",
+        mission_outro: null,
+      }),
+    });
+    expect(mocks.rpc).toHaveBeenCalledWith("update_owned_quest_metadata_v2", {
+      p_quest_id: questId,
+      p_title: input.title,
+      p_description: input.description,
+      p_difficulty: input.difficulty,
+      p_subject_id: null,
+      p_has_subject_id: true,
+      p_language_code: "ru",
+      p_has_language_code: true,
+      p_category: "Science",
+      p_has_category: true,
+      p_tags: ["Space", "Physics"],
+      p_has_tags: true,
+      p_grade_min: 5,
+      p_has_grade_min: true,
+      p_grade_max: 7,
+      p_has_grade_max: true,
+      p_estimated_duration_minutes: 45,
+      p_has_estimated_duration_minutes: true,
+      p_mission_intro: "   ",
+      p_has_mission_intro: true,
+      p_mission_outro: null,
+      p_has_mission_outro: false,
+    });
+  });
+
+  it("retains legacy error mapping and rejects malformed v2 rows", async () => {
+    const v2Input = {
+      ...input,
+      missionIntro: { provided: true, value: null },
+      missionOutro: { provided: true, value: null },
+    };
+
+    configure([emptyV2Outcome("invalid")]);
+    await expect(updateOwnedQuestMetadataV2(v2Input)).resolves.toEqual({
+      status: "invalid",
+    });
+
+    configure([updatedV2Row({ private_owner_id: ownerId })]);
+    await expect(updateOwnedQuestMetadataV2(v2Input)).resolves.toEqual({
+      status: "error",
+    });
   });
 });

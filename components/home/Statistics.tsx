@@ -2,50 +2,23 @@ import Card from "@/components/ui/Card";
 import Container from "@/components/ui/Container";
 
 const items = [
-  {
-    value: "321+",
-    title: "Готовых квестов",
-  },
-  {
-    value: "50+",
-    title: "Предметов",
-  },
-  {
-    value: "AI",
-    title: "Создание уроков",
-  },
-  {
-    value: "5–11",
-    title: "Классы",
-  },
+  { title: "Для преподавателей", text: "Создавайте задания, проверяйте квест в Preview и публикуйте ссылку для учеников." },
+  { title: "Для учеников", text: "Проходите интерактивные задания, получайте результат и возвращайтесь к истории прохождений." },
 ];
 
 export default function Statistics() {
   return (
-    <section className="pb-32">
-
+    <section className="pb-16 sm:pb-24">
       <Container>
-
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
-
+        <div className="grid gap-5 md:grid-cols-2">
           {items.map((item) => (
             <Card key={item.title}>
-
-              <div className="text-5xl font-black text-violet-400">
-                {item.value}
-              </div>
-
-              <div className="mt-5 text-2xl font-semibold">
-                {item.title}
-              </div>
-
+              <h2 className="text-2xl font-bold text-violet-200">{item.title}</h2>
+              <p className="mt-3 leading-7 text-slate-300">{item.text}</p>
             </Card>
           ))}
-
         </div>
-
       </Container>
-
     </section>
   );
 }

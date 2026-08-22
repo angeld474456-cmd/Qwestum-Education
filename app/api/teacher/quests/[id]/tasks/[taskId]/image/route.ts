@@ -9,6 +9,7 @@ import {
   clearOwnedQuestTaskImage,
   setOwnedQuestTaskImage,
 } from "@/services/teacher-task-image-mutation.server";
+import { getTeacherAuthoringAccess } from "@/services/teacher-authoring-access.server";
 
 const maxFileSize = 5 * 1024 * 1024;
 const uuidPattern =
@@ -30,6 +31,10 @@ type RouteContext = {
 type OwnedTask = {
   id: string;
 };
+
+async function requireMediaAuthoringAccess() {
+  return getTeacherAuthoringAccess();
+}
 
 async function removeObjectPath(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -74,20 +79,26 @@ export async function POST(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const access = await requireMediaAuthoringAccess();
 
-  if (!user) {
+  if (access.status === "unauthenticated") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  if (access.status !== "allowed") {
+    return NextResponse.json(
+      { error: "Authoring access unavailable." },
+      { status: 403 }
+    );
+  }
+
+  const supabase = await createClient();
 
   const { data: ownedQuest, error: ownedQuestError } = await supabase
     .from("quests")
     .select("id")
     .eq("id", id)
-    .eq("author_id", user.id)
+    .eq("author_id", access.userId)
     .maybeSingle();
 
   if (ownedQuestError) {
@@ -166,7 +177,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   if (
     expectedImageUrl &&
-    !getSafeQuestImageObjectPath(expectedImageUrl, user.id, id, taskId)
+    !getSafeQuestImageObjectPath(expectedImageUrl, access.userId, id, taskId)
   ) {
     return NextResponse.json(
       { error: "Invalid upload payload." },
@@ -204,7 +215,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     );
   }
 
-  const objectPath = `teachers/${user.id}/quests/${id}/tasks/${taskId}/${crypto.randomUUID()}.${extension}`;
+  const objectPath = `teachers/${access.userId}/quests/${id}/tasks/${taskId}/${crypto.randomUUID()}.${extension}`;
 
   const { error: uploadError } = await supabase.storage
     .from(questImageBucketName)
@@ -237,7 +248,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       ? await removeCanonicalImage(
           supabase,
           result.previousImageUrl,
-          user.id,
+          access.userId,
           id,
           taskId
         )
@@ -279,14 +290,20 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Task not found." }, { status: 404 });
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const access = await requireMediaAuthoringAccess();
 
-  if (!user) {
+  if (access.status === "unauthenticated") {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+
+  if (access.status !== "allowed") {
+    return NextResponse.json(
+      { error: "Authoring access unavailable." },
+      { status: 403 }
+    );
+  }
+
+  const supabase = await createClient();
 
   let body: unknown;
 
@@ -314,7 +331,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
 
   const expectedImageUrl = (body as { expectedImageUrl: string }).expectedImageUrl;
 
-  if (!getSafeQuestImageObjectPath(expectedImageUrl, user.id, id, taskId)) {
+  if (!getSafeQuestImageObjectPath(expectedImageUrl, access.userId, id, taskId)) {
     return NextResponse.json(
       { error: "Invalid image request." },
       { status: 400 }
@@ -325,7 +342,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     .from("quests")
     .select("id")
     .eq("id", id)
-    .eq("author_id", user.id)
+    .eq("author_id", access.userId)
     .maybeSingle();
 
   if (ownedQuestError) {
@@ -398,7 +415,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     ? await removeCanonicalImage(
         supabase,
         result.previousImageUrl,
-        user.id,
+        access.userId,
         id,
         taskId
       )

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import PublicQuestRunner from "@/components/public-runtime/PublicQuestRunner";
-import { getPublicRuntimeQuest } from "@/services/public-runtime.server";
+import { getPublicRuntimeQuestV2 } from "@/services/public-runtime.server";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +50,7 @@ export default async function PublicQuestStartPage({ params }: PageProps) {
 
   if (!isUuid(id)) return <UnavailableQuest id={id} />;
 
-  const quest = await getPublicRuntimeQuest(id);
+  const quest = await getPublicRuntimeQuestV2(id);
 
   if (!quest) return <UnavailableQuest id={id} />;
 

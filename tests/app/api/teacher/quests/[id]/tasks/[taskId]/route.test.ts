@@ -5,7 +5,8 @@ const taskId = "22222222-2222-4222-8222-222222222222";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   deleteOwnedQuestTask: vi.fn(),
-  updateOwnedQuestTask: vi.fn(),
+  getTeacherAuthoringAccess: vi.fn(),
+  updateOwnedQuestTaskV2: vi.fn(),
   getSafeQuestImageObjectPath: vi.fn(),
   remove: vi.fn(),
   storageFrom: vi.fn(),
@@ -15,8 +16,11 @@ vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
 vi.mock("@/services/teacher-task-deletion.server", () => ({
   deleteOwnedQuestTask: mocks.deleteOwnedQuestTask,
 }));
+vi.mock("@/services/teacher-authoring-access.server", () => ({
+  getTeacherAuthoringAccess: mocks.getTeacherAuthoringAccess,
+}));
 vi.mock("@/services/teacher-task-update.server", () => ({
-  updateOwnedQuestTask: mocks.updateOwnedQuestTask,
+  updateOwnedQuestTaskV2: mocks.updateOwnedQuestTaskV2,
 }));
 vi.mock("@/lib/storage/quest-image.server", () => ({
   getSafeQuestImageObjectPath: mocks.getSafeQuestImageObjectPath,
@@ -94,12 +98,43 @@ function taskDto(overrides: Record<string, unknown> = {}) {
     points: 1,
     task_type: "text",
     sort_order: 1,
+    narrative_intro: null,
+    narrative_success: null,
     ...overrides,
   };
 }
 
 describe("teacher task mutation route DELETE", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({
+      status: "allowed",
+      userId: "owner",
+    });
+  });
+
+  it("denies inactive authoring access before task deletion and Storage cleanup", async () => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "entitlement_inactive" });
+
+    const response = await DELETE(deleteRequest(), context);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "Authoring access unavailable." });
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
+  });
+
+  it("preserves the unauthenticated response before task deletion", async () => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "unauthenticated" });
+
+    const response = await DELETE(deleteRequest(), context);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized." });
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.createClient).not.toHaveBeenCalled();
+  });
 
   it("maps unauthenticated, missing, public-final-task, and error outcomes safely", async () => {
     const cases = [
@@ -255,32 +290,85 @@ describe("teacher task mutation route PATCH", () => {
       { title: "x".repeat(501) },
       { description: "x".repeat(10001) },
       { points: 0 },
+      { narrative_intro: "x".repeat(4001) },
       { title: "Task", image_url: "https://example.test/image.png" },
     ]) {
       const response = await PATCH(patchRequest(body), context);
       expect(response.status).toBe(400);
     }
 
-    expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.updateOwnedQuestTaskV2).not.toHaveBeenCalled();
   });
 
   it("uses the metadata RPC and preserves the success DTO", async () => {
     const current = taskDto();
     configurePatch(current);
-    mocks.updateOwnedQuestTask.mockResolvedValue({ status: "updated", task: taskDto({ title: "Updated" }) });
+    mocks.updateOwnedQuestTaskV2.mockResolvedValue({ status: "updated", task: taskDto({ title: "Updated" }) });
 
     const response = await PATCH(patchRequest({ title: "Updated" }), context);
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ task: taskDto({ title: "Updated" }) });
-    expect(mocks.updateOwnedQuestTask).toHaveBeenCalledWith({
+    expect(mocks.updateOwnedQuestTaskV2).toHaveBeenCalledWith({
       questId,
       taskId,
       title: "Updated",
       description: "Description",
       points: 1,
       content: null,
+      narrativeIntro: null,
+      narrativeSuccess: null,
     });
+  });
+
+  it("updates supplied task narrative and preserves narrative omitted by older clients", async () => {
+    configurePatch(
+      taskDto({
+        narrative_intro: "Existing introduction",
+        narrative_success: "Existing transition",
+      })
+    );
+    mocks.updateOwnedQuestTaskV2.mockResolvedValue({
+      status: "updated",
+      task: taskDto({ narrative_intro: null, narrative_success: "Next stage" }),
+    });
+
+    const response = await PATCH(
+      patchRequest({ narrative_intro: "", narrative_success: "Next stage" }),
+      context
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.updateOwnedQuestTaskV2).toHaveBeenCalledWith(
+      expect.objectContaining({
+        narrativeIntro: "",
+        narrativeSuccess: "Next stage",
+      })
+    );
+
+    configurePatch(
+      taskDto({
+        narrative_intro: "Existing introduction",
+        narrative_success: "Existing transition",
+      })
+    );
+    mocks.updateOwnedQuestTaskV2.mockResolvedValue({
+      status: "updated",
+      task: taskDto({
+        title: "Updated",
+        narrative_intro: "Existing introduction",
+        narrative_success: "Existing transition",
+      }),
+    });
+
+    await PATCH(patchRequest({ title: "Updated" }), context);
+
+    expect(mocks.updateOwnedQuestTaskV2).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        narrativeIntro: "Existing introduction",
+        narrativeSuccess: "Existing transition",
+      })
+    );
   });
 
   it("validates malformed Single Choice and Multiple Choice content before calling the RPC", async () => {
@@ -289,34 +377,34 @@ describe("teacher task mutation route PATCH", () => {
     let response = await PATCH(patchRequest({ content: { options: [], correctOptionId: "a" } }), context);
 
     expect(response.status).toBe(400);
-    expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.updateOwnedQuestTaskV2).not.toHaveBeenCalled();
 
     configurePatch(taskDto({ task_type: "multiple_choice", content: { options: [], correctOptionIds: [] } }));
 
     response = await PATCH(patchRequest({ content: { options: [], correctOptionIds: [] } }), context);
 
     expect(response.status).toBe(400);
-    expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.updateOwnedQuestTaskV2).not.toHaveBeenCalled();
   });
 
   it("keeps null choice drafts editable", async () => {
     configurePatch(taskDto({ task_type: "single_choice", content: null }));
-    mocks.updateOwnedQuestTask.mockResolvedValue({ status: "updated", task: taskDto({ task_type: "single_choice", content: null }) });
+    mocks.updateOwnedQuestTaskV2.mockResolvedValue({ status: "updated", task: taskDto({ task_type: "single_choice", content: null }) });
 
     const response = await PATCH(patchRequest({ title: "Updated" }), context);
 
     expect(response.status).toBe(200);
-    expect(mocks.updateOwnedQuestTask).toHaveBeenCalledWith(expect.objectContaining({ content: null }));
+    expect(mocks.updateOwnedQuestTaskV2).toHaveBeenCalledWith(expect.objectContaining({ content: null }));
   });
 
   it("maps metadata service outcomes without direct update", async () => {
     configurePatch(taskDto());
-    mocks.updateOwnedQuestTask.mockResolvedValueOnce({ status: "not_found" });
+    mocks.updateOwnedQuestTaskV2.mockResolvedValueOnce({ status: "not_found" });
     let response = await PATCH(patchRequest({ title: "Updated" }), context);
     expect(response.status).toBe(404);
 
     configurePatch(taskDto());
-    mocks.updateOwnedQuestTask.mockResolvedValueOnce({ status: "error" });
+    mocks.updateOwnedQuestTaskV2.mockResolvedValueOnce({ status: "error" });
     response = await PATCH(patchRequest({ title: "Updated" }), context);
     expect(response.status).toBe(500);
   });
@@ -328,7 +416,7 @@ describe("teacher task mutation route PATCH", () => {
     );
 
     expect(response.status).toBe(400);
-    expect(mocks.updateOwnedQuestTask).not.toHaveBeenCalled();
+    expect(mocks.updateOwnedQuestTaskV2).not.toHaveBeenCalled();
     expect(mocks.createClient).not.toHaveBeenCalled();
   });
 });

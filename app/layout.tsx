@@ -11,8 +11,9 @@ const geist = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Questum Education",
-  description: "Платформа образовательных квестов",
+  title: "Qwestum-Education - интерактивные учебные квесты",
+  description:
+    "Интерактивные учебные квесты для преподавателей и учеников: создавайте, проходите и делитесь заданиями.",
 };
 
 export default function RootLayout({

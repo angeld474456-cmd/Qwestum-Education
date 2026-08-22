@@ -819,6 +819,15 @@ The URL-driven `q` parameter is absent for missing, blank, or malformed values; 
 
 No migration, SQL, RLS, Storage, Supabase, Vercel, Upstash/Redis, provider, deployment, or public teacher-search route was added. Model A remains unchanged, Student Identity remains deferred pending the approved read-only live inventory, and the P0 pre-production launch gates above remain preserved.
 
+## Narrative MVP Browser QA
+
+- Migration 049 is live. Narrative authoring and public-runtime commits `1b1a0c25c03e33c9fa1bc846c9cbc68e0610947c` and `4f72c692a2d6f7dd68441a1d1b5014ab9bd8d4de` are pushed on `feature/next-work`.
+- Browser QA passed for `Тайна Великого шёлкового пути`: a dedicated `Твоя миссия` opening precedes task 1; task 1 displays a readable `Сцена` block; its neutral `Путь` transition displays `Этап 1 из 10` and advances with `Продолжить путь`; task 2 with null narrative fields shows no empty scene block and displays `Путь • Этап 2 из 10` at `20%`.
+- The final result rendered `Миссия завершена`, the mission outro, `50 / 125`, `5` correct, `5` incorrect, `0` unanswered, `0` not scored, and the existing per-task result list. Refresh after completion returns the public flow to the mission opening.
+- One initial final submit showed the existing retry message and immediately succeeded on `Повторить`. Record this as an intermittent public-submit retry observation only; no Narrative Layer root cause is established.
+- No second fully runtime-eligible public quest without narrative was available for standalone browser verification. Task 2's null narrative behavior and automated regressions are the current compatibility evidence; do not claim a full old-quest browser verification.
+- Next: investigate or verify the intermittent public submit retry behavior, then complete final Narrative MVP polish and Preview regression. Do not expand the feature set.
+
 ## Important Notes For Future Codex Chats
 
 - This is a long-running project. Preserve existing architecture unless the user explicitly asks for a redesign.

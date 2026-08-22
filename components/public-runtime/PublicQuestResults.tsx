@@ -5,14 +5,17 @@ import { useEffect, useRef } from "react";
 
 import type {
   PublicRuntimeQuest,
+  PublicRuntimeQuestV2,
   PublicRuntimeResult,
   PublicRuntimeTaskStatus,
 } from "@/types/public-runtime";
 
 type PublicQuestResultsProps = {
-  quest: PublicRuntimeQuest;
+  quest: PublicRuntimeQuest | PublicRuntimeQuestV2;
   result: PublicRuntimeResult;
   onRetry: () => void;
+  retryHref?: string;
+  catalogHref?: string;
 };
 
 const statusLabels: Record<PublicRuntimeTaskStatus, string> = {
@@ -26,12 +29,20 @@ export default function PublicQuestResults({
   quest,
   result,
   onRetry,
+  retryHref,
+  catalogHref = "/catalog",
 }: PublicQuestResultsProps) {
   const resultsRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const resultsByTaskId = new Map(
     result.taskResults.map((taskResult) => [taskResult.taskId, taskResult])
   );
+  const missionOutro =
+    "missionOutro" in quest &&
+    typeof quest.missionOutro === "string" &&
+    /\S/.test(quest.missionOutro)
+      ? quest.missionOutro
+      : null;
 
   useEffect(() => {
     resultsRef.current?.scrollIntoView({
@@ -56,8 +67,13 @@ export default function PublicQuestResults({
           tabIndex={-1}
           className="text-3xl font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
         >
-          {"\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442"}
+          {missionOutro ? "Миссия завершена" : "Результат"}
         </h1>
+        {missionOutro ? (
+          <p className="mt-4 whitespace-pre-wrap leading-7 text-slate-200">
+            {missionOutro}
+          </p>
+        ) : null}
         {result.possiblePoints > 0 ? (
           <p className="mt-4 text-lg text-slate-200">
             {"\u0411\u0430\u043b\u043b\u044b"}: {result.earnedPoints} / {result.possiblePoints}
@@ -91,13 +107,21 @@ export default function PublicQuestResults({
       </ol>
 
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={onRetry} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
-          {"\u041f\u0440\u043e\u0439\u0442\u0438 \u0435\u0449\u0451 \u0440\u0430\u0437"}
-        </button>
-        <Link href={`/catalog/${quest.id}`} className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
-          {"\u0412\u0435\u0440\u043d\u0443\u0442\u044c\u0441\u044f \u043a \u043a\u0432\u0435\u0441\u0442\u0443"}
-        </Link>
-        <Link href="/catalog" className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+        {retryHref ? (
+          <a href={retryHref} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
+            {"\u041f\u0440\u043e\u0439\u0442\u0438 \u0435\u0449\u0451 \u0440\u0430\u0437"}
+          </a>
+        ) : (
+          <button type="button" onClick={onRetry} className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
+            {"\u041f\u0440\u043e\u0439\u0442\u0438 \u0435\u0449\u0451 \u0440\u0430\u0437"}
+          </button>
+        )}
+        {!retryHref ? (
+          <Link href={`/catalog/${quest.id}`} className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
+            {"\u0412\u0435\u0440\u043d\u0443\u0442\u044c\u0441\u044f \u043a \u043a\u0432\u0435\u0441\u0442\u0443"}
+          </Link>
+        ) : null}
+        <Link href={catalogHref} className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white">
           {"\u0412 \u043a\u0430\u0442\u0430\u043b\u043e\u0433"}
         </Link>
       </div>

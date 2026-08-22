@@ -2,18 +2,23 @@
 
 ## Milestone
 
-P1 Production Public Quest Release Gate Planning
+Narrative MVP Follow-up
 
 ## Next Task
 
-Perform a read-only Production public-content release-gate review before exposing a polished quest beyond controlled Preview QA. Establish the actual public catalog state, the intended quest publication state, Production catalog/detail/runtime/submit smoke evidence, operational rollback treatment for a content change, and the minimum approval record. Do not publish, unpublish, or otherwise mutate content in this planning pass.
+Investigate or verify the intermittent public submit retry behavior observed during Narrative MVP browser QA. Then perform final Narrative MVP polish and Preview regression. Do not add new feature scope in this follow-up.
 
 ## Objective
 
-Preserve the anonymous-public plus authenticated-teacher Model A boundary while ensuring the first real public content is intentionally released and verified in Production, rather than relying on Preview-only evidence or an assumed catalog state.
+Preserve the current anonymous-public runtime, authoritative scoring boundary, persisted learner-attempt behavior, and owner-safe teacher authoring boundaries while closing the remaining QA observation and confirming the completed narrative flow.
 
 ## Constraints
 
+- Narrative MVP browser QA passed for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`) after live Migration 049. Mission opening, scene intro, neutral transition, null-narrative task compatibility, progress, finale, and refresh-to-mission behavior passed.
+- The initial final submit showed `Не удалось проверить ответы. Попробуйте ещё раз`; an immediate `Повторить` succeeded and produced the expected result. This is an observation only: do not claim a Narrative Layer defect or root cause without evidence.
+- No second fully runtime-eligible public quest without narrative was available for a standalone browser verification. Task 2 null-narrative behavior and automated regression coverage are the present compatibility evidence; do not overstate it as full old-quest QA.
+- Keep the public submit/scoring contract, M044 attempt snapshots/history, publication-readiness rules, and direct-table/RLS boundaries unchanged unless a separately approved investigation produces concrete evidence.
+- No migration, feature expansion, publication mutation, deployment, provider change, or Production/main action is approved by this task.
 - P1 First Polished Public Quest Authoring and Publication QA is complete for Preview quest `638b728a-baac-460c-b671-43a4bde104a0`: the 10-task mixed Single Choice/Multiple Choice path, cover/task images, teacher authoring/Preview/Play, publication, anonymous runtime, scoring, results, and retry navigation passed. It is controlled Preview QA only, not all-content or Production certification.
 - The one historical Preview submit `503` did not establish a conclusive root cause. Temporary diagnostics have been removed; retain the current fail-closed limiter with x-forwarded-for-only identity trust, no alternate-header fallback, 250 ms timeout, existing buckets, and existing `429`/`503` Retry-After contracts.
 - Teacher task creation, reorder, deletion, metadata/content updates, and image SET/CLEAR now use owner-safe RPC boundaries; direct `quest_tasks` INSERT, UPDATE, and DELETE policies are absent while SELECT remains retained. M036 makes duplicate normalized choice-option text fail public eligibility; M037 allows intentional `content: null` choice drafts while readiness remains fail-closed until complete valid content exists. M038 delivers only canonical optional task images through the public runtime; malformed or legacy image references project `null`.

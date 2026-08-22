@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   clearOwnedQuestTaskImage: vi.fn(),
   createClient: vi.fn(),
   getSafeQuestImageObjectPath: vi.fn(),
+  getTeacherAuthoringAccess: vi.fn(),
   remove: vi.fn(),
   setOwnedQuestTaskImage: vi.fn(),
   storageFrom: vi.fn(),
@@ -24,6 +25,9 @@ vi.mock("@/lib/storage/quest-image.server", () => ({
 vi.mock("@/services/teacher-task-image-mutation.server", () => ({
   clearOwnedQuestTaskImage: mocks.clearOwnedQuestTaskImage,
   setOwnedQuestTaskImage: mocks.setOwnedQuestTaskImage,
+}));
+vi.mock("@/services/teacher-authoring-access.server", () => ({
+  getTeacherAuthoringAccess: mocks.getTeacherAuthoringAccess,
 }));
 
 import {
@@ -45,6 +49,7 @@ function query(result: { data: unknown; error: unknown }) {
 }
 
 function configure(task: { id: string; image_url: string | null } | null) {
+  mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "allowed", userId });
   const ownedQuest = query({ data: { id: questId }, error: null });
   const ownedTask = query({ data: task, error: null });
   mocks.upload.mockResolvedValue({ error: null });
@@ -102,6 +107,34 @@ describe("teacher task image route", () => {
     );
     expect(mocks.setOwnedQuestTaskImage.mock.calls[0][0]).not.toHaveProperty("imageUrl");
     expect(mocks.remove).toHaveBeenCalledWith(["old.png"]);
+  });
+
+  it.each(["POST", "DELETE"] as const)("denies inactive authoring access before %s ownership, Storage, or reference mutation", async (method) => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "entitlement_inactive" });
+
+    const response = method === "POST"
+      ? await POST(uploadRequest(), context)
+      : await DELETE(deleteRequest(previousImageUrl), context);
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "Authoring access unavailable." });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.upload).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.setOwnedQuestTaskImage).not.toHaveBeenCalled();
+    expect(mocks.clearOwnedQuestTaskImage).not.toHaveBeenCalled();
+  });
+
+  it.each(["POST", "DELETE"] as const)("preserves the unauthenticated %s response", async (method) => {
+    mocks.getTeacherAuthoringAccess.mockResolvedValue({ status: "unauthenticated" });
+
+    const response = method === "POST"
+      ? await POST(uploadRequest(), context)
+      : await DELETE(deleteRequest(previousImageUrl), context);
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unauthorized." });
+    expect(mocks.createClient).not.toHaveBeenCalled();
   });
 
   it("cleans only the new upload and returns 409 when SET is stale", async () => {

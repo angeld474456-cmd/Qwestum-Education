@@ -18,6 +18,15 @@
 
 ## Current Milestone
 
+### Narrative MVP
+
+- Completed browser QA on `feature/next-work` for `Тайна Великого шёлкового пути` after live Migration 049 and the separate teacher-authoring/public-runtime commits. The mission opening, scene intro, neutral transition, null-narrative task behavior, progress, finale, and refresh-to-mission behavior passed.
+- Task 1 showed `Твоя миссия`, then a distinct `Сцена`, then a neutral `Путь` transition with `Этап 1 из 10` and `Продолжить путь`. Task 2 had null narrative fields, showed no empty scene block, and displayed `Путь • Этап 2 из 10` with `20%` progress.
+- The finale preserved real scoring and the per-task results list while displaying `Миссия завершена` and the mission outro: `50 / 125`, `5` correct, `5` incorrect, `0` unanswered, and `0` not scored.
+- One initial final submit showed the normal retry message; an immediate retry succeeded. This is a follow-up observation, not a confirmed Narrative Layer defect or root cause.
+- A standalone legacy-quest browser run remains unverified because no second fully runtime-eligible public quest without narrative was available. Existing automated regressions and task 2 null-narrative behavior remain the evidence for compatibility.
+- Next: investigate or verify intermittent public submit retry behavior, then perform final Narrative MVP polish and Preview regression. No new feature expansion is planned.
+
 Sprint 12: Teacher Experience
 
 Completed:
