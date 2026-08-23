@@ -8,6 +8,13 @@ The product lets teachers create learning quests made of modular tasks, preview 
 
 - `feature/next-work`
 
+## Current Release
+
+- Production release PASS: PR #4 merged to `main` as `38e247a2915eeefa78292aad98f91e676f3fb4e9`, and Vercel completed the corresponding Production deployment. Canonical-domain smoke verification passed for public Narrative MVP flow, teacher authoring/results, role-aware access, and learner attempt history.
+- The live database contains the required M043-M048 objects despite historical M045-M048 migration-ledger drift; those migrations must not be blindly rerun. M049 is live and ledgered. The existing teacher entitlement is active, and no migration ran during the Production rollout.
+- The known rollback deployment remains `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` from `3e500e2642c19252b8c4d79bd40964c4a6f21e81`; deployment rollback changes code only and does not revert Supabase schema or data.
+- Next phase: post-launch beta. Consider post-login teacher redirect polish, prepare five excellent public quests, and gather real teacher beta feedback before choosing a further feature.
+
 ## Current State
 
 Implemented:
@@ -781,7 +788,7 @@ The planned live-schema and public-read-boundary verification completed without 
 - PR #1, `Prepare first Qwestum Production release`, merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` to `main` as merge commit `bfe773a66024d60d6824209290f5990d9c551225`. Vercel then created the first intentional Production deployment from `main`.
 - The initial Production smoke test found `/catalog` failing because the Production `NEXT_PUBLIC_SUPABASE_URL` value produced `/rest/v1/rest/v1/rpc/list_public_catalog_quests`. The environment value was corrected to the Supabase Project URL without `/rest/v1`, and Vercel redeployed the same `main` source commit. The replacement deployment became Ready and Current; no application code, migration, or schema change was required to resolve the incident.
 - Production smoke verification passed for `/`, `/catalog`, `/login`, magic-link login, `/dashboard`, `/dashboard/quests`, logout, and unauthenticated `/dashboard` redirect to `/login`. The public catalog is intentionally empty because all test/demo quests were unpublished before release. Migration 035 remains the schema freeze; no schema migration was required before Production.
-- P1 post-launch review establishes `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` (`qwestum-education-gskc2mem9-qwestum.vercel.app`) as the Ready/Current Production rollback baseline, sourced from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. Do not use the earlier `bfe773a` deployment that had the malformed Supabase URL. Urgent operations promote the known-good Vercel deployment; ordinary code regressions use a reviewed `git revert` on `main`; never force-push/reset `main`. Neither method reverts database/data state.
+- P1 post-launch review established `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` (`qwestum-education-gskc2mem9-qwestum.vercel.app`) as the rollback reference from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. It is now Ready/Stale; the current Production baseline is the later PR #4 merge `38e247a2915eeefa78292aad98f91e676f3fb4e9`. Do not use the earlier `bfe773a` deployment that had the malformed Supabase URL. Urgent operations promote the known-good Vercel deployment; ordinary code regressions use a reviewed `git revert` on `main`; never force-push/reset `main`. Neither method reverts database/data state.
 - First-launch health checks remain manual on Hobby/free: Vercel deployment status, runtime logs, and basic Observability for `/`, `/catalog`, `/login`, `/auth/callback`, `/auth/logout`, `/dashboard`, `/dashboard/quests`, and public runtime/submit. Investigate repeated 5xx, unexpected auth failures, catalog/runtime RPC errors, and submit `503`; a threshold submit `429` is expected. Public runtime/submit can be smoke-tested only when approved public content exists. Next: **Core MVP Next Milestone Planning**.
 
 ## Sprint 12.20.32 - Controlled Preview 429 Verification

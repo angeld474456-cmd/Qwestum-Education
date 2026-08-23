@@ -18,6 +18,12 @@
 
 ## Current Milestone
 
+### Post-Launch Beta
+
+- Production release PASS: PR #4 merged to `main` as `38e247a2915eeefa78292aad98f91e676f3fb4e9`; the Vercel Production deployment completed successfully and canonical-domain smoke verification passed for public Narrative MVP, teacher authoring/results, learner history, and role-aware access.
+- M043-M048 required live objects are present despite historical M045-M048 ledger drift; never rerun those migrations blindly. M049 is live and ledgered, the existing teacher entitlement is active, and no migration ran during release.
+- Next: assess the non-blocking teacher post-login redirect UX, prepare five excellent public quests, and gather real teacher beta feedback. Select the next feature only from that evidence.
+
 ### Narrative MVP
 
 - Completed browser QA on `feature/next-work` for `Тайна Великого шёлкового пути` after live Migration 049 and the separate teacher-authoring/public-runtime commits. The mission opening, scene intro, neutral transition, null-narrative task behavior, progress, finale, and refresh-to-mission behavior passed.
@@ -25,7 +31,7 @@
 - The finale preserved real scoring and the per-task results list while displaying `Миссия завершена` and the mission outro: `50 / 125`, `5` correct, `5` incorrect, `0` unanswered, and `0` not scored.
 - One initial final submit showed the normal retry message; an immediate retry succeeded. This is a follow-up observation, not a confirmed Narrative Layer defect or root cause.
 - A standalone legacy-quest browser run remains unverified because no second fully runtime-eligible public quest without narrative was available. Existing automated regressions and task 2 null-narrative behavior remain the evidence for compatibility.
-- Next: investigate or verify intermittent public submit retry behavior, then perform final Narrative MVP polish and Preview regression. No new feature expansion is planned.
+- Production smoke later passed the full Narrative MVP path, including first-attempt submit; the earlier retry observation remains monitor-only rather than a release blocker.
 
 Sprint 12: Teacher Experience
 
@@ -585,7 +591,7 @@ Historical P0 records:
 - First Production Release Verification.
   - PR #1 merged the RC to `main` as `bfe773a66024d60d6824209290f5990d9c551225`; Vercel created the first intentional Production deployment. The first smoke attempt exposed a Production `NEXT_PUBLIC_SUPABASE_URL` value containing `/rest/v1`, which formed `/rest/v1/rest/v1/rpc/list_public_catalog_quests` for `/catalog`. Correcting the value to the Supabase Project URL and redeploying the same source resolved the issue without code or schema changes.
   - The replacement Production deployment is Ready and Current. Smoke verification passed for `/`, `/catalog`, `/login`, magic-link login, `/dashboard`, `/dashboard/quests`, logout, and unauthenticated dashboard redirect. The catalog is intentionally empty at launch; no migration newer than 035 exists or was required.
-  - P1 post-launch observability and rollback baseline review is complete. The known-good Production rollback target is deployment `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` at `qwestum-education-gskc2mem9-qwestum.vercel.app`, Ready/Current in Production from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment with the malformed URL is excluded. Urgent rollback promotes this deployment; a normal code regression uses a reviewed `git revert` on `main`; rollback never rewinds database/data state or uses force-push/reset.
+  - P1 post-launch observability and rollback baseline review is complete. The known-good rollback target is deployment `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` at `qwestum-education-gskc2mem9-qwestum.vercel.app`, sourced from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. It is now Ready/Stale; the current Production baseline is the later PR #4 merge `38e247a2915eeefa78292aad98f91e676f3fb4e9`. The earlier `bfe773a` deployment with the malformed URL is excluded. Urgent rollback promotes this deployment; a normal code regression uses a reviewed `git revert` on `main`; rollback never rewinds database/data state or uses force-push/reset.
   - Hobby/free observability remains manual through Vercel deployment status, runtime logs, and basic Observability. Monitor public entry/catalog/runtime/submit and auth/dashboard/logout routes; investigate repeated 5xx, unexpected auth failures, catalog/runtime RPC errors, and submit `503`. A controlled submit `429` remains expected limiter behavior. Next: **Core MVP Next Milestone Planning**.
 
 - Sprint 12.18.30 - Task Creation Failure State Preservation.

@@ -1,5 +1,13 @@
 # Changelog
 
+## Production Release: Learner Flows, Teacher Results, and Narrative MVP
+
+- PR #4 merged to `main` as `38e247a2915eeefa78292aad98f91e676f3fb4e9` (`Merge pull request #4 from angeld474456-cmd/feature/next-work`). Vercel Production completed successfully; the observed deployment URL was `https://qwestum-education-hgl0ruo7i-qwestum.vercel.app`, and smoke verification used `https://qwestum-education.vercel.app`.
+- Production smoke passed for the homepage, catalog filters and Silk Road card/detail, mission opening, scene, neutral transition, null-narrative task fallback, first-attempt submit, mission finale, scoring, and task breakdown. No intermittent submit retry issue reproduced.
+- Teacher magic-link authentication, dashboard, quest library, Settings, task editor narrative fields, and empty Teacher Results page passed. Authenticated learner access, persisted history, and attempt-detail snapshots also passed; anonymous dashboard and learner routes redirected to login as expected.
+- M043-M048 required live objects were reconciled as present despite historical M045-M048 migration-ledger drift; do not rerun those migrations blindly. M049 is live and ledgered, the existing teacher entitlement is active, and no migration ran during rollout. The historical rollback reference remains `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` from `3e500e2642c19252b8c4d79bd40964c4a6f21e81`; Vercel rollback never reverts Supabase schema or data.
+- Non-blocking follow-up only: teacher magic-link callback initially reached the homepage with `?code=...` before a manual `/dashboard` visit; polish this post-login redirect if evidence supports it. The earlier isolated anonymous-submit retry observation remains monitor-only.
+
 ## Narrative MVP Browser QA
 
 - Narrative MVP browser QA passed on `feature/next-work` for `Тайна Великого шёлкового пути`. The dedicated `Твоя миссия` opening rendered the quest title and task count, and kept task 1 hidden until `Начать миссию`.
@@ -43,7 +51,7 @@
 
 ## P1 Post-Launch Observability and Rollback Baseline
 
-- Recorded the current known-good Vercel Production rollback deployment: `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y`, `qwestum-education-gskc2mem9-qwestum.vercel.app`, Ready/Current from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment affected by the malformed `NEXT_PUBLIC_SUPABASE_URL` is explicitly not a rollback baseline.
+- Recorded the historical known-good Vercel rollback deployment: `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y`, `qwestum-education-gskc2mem9-qwestum.vercel.app`, sourced from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. It is retained as a Ready/Stale rollback reference; the current Production baseline is the later PR #4 merge `38e247a2915eeefa78292aad98f91e676f3fb4e9`.
 - Operational rollback order is now defined: urgently promote the recorded known-good Vercel deployment; use a reviewed `git revert` on `main` for a normal code regression; never force-push or reset `main`. Deployment rollback does not revert database or data state; schema remains frozen through Migration 035.
 - Current first-launch monitoring is manual on Hobby/free: inspect Vercel deployment status, runtime logs, and basic Observability for public entry/catalog/runtime/submit and auth/dashboard/logout routes. Repeated 5xx, unexpected authentication failures, catalog/runtime RPC failures, and submit `503` require investigation; a threshold `429` is expected rate-limiter behavior.
 

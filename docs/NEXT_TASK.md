@@ -2,17 +2,22 @@
 
 ## Milestone
 
-Narrative MVP Follow-up
+Post-Launch Beta
 
 ## Next Task
 
-Investigate or verify the intermittent public submit retry behavior observed during Narrative MVP browser QA. Then perform final Narrative MVP polish and Preview regression. Do not add new feature scope in this follow-up.
+Treat Production rollout as complete. First assess whether the non-blocking teacher post-login redirect UX merits a focused fix; then prepare five excellent public quests and collect real teacher beta feedback. Choose any further feature only from that evidence.
 
 ## Objective
 
-Preserve the current anonymous-public runtime, authoritative scoring boundary, persisted learner-attempt behavior, and owner-safe teacher authoring boundaries while closing the remaining QA observation and confirming the completed narrative flow.
+Preserve the released anonymous-public runtime, authoritative scoring boundary, persisted learner-attempt behavior, active teacher entitlement boundary, and owner-safe authoring model while validating real beta use before expanding features.
 
 ## Constraints
+
+- Production release PASS: PR #4 merged to `main` as `38e247a2915eeefa78292aad98f91e676f3fb4e9`; Vercel Production deployment and canonical-domain smoke verification passed for public narrative runtime, teacher workflows/results, learner history, and access routing.
+- M043-M048 required live objects are present despite historical M045-M048 migration-ledger drift; do not rerun those migrations blindly. M049 is live and ledgered, the existing teacher entitlement is active, and no migration ran during rollout.
+- Teacher magic-link callback initially returned to the homepage with `?code=...` before manual `/dashboard` navigation. This is a non-blocking post-login redirect UX observation, not a release blocker. The earlier isolated anonymous-submit retry observation did not reproduce in Production and remains monitor-only.
+- Do not introduce new feature scope before public-content quality and real teacher beta feedback establish the next priority.
 
 - Narrative MVP browser QA passed for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`) after live Migration 049. Mission opening, scene intro, neutral transition, null-narrative task compatibility, progress, finale, and refresh-to-mission behavior passed.
 - The initial final submit showed `Не удалось проверить ответы. Попробуйте ещё раз`; an immediate `Повторить` succeeded and produced the expected result. This is an observation only: do not claim a Narrative Layer defect or root cause without evidence.
@@ -28,7 +33,7 @@ Preserve the current anonymous-public runtime, authoritative scoring boundary, p
 - Production Auth and environment configuration are complete: the shared Supabase Auth Site URL is `https://qwestum-education.vercel.app`; the deployment-specific Preview, stable branch Preview, and Production callbacks are allowlisted; and all six application runtime variables have distinct Production-scope entries while Preview remains unchanged.
 - Preview and first-launch Production intentionally share the existing Supabase project and Upstash database. Production uses a newly generated distinct `RATE_LIMIT_HMAC_SECRET`, producing separate opaque limiter identifiers; shared quota, outage, and credential-operational risk remain accepted first-MVP constraints. Every Preview database write is therefore a live shared-database write.
 - The first intentional Production release is complete: PR #1 merged RC `86aaeae1ad7db2aaee99dd969cf58ea3ba4f4138` through merge commit `bfe773a66024d60d6824209290f5990d9c551225`, then passed Production smoke verification after correcting the Production Supabase Project URL value. The initial `/catalog` failure formed `/rest/v1/rest/v1/rpc/list_public_catalog_quests`; no application code or schema change was needed. The public catalog intentionally remains empty because test/demo quests were unpublished before release.
-- The P1 post-launch operational baseline is documented. The known-good Production rollback deployment is `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` (`qwestum-education-gskc2mem9-qwestum.vercel.app`), Ready/Current in Production from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`. The earlier `bfe773a` deployment with the malformed Supabase URL is not a rollback target. For urgent operations, promote this exact known-good Vercel deployment; for a normal code regression, use a reviewed `git revert` on `main`; never force-push or reset `main`. Rollback does not revert database or data state. Shared schema is now live through Migration 042.
+- The P1 post-launch operational baseline is documented. The known-good rollback deployment is `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` (`qwestum-education-gskc2mem9-qwestum.vercel.app`) from `main` commit `3e500e2642c19252b8c4d79bd40964c4a6f21e81`; it is now Ready/Stale. The current Production baseline is the later PR #4 merge `38e247a2915eeefa78292aad98f91e676f3fb4e9`. The earlier `bfe773a` deployment with the malformed Supabase URL is not a rollback target. For urgent operations, promote this exact known-good Vercel deployment; for a normal code regression, use a reviewed `git revert` on `main`; never force-push or reset `main`. Rollback does not revert database or data state. Shared schema is live through M049.
 - Migrations 039-042 are live and verified: the first Kazakhstan school taxonomy profile, its 26 disciplines, legacy-subject classification, and the 12 missing canonical subject offerings. New authoring shows 25 canonical subjects: all 26 grade-null offerings except legacy generic `Литература`; explicitly selected legacy IDs remain available for existing quests.
 - Program-Aware Teacher Subject Lookup Planning is complete and deferred: the one-profile `kz-school-general` lookup remains correct. Before a second profile, a quest's program context must be persisted and authoritative, subject lookup must filter `subjects.education_program_id`, and the owner-safe metadata write boundary must reject cross-program subjects. Program code must resolve server-side to a generated UUID without broad taxonomy SELECT RLS. No code or UI selector is needed while only one meaningful program exists.
 - Current Hobby/free monitoring is manual: review Vercel deployment status, runtime logs and basic Observability for `/`, `/catalog`, `/login`, `/auth/callback`, `/auth/logout`, `/dashboard`, `/dashboard/quests`, and public runtime/submit routes. Investigate repeated 5xx, unexpected auth failures, catalog/runtime RPC failures, and submit `503`; `429` is expected only at limiter threshold. The smoke checklist remains `/`, `/catalog`, login, protected dashboard redirect, teacher dashboard/library, logout, and public runtime/submit only when approved public content exists.
