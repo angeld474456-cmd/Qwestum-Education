@@ -6,6 +6,7 @@ import {
 } from "@/components/tasks/runtime/SingleChoiceTaskRenderer";
 import { QuestTask } from "@/services/quest.service";
 import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
+import { parseSequenceTaskContent } from "@/lib/sequence-task-content";
 import QuestFinishScreen from "./QuestFinishScreen";
 import ProgressBar from "./ProgressBar";
 import { RuntimeProvider, useRuntimeContext } from "./RuntimeContext";
@@ -81,6 +82,7 @@ function QuestRunnerContent() {
     options: [],
     correctOptionIds: [],
   };
+  const sequenceContent = parseSequenceTaskContent(currentTask.content);
   const currentAnswer = answers[currentTask.id];
 
   return (
@@ -106,6 +108,11 @@ function QuestRunnerContent() {
         onMultipleChoiceAnswerChange={(optionIds) =>
           setAnswer(currentTask.id, optionIds)
         }
+        taskId={currentTask.id}
+        sequenceItems={sequenceContent?.items}
+        sequenceCorrectOrder={sequenceContent?.correctOrder}
+        sequenceAnswer={Array.isArray(currentAnswer) ? currentAnswer : []}
+        onSequenceAnswerChange={(itemIds) => setAnswer(currentTask.id, itemIds)}
       />
 
       <TaskNavigator />

@@ -173,4 +173,29 @@ describe("updateOwnedQuestTaskV2", () => {
       status: "error",
     });
   });
+
+  it("maps a Sequence response only through the existing owner-safe v2 RPC", async () => {
+    const sequenceContent = {
+      items: [
+        { id: "11111111-1111-4111-8111-111111111111", text: "First" },
+        { id: "22222222-2222-4222-8222-222222222222", text: "Second" },
+        { id: "33333333-3333-4333-8333-333333333333", text: "Third" },
+      ],
+      correctOrder: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        "33333333-3333-4333-8333-333333333333",
+      ],
+    };
+    const v2Input = { ...input, content: sequenceContent, narrativeIntro: null, narrativeSuccess: null };
+    configure([updatedTaskV2({ task_type: "sequence", content: sequenceContent })]);
+
+    await expect(updateOwnedQuestTaskV2(v2Input)).resolves.toMatchObject({
+      status: "updated",
+      task: { task_type: "sequence", content: sequenceContent },
+    });
+    expect(mocks.rpc).toHaveBeenCalledWith("update_owned_quest_task_content_v2", expect.objectContaining({
+      p_content: sequenceContent,
+    }));
+  });
 });

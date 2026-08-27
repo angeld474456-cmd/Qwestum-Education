@@ -6,9 +6,10 @@ import {
   classifySingleChoiceContent,
 } from "@/lib/task-choice-content";
 import { MAX_TASK_POINTS } from "@/lib/task-points";
+import { parseSequenceTaskContent } from "@/lib/sequence-task-content";
 import { createOwnedQuestTask } from "@/services/teacher-task-creation.server";
 
-const allowedTaskTypes = new Set(["text", "single_choice", "multiple_choice"]);
+const allowedTaskTypes = new Set(["text", "single_choice", "multiple_choice", "sequence"]);
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -131,6 +132,10 @@ function parseCreateTaskPayload(body: CreateTaskPayload) {
     if (choiceContent.state === "malformed") {
       return { error: "Multiple Choice content is invalid." };
     }
+  }
+
+  if (body.task_type === "sequence" && content !== null && !parseSequenceTaskContent(content)) {
+    return { error: "Sequence content is invalid." };
   }
 
   return {

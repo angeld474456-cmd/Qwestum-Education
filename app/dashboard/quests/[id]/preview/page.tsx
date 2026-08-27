@@ -20,6 +20,7 @@ import {
   type TeacherQuestTask,
 } from "@/services/teacher-quest.server";
 import { parseMultipleChoiceContent } from "@/lib/multiple-choice";
+import { parseSequenceTaskContent } from "@/lib/sequence-task-content";
 
 type PreviewPageProps = {
   params: Promise<{
@@ -246,6 +247,7 @@ export default async function TeacherQuestPreviewPage({
               options: [],
               correctOptionIds: [],
             };
+            const sequenceContent = parseSequenceTaskContent(task.content);
 
             return (
               <Card key={task.id}>
@@ -261,6 +263,9 @@ export default async function TeacherQuestPreviewPage({
                   options={singleChoiceContent.options}
                   correctOptionId={singleChoiceContent.correctOptionId}
                   correctOptionIds={multipleChoiceContent.correctOptionIds}
+                  taskId={task.id}
+                  sequenceItems={sequenceContent?.items}
+                  sequenceCorrectOrder={sequenceContent?.correctOrder}
                 />
               </Card>
             );

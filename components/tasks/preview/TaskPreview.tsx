@@ -1,5 +1,6 @@
 import TaskRenderer from "@/components/tasks/runtime/TaskRenderer";
 import { SingleChoiceRuntimeOption } from "@/components/tasks/runtime/SingleChoiceTaskRenderer";
+import type { SequenceTaskItem } from "@/lib/sequence-task-content";
 
 interface TaskPreviewProps {
   taskType: string;
@@ -7,6 +8,9 @@ interface TaskPreviewProps {
   description: string;
   options?: SingleChoiceRuntimeOption[];
   correctOptionId?: string;
+  taskId?: string;
+  sequenceItems?: SequenceTaskItem[];
+  sequenceCorrectOrder?: string[];
 }
 
 export default function TaskPreview({
@@ -15,6 +19,9 @@ export default function TaskPreview({
   description,
   options = [],
   correctOptionId = "",
+  taskId = "preview-task",
+  sequenceItems = [],
+  sequenceCorrectOrder = [],
 }: TaskPreviewProps) {
   return (
     <TaskRenderer
@@ -24,6 +31,9 @@ export default function TaskPreview({
       description={description}
       options={options}
       correctOptionId={correctOptionId}
+      taskId={taskId}
+      sequenceItems={sequenceItems}
+      sequenceCorrectOrder={sequenceCorrectOrder}
     />
   );
 }

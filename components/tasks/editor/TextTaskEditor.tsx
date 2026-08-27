@@ -28,6 +28,8 @@ export interface TextTaskEditorProps {
 export function getTaskTypeLabel(taskType: string) {
   if (taskType === "text") return "Текстовое задание";
   if (taskType === "single_choice") return "Выбор одного ответа";
+  if (taskType === "multiple_choice") return "Выбор нескольких ответов";
+  if (taskType === "sequence") return "Последовательность";
   return taskType;
 }
 

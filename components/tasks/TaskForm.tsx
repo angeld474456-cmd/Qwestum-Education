@@ -6,7 +6,7 @@ import {
   parsePositiveSafeInteger,
 } from "@/lib/task-points";
 
-type TaskType = "text" | "single_choice" | "multiple_choice";
+type TaskType = "text" | "single_choice" | "multiple_choice" | "sequence";
 
 interface TaskFormProps {
   onSave: (task: {
@@ -145,6 +145,7 @@ export default function TaskForm({ onSave }: TaskFormProps) {
             <option value="text">Текстовое задание</option>
             <option value="single_choice">Выбор одного ответа</option>
             <option value="multiple_choice">Multiple Choice</option>
+            <option value="sequence">Последовательность</option>
           </select>
         </div>
 

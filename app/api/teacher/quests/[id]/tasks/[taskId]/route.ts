@@ -10,6 +10,7 @@ import {
   classifySingleChoiceContent,
 } from "@/lib/task-choice-content";
 import { MAX_TASK_POINTS } from "@/lib/task-points";
+import { parseSequenceTaskContent } from "@/lib/sequence-task-content";
 import { deleteOwnedQuestTask } from "@/services/teacher-task-deletion.server";
 import { getTeacherAuthoringAccess } from "@/services/teacher-authoring-access.server";
 import { updateOwnedQuestTaskV2 } from "@/services/teacher-task-update.server";
@@ -349,6 +350,17 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       }
 
       return NextResponse.json({ task: result.task });
+    }
+
+    if (
+      currentTask.task_type === "sequence" &&
+      content !== null &&
+      !parseSequenceTaskContent(content)
+    ) {
+      return NextResponse.json(
+        { error: "Sequence content is invalid." },
+        { status: 400 }
+      );
     }
 
   }

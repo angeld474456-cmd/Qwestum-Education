@@ -109,6 +109,32 @@ describe("createOwnedQuestTask", () => {
     }));
   });
 
+  it("accepts the live Sequence task type and preserves its exact content payload", async () => {
+    const sequenceContent = {
+      items: [
+        { id: "11111111-1111-4111-8111-111111111111", text: "First" },
+        { id: "22222222-2222-4222-8222-222222222222", text: "Second" },
+        { id: "33333333-3333-4333-8333-333333333333", text: "Third" },
+      ],
+      correctOrder: [
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+        "33333333-3333-4333-8333-333333333333",
+      ],
+    };
+    const sequenceInput = { ...input, taskType: "sequence", content: sequenceContent };
+    configure([createdTask({ task_type: "sequence", content: sequenceContent })]);
+
+    await expect(createOwnedQuestTask(sequenceInput)).resolves.toMatchObject({
+      status: "ok",
+      task: { task_type: "sequence", content: sequenceContent },
+    });
+    expect(mocks.rpc).toHaveBeenCalledWith("create_owned_quest_task", expect.objectContaining({
+      p_task_type: "sequence",
+      p_content: sequenceContent,
+    }));
+  });
+
   it("returns unauthorized without calling the RPC", async () => {
     configure(null, null, null);
 
