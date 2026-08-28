@@ -8,8 +8,11 @@ vi.mock("next/image", () => ({
 }));
 
 import ImageUploader, {
+  getImageUploadErrorMessage,
   getImageUploadButtonLabel,
   getSelectedImageFileLabel,
+  ImageUploadStatus,
+  imageUploaderIsBusy,
   removeSelectedTaskImage,
   uploadSelectedTaskImage,
 } from "@/components/media/ImageUploader";
@@ -49,6 +52,36 @@ describe("ImageUploader", () => {
     );
   });
 
+  it("renders accessible uploading and success statuses", () => {
+    const uploading = renderToStaticMarkup(
+      createElement(ImageUploadStatus, { status: "uploading" })
+    );
+    const success = renderToStaticMarkup(
+      createElement(ImageUploadStatus, { status: "success" })
+    );
+
+    expect(uploading).toContain("Загрузка изображения...");
+    expect(uploading).toContain('role="status"');
+    expect(uploading).toContain("animate-spin");
+    expect(success).toContain("Изображение загружено");
+    expect(success).toContain('aria-live="polite"');
+  });
+
+  it("disables conflicting controls while an upload is pending", () => {
+    expect(imageUploaderIsBusy(false, true)).toBe(true);
+    expect(imageUploaderIsBusy(true, false)).toBe(true);
+    expect(imageUploaderIsBusy(false, false)).toBe(false);
+  });
+
+  it("uses the shared fallback while retaining useful upload error detail", () => {
+    expect(getImageUploadErrorMessage(undefined)).toBe(
+      "Не удалось загрузить изображение. Попробуйте ещё раз."
+    );
+    expect(getImageUploadErrorMessage(new Error("Слишком большой файл"))).toBe(
+      "Не удалось загрузить изображение. Попробуйте ещё раз. Слишком большой файл"
+    );
+  });
+
   it("clears the selected filename after the delete callback succeeds", async () => {
     const onRemoved = vi.fn();
     const onRemove = vi.fn().mockResolvedValue(undefined);
@@ -75,6 +108,32 @@ describe("ImageUploader", () => {
 
     expect(onSelected).toHaveBeenCalledWith("filename.png");
     expect(onUpload).toHaveBeenCalledWith(file);
+  });
+
+  it("preserves upload failures for the visible error state and keeps an existing image contract intact", async () => {
+    const file = new File(["image"], "replacement.png", {
+      type: "image/png",
+    });
+    const onSelected = vi.fn();
+    const onUpload = vi.fn().mockRejectedValue(new Error("upload failed"));
+
+    await expect(
+      uploadSelectedTaskImage({
+        disabled: false,
+        file,
+        onSelected,
+        onUpload,
+      })
+    ).rejects.toThrow("upload failed");
+    expect(onSelected).toHaveBeenCalledWith("replacement.png");
+
+    const markup = renderToStaticMarkup(
+      createElement(ImageUploader, {
+        imageUrl: "https://example.test/current.png",
+        onUpload,
+      })
+    );
+    expect(markup).toContain('src="https://example.test/current.png"');
   });
 
   it("does not select or upload a file when the control is disabled", async () => {

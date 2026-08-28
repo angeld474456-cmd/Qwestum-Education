@@ -443,8 +443,9 @@ export default function QuestTasksClient({
       );
 
       if (error || !imageUrl) {
-        setErrorMessage(error ?? "Не удалось загрузить изображение.");
-        return;
+        const message = error ?? "Не удалось загрузить изображение.";
+        setErrorMessage(message);
+        throw new Error(message);
       }
 
       const nextTasks = tasks.map((task) =>
@@ -460,11 +461,16 @@ export default function QuestTasksClient({
     } catch (error) {
       if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
         setErrorMessage(SESSION_EXPIRED_MESSAGE);
-        return;
+        throw error;
       }
 
       console.error(error);
-      setErrorMessage("Не удалось загрузить изображение.");
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Не удалось загрузить изображение.";
+      setErrorMessage(message);
+      throw error instanceof Error ? error : new Error(message);
     } finally {
       setBusy(false);
     }

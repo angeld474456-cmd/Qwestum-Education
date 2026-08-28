@@ -4,6 +4,10 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 
 import {
+  getImageUploadErrorMessage,
+  ImageUploadStatus,
+} from "@/components/media/ImageUploader";
+import {
   SESSION_EXPIRED_MESSAGE,
 } from "@/lib/auth/session-expired.client";
 import {
@@ -23,26 +27,30 @@ export default function QuestCoverImageManager({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState(initialCoverImageUrl);
   const [busy, setBusy] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [uploadSucceeded, setUploadSucceeded] = useState(false);
 
   async function handleUpload(file: File) {
     if (busy) return;
 
     setBusy(true);
+    setIsUploading(true);
     setErrorMessage("");
     setSuccessMessage("");
+    setUploadSucceeded(false);
 
     try {
       const result = await uploadQuestCoverImage(questId, file);
 
       if (result.error || !result.coverImageUrl) {
-        setErrorMessage(result.error ?? "Не удалось загрузить обложку.");
+        setErrorMessage(getImageUploadErrorMessage(result.error));
         return;
       }
 
       setCoverImageUrl(result.coverImageUrl);
-      setSuccessMessage("Обложка сохранена.");
+      setUploadSucceeded(true);
     } catch (error) {
       if (error instanceof Error && error.message === SESSION_EXPIRED_MESSAGE) {
         setErrorMessage(SESSION_EXPIRED_MESSAGE);
@@ -50,9 +58,10 @@ export default function QuestCoverImageManager({
       }
 
       console.error(error);
-      setErrorMessage("Не удалось загрузить обложку.");
+      setErrorMessage(getImageUploadErrorMessage(error));
     } finally {
       setBusy(false);
+      setIsUploading(false);
 
       if (inputRef.current) {
         inputRef.current.value = "";
@@ -74,6 +83,7 @@ export default function QuestCoverImageManager({
     setBusy(true);
     setErrorMessage("");
     setSuccessMessage("");
+    setUploadSucceeded(false);
 
     try {
       const result = await removeQuestCoverImage(questId);
@@ -110,21 +120,25 @@ export default function QuestCoverImageManager({
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <label
-            className={`inline-flex rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 ${
-              busy ? "cursor-not-allowed opacity-50" : "cursor-pointer"
-            }`}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={busy}
+            onChange={handleFileChange}
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            aria-label={coverImageUrl ? "Заменить обложку" : "Загрузить обложку"}
+            className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111827] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {coverImageUrl ? "Заменить обложку" : "Загрузить обложку"}
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              disabled={busy}
-              onChange={handleFileChange}
-              className="sr-only"
-            />
-          </label>
+          </button>
 
           {coverImageUrl ? (
             <button
@@ -139,7 +153,7 @@ export default function QuestCoverImageManager({
         </div>
       </div>
 
-      <div className="mt-6 aspect-video overflow-hidden rounded-xl border border-slate-700 bg-gradient-to-br from-slate-800 via-slate-900 to-violet-950">
+      <div className="relative mt-6 aspect-video overflow-hidden rounded-xl border border-slate-700 bg-gradient-to-br from-slate-800 via-slate-900 to-violet-950">
         {coverImageUrl ? (
           <Image
             src={coverImageUrl}
@@ -151,15 +165,26 @@ export default function QuestCoverImageManager({
           />
         ) : (
           <div className="flex h-full items-center justify-center px-6 text-center text-sm font-semibold text-slate-400">
-            Обложка не загружена
+            {isUploading ? <ImageUploadStatus status="uploading" /> : "Обложка не загружена"}
           </div>
         )}
+        {coverImageUrl && isUploading ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-[1px]">
+            <ImageUploadStatus status="uploading" />
+          </div>
+        ) : null}
       </div>
 
       {errorMessage ? (
-        <p className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <p role="alert" className="mt-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {errorMessage}
         </p>
+      ) : null}
+
+      {uploadSucceeded ? (
+        <div className="mt-4">
+          <ImageUploadStatus status="success" />
+        </div>
       ) : null}
 
       {successMessage ? (
