@@ -107,12 +107,14 @@ export function shouldShowPublicQuestTransition(
 export function createPublicRuntimeSubmission(
   quest: Pick<PublicRuntimeQuestForRunner, "tasks">,
   selectedOptionIds: Record<string, string>,
-  selectedMultipleChoiceOptionIds: Record<string, string[]>
+  selectedMultipleChoiceOptionIds: Record<string, string[]>,
+  sequenceOrderedItemIds: Record<string, string[]> = {}
 ): PublicRuntimeSubmission {
   return {
     answers: quest.tasks.map((task) => {
       const selectedOptionId = selectedOptionIds[task.id];
       const selectedOptionIdsForTask = selectedMultipleChoiceOptionIds[task.id];
+      const orderedItemIds = sequenceOrderedItemIds[task.id];
 
       if (task.taskType === "single_choice" && selectedOptionId) {
         return { taskId: task.id, selectedOptionId };
@@ -124,6 +126,10 @@ export function createPublicRuntimeSubmission(
         selectedOptionIdsForTask.length > 0
       ) {
         return { taskId: task.id, selectedOptionIds: selectedOptionIdsForTask };
+      }
+
+      if (task.taskType === "sequence" && orderedItemIds) {
+        return { taskId: task.id, orderedItemIds };
       }
 
       return { taskId: task.id };
@@ -148,6 +154,24 @@ function isValidQuest(quest: PublicRuntimeQuestForRunner) {
     taskIds.add(task.id);
 
     if (task.taskType === "text") continue;
+
+    if (task.taskType === "sequence") {
+      if (
+        !Array.isArray(task.items) ||
+        task.items.length < 3 ||
+        task.items.length > 8 ||
+        new Set(task.items.map((item) => item.id)).size !== task.items.length ||
+        task.items.some(
+          (item) =>
+            !isUuid(item.id) ||
+            typeof item.text !== "string" ||
+            !/\S/.test(item.text)
+        )
+      ) {
+        return false;
+      }
+      continue;
+    }
 
     if (
       (task.taskType !== "single_choice" &&
@@ -307,6 +331,9 @@ export default function PublicQuestRunner({
   >({});
   const [selectedMultipleChoiceOptionIds, setSelectedMultipleChoiceOptionIds] =
     useState<Record<string, string[]>>({});
+  const [sequenceOrderedItemIds, setSequenceOrderedItemIds] = useState<
+    Record<string, string[]>
+  >({});
   const [phase, setPhase] = useState<PublicQuestRunnerPhase>(() =>
     getInitialPublicQuestRunnerPhase(quest)
   );
@@ -424,6 +451,15 @@ export default function PublicQuestRunner({
     });
   }
 
+  function reorderSequence(itemIds: string[]) {
+    if (isSubmitting || currentTask.taskType !== "sequence") return;
+
+    setSequenceOrderedItemIds((current) => ({
+      ...current,
+      [currentTask.id]: itemIds,
+    }));
+  }
+
   function resetRunner() {
     requestIdRef.current += 1;
     abortControllerRef.current?.abort();
@@ -433,6 +469,7 @@ export default function PublicQuestRunner({
     setCurrentTaskIndex(0);
     setSelectedOptionIds({});
     setSelectedMultipleChoiceOptionIds({});
+    setSequenceOrderedItemIds({});
     setPhase(getInitialPublicQuestRunnerPhase(quest));
     setResult(null);
     setErrorMessage(null);
@@ -452,7 +489,8 @@ export default function PublicQuestRunner({
     const submission = createPublicRuntimeSubmission(
       quest,
       selectedOptionIds,
-      selectedMultipleChoiceOptionIds
+      selectedMultipleChoiceOptionIds,
+      sequenceOrderedItemIds
     );
     setPhase("submitting");
     setErrorMessage(null);
@@ -613,9 +651,11 @@ export default function PublicQuestRunner({
           selectedOptionIds={
             selectedMultipleChoiceOptionIds[currentTask.id] ?? []
           }
+          orderedItemIds={sequenceOrderedItemIds[currentTask.id]}
           disabled={isSubmitting}
           onSelectOption={selectOption}
           onToggleOption={toggleOption}
+          onSequenceChange={reorderSequence}
         />
       </section>
 

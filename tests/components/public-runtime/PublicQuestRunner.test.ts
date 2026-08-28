@@ -14,6 +14,11 @@ const questId = "7c4cf0cf-42ef-4c1d-a696-8a0be0c2c8c8";
 const firstTaskId = "d6db30c3-2d00-47d8-9a9c-2f879c8c36fe";
 const secondTaskId = "3c4cf0cf-42ef-4c1d-a696-8a0be0c2c8c8";
 const optionId = "4c4cf0cf-42ef-4c1d-a696-8a0be0c2c8c8";
+const sequenceItemIds = [
+  "11111111-1111-4111-8111-111111111111",
+  "22222222-2222-4222-8222-222222222222",
+  "33333333-3333-4333-8333-333333333333",
+];
 
 function narrativeQuest(overrides: Partial<PublicRuntimeQuestV2> = {}): PublicRuntimeQuestV2 {
   return {
@@ -112,5 +117,35 @@ describe("PublicQuestRunner narrative flow", () => {
     });
     expect(JSON.stringify(submission)).not.toContain("narrative");
     expect(JSON.stringify(submission)).not.toContain("Mission");
+  });
+
+  it("keeps an untouched Sequence display unanswered and submits an explicitly moved order", () => {
+    const sequenceTask = {
+      id: "55555555-5555-4555-8555-555555555555",
+      taskType: "sequence" as const,
+      title: "Sequence task",
+      description: null,
+      imageUrl: null,
+      narrativeIntro: null,
+      narrativeSuccess: null,
+      items: sequenceItemIds.map((id, index) => ({ id, text: `Item ${index + 1}` })),
+    };
+    const quest = narrativeQuest({ tasks: [...narrativeQuest().tasks, sequenceTask] });
+
+    expect(createPublicRuntimeSubmission(quest, {}, {}, {})).toEqual({
+      answers: [
+        { taskId: firstTaskId },
+        { taskId: secondTaskId },
+        { taskId: sequenceTask.id },
+      ],
+    });
+    expect(
+      createPublicRuntimeSubmission(quest, {}, {}, {
+        [sequenceTask.id]: [sequenceItemIds[1], sequenceItemIds[0], sequenceItemIds[2]],
+      }).answers
+    ).toContainEqual({
+      taskId: sequenceTask.id,
+      orderedItemIds: [sequenceItemIds[1], sequenceItemIds[0], sequenceItemIds[2]],
+    });
   });
 });

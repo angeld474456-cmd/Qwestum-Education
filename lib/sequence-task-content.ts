@@ -29,7 +29,7 @@ function hasExactKeys(value: Record<string, unknown>, keys: string[]) {
   );
 }
 
-function normalizeItemText(text: string) {
+export function normalizeSequenceItemText(text: string) {
   return text.trim().toLowerCase();
 }
 
@@ -73,7 +73,7 @@ export function isValidSequenceTaskContent(
   }
 
   const itemIds = items.map((item) => item.id);
-  const normalizedTexts = items.map((item) => normalizeItemText(item.text));
+  const normalizedTexts = items.map((item) => normalizeSequenceItemText(item.text));
 
   if (
     new Set(itemIds).size !== itemIds.length ||
@@ -137,7 +137,7 @@ export function getSequenceValidationMessages(items: SequenceTaskItem[]) {
     messages.push("Текст элемента не должен превышать 1000 символов.");
   }
 
-  const normalizedTexts = items.map((item) => normalizeItemText(item.text));
+  const normalizedTexts = items.map((item) => normalizeSequenceItemText(item.text));
   if (new Set(normalizedTexts).size !== normalizedTexts.length) {
     messages.push("Элементы не должны повторяться.");
   }

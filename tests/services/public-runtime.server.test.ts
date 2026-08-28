@@ -195,6 +195,152 @@ describe("public runtime server service", () => {
     });
   });
 
+  it("maps a strict sanitized Sequence v2 DTO without canonical data", async () => {
+    const v2Row = validV2RuntimeRow();
+    const sequenceTask = {
+      id: "55555555-5555-4555-8555-555555555555",
+      task_type: "sequence",
+      title: "Sequence task",
+      description: null,
+      narrative_intro: null,
+      narrative_success: null,
+      image_url: null,
+      items: [
+        { id: "11111111-1111-4111-8111-111111111111", text: "First" },
+        { id: "22222222-2222-4222-8222-222222222222", text: "Second" },
+        { id: "33333333-3333-4333-8333-333333333333", text: "Third" },
+      ],
+    };
+    (v2Row.tasks as Record<string, unknown>[]).push(sequenceTask);
+    mocks.rpc.mockResolvedValue({ data: [v2Row], error: null });
+
+    const quest = await getPublicRuntimeQuestV2(runtimeQuestId);
+
+    expect(quest?.tasks.at(-1)).toEqual({
+      id: sequenceTask.id,
+      taskType: "sequence",
+      title: "Sequence task",
+      description: null,
+      narrativeIntro: null,
+      narrativeSuccess: null,
+      imageUrl: null,
+      items: sequenceTask.items,
+    });
+    expect(JSON.stringify(quest)).not.toContain("correctOrder");
+    expect(JSON.stringify(quest)).not.toContain("content");
+  });
+
+  it("maps the same sanitized Sequence shape through the legacy runtime loader", async () => {
+    const legacyRow = {
+      id: runtimeQuestId,
+      title: "Legacy sequence quest",
+      description: null,
+      tasks: [
+        {
+          id: "55555555-5555-4555-8555-555555555555",
+          task_type: "sequence",
+          title: "Sequence task",
+          description: null,
+          image_url: null,
+          items: [
+            { id: "11111111-1111-4111-8111-111111111111", text: "First" },
+            { id: "22222222-2222-4222-8222-222222222222", text: "Second" },
+            { id: "33333333-3333-4333-8333-333333333333", text: "Third" },
+          ],
+        },
+      ],
+    };
+    mocks.rpc.mockResolvedValue({ data: [legacyRow], error: null });
+
+    await expect(getPublicRuntimeQuest(runtimeQuestId)).resolves.toMatchObject({
+      tasks: [{ taskType: "sequence", items: legacyRow.tasks[0].items }],
+    });
+  });
+
+  it.each([
+    ["blank item text", (task: Record<string, unknown>) => {
+      ((task.items as Record<string, unknown>[])[0]).text = "  ";
+    }],
+    ["overlong item text", (task: Record<string, unknown>) => {
+      ((task.items as Record<string, unknown>[])[0]).text = "a".repeat(1001);
+    }],
+    ["duplicate normalized item text", (task: Record<string, unknown>) => {
+      const items = task.items as Record<string, unknown>[];
+      items[1].text = "  FIRST  ";
+    }],
+    ["extra item field", (task: Record<string, unknown>) => {
+      ((task.items as Record<string, unknown>[])[0]).private = true;
+    }],
+    ["duplicate item id", (task: Record<string, unknown>) => {
+      const items = task.items as Record<string, unknown>[];
+      items[1].id = items[0].id;
+    }],
+    ["invalid item id", (task: Record<string, unknown>) => {
+      ((task.items as Record<string, unknown>[])[0]).id = "not-a-uuid";
+    }],
+    ["two items", (task: Record<string, unknown>) => {
+      task.items = (task.items as Record<string, unknown>[]).slice(0, 2);
+    }],
+    ["nine items", (task: Record<string, unknown>) => {
+      task.items = Array.from({ length: 9 }, (_, index) => ({
+        id: `11111111-1111-4111-8111-${String(index + 1).padStart(12, "0")}`,
+        text: `Item ${index + 1}`,
+      }));
+    }],
+  ])("rejects malformed Sequence DTO: %s", async (_label, mutate) => {
+    const v2Row = validV2RuntimeRow();
+    const sequenceTask: Record<string, unknown> = {
+      id: "55555555-5555-4555-8555-555555555555",
+      task_type: "sequence",
+      title: "Sequence task",
+      description: null,
+      narrative_intro: null,
+      narrative_success: null,
+      image_url: null,
+      items: [
+        { id: "11111111-1111-4111-8111-111111111111", text: "First" },
+        { id: "22222222-2222-4222-8222-222222222222", text: "Second" },
+        { id: "33333333-3333-4333-8333-333333333333", text: "Third" },
+      ],
+    };
+    mutate(sequenceTask);
+    (v2Row.tasks as Record<string, unknown>[]).push(sequenceTask);
+    mocks.rpc.mockResolvedValue({ data: [v2Row], error: null });
+
+    await expect(getPublicRuntimeQuestV2(runtimeQuestId)).rejects.toThrow(
+      "Public runtime fetch returned invalid data."
+    );
+  });
+
+  it.each([
+    ["correctOrder", ["11111111-1111-4111-8111-111111111111"]],
+    ["content", { items: [] }],
+    ["author_id", runtimeQuestId],
+  ])("rejects private Sequence field %s", async (key, value) => {
+    const v2Row = validV2RuntimeRow();
+    const sequenceTask: Record<string, unknown> = {
+      id: "55555555-5555-4555-8555-555555555555",
+      task_type: "sequence",
+      title: "Sequence task",
+      description: null,
+      narrative_intro: null,
+      narrative_success: null,
+      image_url: null,
+      items: [
+        { id: "11111111-1111-4111-8111-111111111111", text: "First" },
+        { id: "22222222-2222-4222-8222-222222222222", text: "Second" },
+        { id: "33333333-3333-4333-8333-333333333333", text: "Third" },
+      ],
+    };
+    sequenceTask[key] = value;
+    (v2Row.tasks as Record<string, unknown>[]).push(sequenceTask);
+    mocks.rpc.mockResolvedValue({ data: [v2Row], error: null });
+
+    await expect(getPublicRuntimeQuestV2(runtimeQuestId)).rejects.toThrow(
+      "Public runtime fetch returned invalid data."
+    );
+  });
+
   it("fails closed when the v2 runtime DTO contains a private field", async () => {
     const v2Row = validV2RuntimeRow();
     choiceTask(v2Row).answer = "private answer";

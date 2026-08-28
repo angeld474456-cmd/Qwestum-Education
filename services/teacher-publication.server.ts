@@ -4,6 +4,7 @@ import {
   getMultipleChoiceContentError,
   getSingleChoiceContentError,
 } from "@/lib/task-choice-content";
+import { isValidSequenceTaskContent } from "@/lib/sequence-task-content";
 import { MAX_TASK_POINTS } from "@/lib/task-points";
 import type {
   PublicationAction,
@@ -71,7 +72,12 @@ function evaluate(q: Row, tasks: Row[]): PublicationReadiness {
     const taskId = typeof task.id === "string" ? task.id : undefined;
     const taskType = task.task_type;
 
-    if (taskType !== "text" && taskType !== "single_choice" && taskType !== "multiple_choice") {
+    if (
+      taskType !== "text" &&
+      taskType !== "single_choice" &&
+      taskType !== "multiple_choice" &&
+      taskType !== "sequence"
+    ) {
       add(blockers, "unsupported_task_type", "Тип задания не поддерживается.", taskId, "task_type");
       continue;
     }
@@ -106,7 +112,11 @@ function evaluate(q: Row, tasks: Row[]): PublicationReadiness {
 
     const contentError = taskType === "single_choice"
       ? getSingleChoiceContentError(task.content)
-      : getMultipleChoiceContentError(task.content);
+      : taskType === "multiple_choice"
+        ? getMultipleChoiceContentError(task.content)
+        : isValidSequenceTaskContent(task.content)
+          ? null
+          : "invalid_sequence_content";
 
     if (contentError) {
       add(

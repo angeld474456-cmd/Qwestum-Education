@@ -3,6 +3,56 @@ import { blankTitleQuest, choiceTask, duplicateOptionIdsQuest, foreignCorrectOpt
 const m=vi.hoisted(()=>({createClient:vi.fn(),auth:vi.fn(),from:vi.fn(),rpc:vi.fn()}));
 vi.mock("server-only",()=>({})); vi.mock("@/lib/supabase/server",()=>({createClient:m.createClient}));
 import { getOwnedQuestPublicationReadiness, setOwnedQuestPublicationState } from "@/services/teacher-publication.server";
+const sequenceItemIds = ["55555555-5555-4555-8555-555555555551", "55555555-5555-4555-8555-555555555552", "55555555-5555-4555-8555-555555555553"];
+const validSequenceTask = {
+  ...textTask,
+  id: "55555555-5555-4555-8555-555555555555",
+  title: "Sequence",
+  points: 10,
+  task_type: "sequence",
+  content: {
+    items: sequenceItemIds.map((id, index) => ({ id, text: `Item ${index + 1}` })),
+    correctOrder: [...sequenceItemIds],
+  },
+};
+
+describe("sequence readiness", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("counts valid Sequence tasks as supported alongside existing task types", async () => {
+    client({ ...validQuest }, [{ ...textTask }, { ...choiceTask }, validSequenceTask]);
+
+    const result = await getOwnedQuestPublicationReadiness(questId);
+
+    expect(result).toMatchObject({
+      status: "ok",
+      readiness: { ready: true, taskCount: 3, supportedTaskCount: 3, blockers: [] },
+    });
+  });
+
+  it("keeps malformed Sequence content blocked while counting its supported type", async () => {
+    const malformedSequenceTask = {
+      ...validSequenceTask,
+      content: {
+        ...validSequenceTask.content,
+        correctOrder: [sequenceItemIds[0], sequenceItemIds[0], sequenceItemIds[2]],
+      },
+    };
+    client({ ...validQuest }, [malformedSequenceTask]);
+
+    const result = await getOwnedQuestPublicationReadiness(questId);
+
+    expect(result).toMatchObject({
+      status: "ok",
+      readiness: {
+        ready: false,
+        taskCount: 1,
+        supportedTaskCount: 1,
+        blockers: [expect.objectContaining({ code: "invalid_sequence_content", field: "content" })],
+      },
+    });
+  });
+});
 function client(quest:unknown,tasks:unknown,error=false){let n=0;const q={select:vi.fn().mockReturnThis(),eq:vi.fn().mockReturnThis(),maybeSingle:vi.fn(async()=>n++?{data:tasks,error:error?{}:null}:{data:quest,error:error?{}:null}),order:vi.fn()};q.order.mockReturnValueOnce(q).mockResolvedValueOnce({data:tasks,error:null});m.auth.mockResolvedValue({data:{user:{id:"owner"}}});m.from.mockReturnValue(q);m.createClient.mockResolvedValue({auth:{getUser:m.auth},from:m.from});}
 function publicationClient(data: unknown, error: unknown = null, user: unknown = { id: "owner" }) {
   m.auth.mockResolvedValue({ data: { user } });

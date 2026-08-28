@@ -3,6 +3,20 @@ export type PublicRuntimeSingleChoiceOption = {
   text: string;
 };
 
+export type PublicRuntimeSequenceItem = {
+  id: string;
+  text: string;
+};
+
+export type PublicRuntimeSequenceTask = {
+  id: string;
+  taskType: "sequence";
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  items: PublicRuntimeSequenceItem[];
+};
+
 export type PublicRuntimeMultipleChoiceTask = {
   id: string;
   taskType: "multiple_choice";
@@ -32,7 +46,8 @@ export type PublicRuntimeSingleChoiceTask = {
 export type PublicRuntimeTask =
   | PublicRuntimeTextTask
   | PublicRuntimeSingleChoiceTask
-  | PublicRuntimeMultipleChoiceTask;
+  | PublicRuntimeMultipleChoiceTask
+  | PublicRuntimeSequenceTask;
 
 export type PublicRuntimeQuest = {
   id: string;
@@ -63,6 +78,10 @@ export type PublicRuntimeSubmissionAnswer =
   | {
       taskId: string;
       selectedOptionIds: string[];
+    }
+  | {
+      taskId: string;
+      orderedItemIds: string[];
     };
 
 export type PublicRuntimeSubmission = {

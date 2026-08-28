@@ -1,11 +1,16 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import {
+  normalizeSequenceItemText,
+  SEQUENCE_ITEM_TEXT_MAX_LENGTH,
+} from "@/lib/sequence-task-content";
 import type {
   PublicRuntimeNarrativeTask,
   PublicRuntimeQuest,
   PublicRuntimeQuestV2,
   PublicRuntimeResult,
+  PublicRuntimeSequenceItem,
   PublicRuntimeSingleChoiceOption,
   PublicRuntimeSubmission,
   PublicRuntimeSubmissionAnswer,
@@ -16,6 +21,8 @@ import type {
 
 const MAX_TASKS = 100;
 const MAX_OPTIONS = 100;
+const MIN_SEQUENCE_ITEMS = 3;
+const MAX_SEQUENCE_ITEMS = 8;
 const MAX_ANSWERS = 100;
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -110,6 +117,24 @@ function mapRuntimeV2Option(
   };
 }
 
+function mapRuntimeSequenceItem(
+  value: unknown
+): PublicRuntimeSequenceItem | null {
+  if (!isPlainObject(value) || !hasOnlyKeys(value, ["id", "text"])) {
+    return null;
+  }
+
+  if (
+    !isUuid(value.id) ||
+    !isNonBlankString(value.text) ||
+    Array.from(value.text).length > SEQUENCE_ITEM_TEXT_MAX_LENGTH
+  ) {
+    return null;
+  }
+
+  return { id: value.id, text: value.text };
+}
+
 function mapRuntimeTask(value: unknown): PublicRuntimeTask | null {
   if (!isPlainObject(value)) return null;
 
@@ -131,6 +156,59 @@ function mapRuntimeTask(value: unknown): PublicRuntimeTask | null {
       title: value.title,
       description: value.description,
       imageUrl: value.image_url,
+    };
+  }
+
+  if (value.task_type === "sequence") {
+    const legacySequenceKeys = [
+      "description",
+      "id",
+      "image_url",
+      "items",
+      "task_type",
+      "title",
+    ];
+    const narrativeSequenceKeys = [
+      ...legacySequenceKeys,
+      "narrative_intro",
+      "narrative_success",
+    ];
+
+    if (
+      (!hasOnlyKeys(value, legacySequenceKeys) &&
+        !hasOnlyKeys(value, narrativeSequenceKeys)) ||
+      !Array.isArray(value.items) ||
+      value.items.length < MIN_SEQUENCE_ITEMS ||
+      value.items.length > MAX_SEQUENCE_ITEMS
+    ) {
+      return null;
+    }
+
+    const items = value.items.map(mapRuntimeSequenceItem);
+
+    if (items.some((item) => item === null)) return null;
+
+    const mappedItems = items as PublicRuntimeSequenceItem[];
+
+    if (new Set(mappedItems.map((item) => item.id)).size !== mappedItems.length) {
+      return null;
+    }
+
+    if (
+      new Set(
+        mappedItems.map((item) => normalizeSequenceItemText(item.text))
+      ).size !== mappedItems.length
+    ) {
+      return null;
+    }
+
+    return {
+      id: value.id,
+      taskType: "sequence",
+      title: value.title,
+      description: value.description,
+      imageUrl: value.image_url,
+      items: mappedItems,
     };
   }
 
@@ -215,7 +293,13 @@ function mapRuntimeV2Task(value: unknown): PublicRuntimeNarrativeTask | null {
     "title",
   ];
   const choiceKeys = [...baseKeys, "options"];
-  const expectedKeys = value.task_type === "text" ? baseKeys : choiceKeys;
+  const sequenceKeys = [...baseKeys, "items"];
+  const expectedKeys =
+    value.task_type === "text"
+      ? baseKeys
+      : value.task_type === "sequence"
+        ? sequenceKeys
+        : choiceKeys;
 
   if (!hasOnlyKeys(value, expectedKeys)) return null;
 
@@ -224,6 +308,14 @@ function mapRuntimeV2Task(value: unknown): PublicRuntimeNarrativeTask | null {
   if (!task) return null;
 
   if (task.taskType === "text") {
+    return {
+      ...task,
+      narrativeIntro: value.narrative_intro,
+      narrativeSuccess: value.narrative_success,
+    };
+  }
+
+  if (task.taskType === "sequence") {
     return {
       ...task,
       narrativeIntro: value.narrative_intro,
@@ -400,17 +492,22 @@ function validateSubmission(
       "selectedOptionId"
     );
     const hasSelectedOptionIds = Object.prototype.hasOwnProperty.call(rawAnswer, "selectedOptionIds");
+    const hasOrderedItemIds = Object.prototype.hasOwnProperty.call(rawAnswer, "orderedItemIds");
     const selectedOptionId = rawAnswer.selectedOptionId;
     const selectedOptionIds = rawAnswer.selectedOptionIds;
+    const orderedItemIds = rawAnswer.orderedItemIds;
 
     if (
       !hasOnlyKeys(
         rawAnswer,
-        hasSelectedOptionId ? ["taskId", "selectedOptionId"] : hasSelectedOptionIds ? ["taskId", "selectedOptionIds"] : ["taskId"]
+        hasSelectedOptionId ? ["taskId", "selectedOptionId"] : hasSelectedOptionIds ? ["taskId", "selectedOptionIds"] : hasOrderedItemIds ? ["taskId", "orderedItemIds"] : ["taskId"]
       ) ||
       (hasSelectedOptionId && typeof selectedOptionId !== "string") ||
       (hasSelectedOptionIds && (!Array.isArray(selectedOptionIds) || selectedOptionIds.some((id) => typeof id !== "string" || !/\S/.test(id) || id.length > 128) || new Set(selectedOptionIds).size !== selectedOptionIds.length)) ||
       (hasSelectedOptionId && hasSelectedOptionIds) ||
+      (hasSelectedOptionId && hasOrderedItemIds) ||
+      (hasSelectedOptionIds && hasOrderedItemIds) ||
+      (hasOrderedItemIds && (!Array.isArray(orderedItemIds) || orderedItemIds.length < MIN_SEQUENCE_ITEMS || orderedItemIds.length > MAX_SEQUENCE_ITEMS || orderedItemIds.some((id) => !isUuid(id)) || new Set(orderedItemIds).size !== orderedItemIds.length)) ||
       taskIds.has(taskId)
     ) {
       runtimeError("Public runtime submission is invalid.");
@@ -425,6 +522,8 @@ function validateSubmission(
           }
         : hasSelectedOptionIds && (selectedOptionIds as string[]).length > 0
           ? { taskId, selectedOptionIds: selectedOptionIds as string[] }
+          : hasOrderedItemIds
+            ? { taskId, orderedItemIds: orderedItemIds as string[] }
           : { taskId }
     );
   }

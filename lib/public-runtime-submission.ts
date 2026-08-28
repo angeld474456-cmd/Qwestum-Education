@@ -5,6 +5,9 @@ import type {
 
 export const MAX_PUBLIC_RUNTIME_ANSWERS = 100;
 
+const MIN_SEQUENCE_ITEMS = 3;
+const MAX_SEQUENCE_ITEMS = 8;
+
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -62,6 +65,7 @@ export function parsePublicRuntimeSubmission(
 
     const hasSelectedOptionId = hasOwn(answer, "selectedOptionId");
     const hasSelectedOptionIds = hasOwn(answer, "selectedOptionIds");
+    const hasOrderedItemIds = hasOwn(answer, "orderedItemIds");
 
     if (
       !hasExactKeys(
@@ -70,9 +74,14 @@ export function parsePublicRuntimeSubmission(
           ? ["taskId", "selectedOptionId"]
           : hasSelectedOptionIds
             ? ["taskId", "selectedOptionIds"]
+            : hasOrderedItemIds
+              ? ["taskId", "orderedItemIds"]
             : ["taskId"]
       ) ||
-      (hasSelectedOptionId && hasSelectedOptionIds) ||
+      Number(hasSelectedOptionId) +
+        Number(hasSelectedOptionIds) +
+        Number(hasOrderedItemIds) >
+        1 ||
       taskIds.has(answer.taskId)
     ) {
       return null;
@@ -107,6 +116,25 @@ export function parsePublicRuntimeSubmission(
           ? { taskId: answer.taskId, selectedOptionIds: answer.selectedOptionIds }
           : { taskId: answer.taskId }
       );
+      continue;
+    }
+
+    if (hasOrderedItemIds) {
+      if (
+        !Array.isArray(answer.orderedItemIds) ||
+        answer.orderedItemIds.length < MIN_SEQUENCE_ITEMS ||
+        answer.orderedItemIds.length > MAX_SEQUENCE_ITEMS ||
+        answer.orderedItemIds.some((itemId) => !isUuid(itemId)) ||
+        new Set(answer.orderedItemIds).size !== answer.orderedItemIds.length
+      ) {
+        return null;
+      }
+
+      taskIds.add(answer.taskId);
+      answers.push({
+        taskId: answer.taskId,
+        orderedItemIds: answer.orderedItemIds,
+      });
       continue;
     }
 
