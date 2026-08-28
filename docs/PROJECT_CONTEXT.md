@@ -12,8 +12,10 @@ The product lets teachers create learning quests made of modular tasks, preview 
 
 - Production release PASS: PR #4 merged to `main` as `38e247a2915eeefa78292aad98f91e676f3fb4e9`, and Vercel completed the corresponding Production deployment. Canonical-domain smoke verification passed for public Narrative MVP flow, teacher authoring/results, role-aware access, and learner attempt history.
 - The live database contains the required M043-M048 objects despite historical M045-M048 migration-ledger drift; those migrations must not be blindly rerun. M049 is live and ledgered. The existing teacher entitlement is active, and no migration ran during the Production rollout.
+- M050 is live and verified. `sequence` is complete across database/runtime/scoring, teacher authoring and Preview/Play, publication readiness, public rendering, and public submission. Preview E2E passed for Aral Task 5 (`b5184b19-f702-4878-8240-4e05067ac67b`): untouched `unanswered / 0`, wrong moved order `incorrect / 0`, and exact canonical order `correct / 15`.
+- During that QA, the stored Task 5 `correctOrder` was corrected after separate review and approval to match the intended educational cause-and-effect sequence. This was a content-only correction to `quest_tasks.content.correctOrder`; no code defect, migration, schema, RLS, Auth, Storage, or Vercel change was involved. Local submit can fail closed with `503` when limiter configuration is absent; configured Preview provided the final Sequence E2E evidence.
 - The known rollback deployment remains `dpl_146uK8UYRdnFZFPGyDfrKXsfpG4Y` from `3e500e2642c19252b8c4d79bd40964c4a6f21e81`; deployment rollback changes code only and does not revert Supabase schema or data.
-- Next phase: post-launch beta. Consider post-login teacher redirect polish, prepare five excellent public quests, and gather real teacher beta feedback before choosing a further feature.
+- Next content order: finish the Aral quest, Evidence / mission dossier, mission route/map, third flagship quest, then Match.
 
 ## Current State
 
@@ -41,6 +43,8 @@ Implemented task types:
 
 - `text`
 - `single_choice`
+- `multiple_choice`
+- `sequence`
 
 ## Teacher Experience Status
 

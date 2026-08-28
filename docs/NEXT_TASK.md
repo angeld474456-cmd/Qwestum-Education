@@ -2,15 +2,15 @@
 
 ## Milestone
 
-Post-Launch Beta
+Aral Quest Authoring
 
 ## Next Task
 
-Treat Production rollout as complete. First assess whether the non-blocking teacher post-login redirect UX merits a focused fix; then prepare five excellent public quests and collect real teacher beta feedback. Choose any further feature only from that evidence.
+Continue authoring the Aral quest after completed Sequence Task 5. Keep the next work content-only: Task 6 is an ordinary question with a math element; Task 7 is Multiple Choice; Tasks 8-9 prepare the learner for the solution; Task 10 is the full final expedition decision.
 
 ## Objective
 
-Preserve the released anonymous-public runtime, authoritative scoring boundary, persisted learner-attempt behavior, active teacher entitlement boundary, and owner-safe authoring model while validating real beta use before expanding features.
+Finish one coherent flagship quest while preserving the released anonymous-public runtime, authoritative scoring boundary, persisted learner-attempt behavior, active teacher entitlement boundary, and owner-safe authoring model.
 
 ## Constraints
 
@@ -18,6 +18,8 @@ Preserve the released anonymous-public runtime, authoritative scoring boundary, 
 - M043-M048 required live objects are present despite historical M045-M048 migration-ledger drift; do not rerun those migrations blindly. M049 is live and ledgered, the existing teacher entitlement is active, and no migration ran during rollout.
 - Teacher magic-link callback initially returned to the homepage with `?code=...` before manual `/dashboard` navigation. This is a non-blocking post-login redirect UX observation, not a release blocker. The earlier isolated anonymous-submit retry observation did not reproduce in Production and remains monitor-only.
 - Do not introduce new feature scope before public-content quality and real teacher beta feedback establish the next priority.
+- Sequence is complete through Preview E2E: M050 scoring accepts the corrected Aral Task 5 canonical order for `correct / 15`; untouched remains `unanswered / 0` and a wrong moved order remains `incorrect / 0`. The content-only live `correctOrder` correction required no migration, schema, RLS, Auth, Storage, or Vercel change.
+- Local public submit may return fail-closed `503` when limiter configuration is absent. This is not a Sequence defect; use configured Preview for public submit QA.
 
 - Narrative MVP browser QA passed for `Тайна Великого шёлкового пути` (`638b728a-baac-460c-b671-43a4bde104a0`) after live Migration 049. Mission opening, scene intro, neutral transition, null-narrative task compatibility, progress, finale, and refresh-to-mission behavior passed.
 - The initial final submit showed `Не удалось проверить ответы. Попробуйте ещё раз`; an immediate `Повторить` succeeded and produced the expected result. This is an observation only: do not claim a Narrative Layer defect or root cause without evidence.

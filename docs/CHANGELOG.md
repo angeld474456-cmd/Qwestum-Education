@@ -1,5 +1,12 @@
 # Changelog
 
+## Sequence Task Type: Public Runtime and Preview QA
+
+- Completed `sequence` support across live M050 database/runtime/scoring, teacher authoring and Preview/Play, publication readiness, public rendering, and public submission. The public boundary projects only shuffled `items[{id,text}]`; canonical order remains server-side.
+- Preview E2E passed for Aral quest `bba3c463-5fa5-4060-b8f5-833f8692c879`, Task 5 `Восстанови цепочку катастрофы`: untouched was unanswered for `0`, an intentionally wrong order was incorrect for `0`, and the exact canonical order was correct for `15`.
+- QA identified a content-order mismatch, not a code defect. After separate review and approval, only `quest_tasks.content.correctOrder` for Task 5 was corrected live; validation passed, the former order became incorrect, untouched remained unanswered, and the quest remained public/runtime-eligible. No migration, schema, RLS, Auth, Storage, or Vercel change was required.
+- Local public submit can fail closed with `503` when limiter configuration is absent; this was not a Sequence defect. Configured Preview was used for final E2E verification.
+
 ## Production Release: Learner Flows, Teacher Results, and Narrative MVP
 
 - PR #4 merged to `main` as `38e247a2915eeefa78292aad98f91e676f3fb4e9` (`Merge pull request #4 from angeld474456-cmd/feature/next-work`). Vercel Production completed successfully; the observed deployment URL was `https://qwestum-education-hgl0ruo7i-qwestum.vercel.app`, and smoke verification used `https://qwestum-education.vercel.app`.

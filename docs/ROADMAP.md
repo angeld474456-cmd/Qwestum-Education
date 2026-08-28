@@ -22,7 +22,8 @@
 
 - Production release PASS: PR #4 merged to `main` as `38e247a2915eeefa78292aad98f91e676f3fb4e9`; the Vercel Production deployment completed successfully and canonical-domain smoke verification passed for public Narrative MVP, teacher authoring/results, learner history, and role-aware access.
 - M043-M048 required live objects are present despite historical M045-M048 ledger drift; never rerun those migrations blindly. M049 is live and ledgered, the existing teacher entitlement is active, and no migration ran during release.
-- Next: assess the non-blocking teacher post-login redirect UX, prepare five excellent public quests, and gather real teacher beta feedback. Select the next feature only from that evidence.
+- M050 Sequence is complete and live: teacher authoring/Preview/Play, publication readiness, public runtime, submission, and authoritative scoring passed Preview E2E. Aral Task 5 passed untouched `unanswered / 0`, wrong order `incorrect / 0`, and canonical order `correct / 15` after a separately reviewed content-only `correctOrder` correction.
+- Next content order: finish the Aral quest, Evidence / mission dossier, mission route/map, third flagship quest, then Match.
 
 ### Narrative MVP
 

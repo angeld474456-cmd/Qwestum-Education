@@ -821,6 +821,10 @@ Sprint 12.20.20 completed the pre-production plan as **PASS - PRE-PRODUCTION REA
 
 `multiple_choice` content is private teacher/server data: ordered option objects plus `correctOptionIds`. `lib/multiple-choice.ts` enforces the common authoring/readiness contract. Public runtime mapping exposes only the task metadata and option IDs/text; public checkboxes submit opaque `selectedOptionIds` and never receive answer keys.
 
+## Sequence Runtime Boundary
+
+Migration 050 adds the `sequence` task contract: teacher content contains `items[{id,text}]` and server-only `correctOrder`. The public runtime projects only a deterministic shuffled `items[{id,text}]` array; it never receives canonical order, raw content, points, or owner data. Learners submit no answer until they move an item, then submit only opaque `orderedItemIds`; M050 remains authoritative for membership and exact-order scoring. Publication readiness accepts only valid 3-8 item Sequence content alongside `text`, `single_choice`, and `multiple_choice`.
+
 Migration 019 makes `public.score_public_runtime_quest(uuid, jsonb)` the sole correctness authority. It compares valid submitted option-ID sets exactly, without order dependence or partial credit; missing/extra selections are incorrect and no selection is unanswered. Teacher Preview can show correct options, while Teacher Play/Test deliberately retains its local selection/completion model rather than duplicating database scoring.
 
 `/dashboard/quests` remains a server-rendered authenticated teacher page. Its `q` search parameter is normalized by `lib/teacher-quest-library-filters.ts`: the first string value is trimmed and whitespace-normalized; missing, blank, or malformed values become absent. The helper matches only an already owner-scoped quest's title or nullable description with case-insensitive substring semantics, then applies the existing Category/Tag filters with AND semantics. It does not query task content, owner IDs, or other private fields.
@@ -897,7 +901,7 @@ Migration 035 removes `Teachers can insert own quests`. Current `public.quests` 
 
 ### Production Content Authoring Safety
 
-The supported task types are `text`, `single_choice`, and `multiple_choice`. Draft persistence and publication readiness are deliberately separate: Text remains open-response and `not_scored`; choice tasks may persist with `content = null` as an intentional incomplete draft, but public eligibility remains fail-closed until their content is complete and valid. The task-creation UI does not expose generic Answer or Hint inputs because they have no learner/runtime effect.
+The supported task types are `text`, `single_choice`, `multiple_choice`, and `sequence`. Draft persistence and publication readiness are deliberately separate: Text remains open-response and `not_scored`; choice tasks may persist with `content = null` as an intentional incomplete draft, while Sequence remains fail-closed until its 3-8 item content and canonical order are complete and valid. The task-creation UI does not expose generic Answer or Hint inputs because they have no learner/runtime effect.
 
 Migration 036 extends only `public.is_public_runtime_eligible(uuid)`: it rejects duplicate Single Choice and Multiple Choice option text after `lower(btrim(option text))`, without rewriting stored display text. Migration 037 extends only `public.update_owned_quest_task_content(...)`: it permits nullable choice drafts while preserving malformed non-null rejection, owner checks, parent-first locks, and the existing result DTO. Multiple Choice scoring remains exact-set with no partial credit, and learner hints remain unsupported.
 
