@@ -104,14 +104,14 @@ BEGIN
             $quest_select$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))))
         OR (p.polrelid = 'public.quest_tasks'::pg_catalog.regclass
           AND (p.polname <> 'Teachers can select tasks for own quests' OR p.polcmd <> 'r' OR p.polroles <> ARRAY[v_authenticated_role]::oid[] OR p.polwithcheck IS NOT NULL
-            OR lower(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polqual, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g')) <> lower(regexp_replace(regexp_replace($task_select$
+            OR lower(regexp_replace(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polqual, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g'), 'from(public[.])?quests(as)?parent_quest', 'frompublic.questsparent_quest', 'g')) <> lower(regexp_replace(regexp_replace(regexp_replace($task_select$
               exists (
                 select 1
                 from public.quests as parent_quest
                 where parent_quest.id = quest_tasks.quest_id
                   and parent_quest.author_id = auth.uid()
               )
-            $task_select$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))))
+            $task_select$, '[[:space:]()]', '', 'g'), '::text', '', 'g'), 'from(public[.])?quests(as)?parent_quest', 'frompublic.questsparent_quest', 'g'))))
       )
   ) OR (SELECT pg_catalog.count(*) FROM pg_catalog.pg_policy AS p WHERE p.polrelid = 'public.quests'::pg_catalog.regclass) <> 1
     OR (SELECT pg_catalog.count(*) FROM pg_catalog.pg_policy AS p WHERE p.polrelid = 'public.quest_tasks'::pg_catalog.regclass) <> 1 THEN

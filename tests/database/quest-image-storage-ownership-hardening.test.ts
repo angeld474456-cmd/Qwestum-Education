@@ -45,6 +45,29 @@ function tablePrivilegePreflight() {
   return migration.slice(start, end + "END IF;".length);
 }
 
+function extractTaggedPredicate(tag: string) {
+  const match = migration.match(
+    new RegExp(`\\$${tag}\\$([\\s\\S]*?)\\$${tag}\\$`)
+  );
+
+  if (!match) {
+    throw new Error(`Missing ${tag} predecessor predicate in M051.`);
+  }
+
+  return match[1];
+}
+
+function normalizeKnownTaskSelectExpression(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[\s()]/g, "")
+    .replaceAll("::text", "")
+    .replace(
+      /from(public[.])?quests(as)?parent_quest/g,
+      "frompublic.questsparent_quest"
+    );
+}
+
 describe("M051 quest image Storage ownership hardening contract", () => {
   it("is transactional and completes all predecessor checks before policy mutation", () => {
     const begin = migration.indexOf("BEGIN;");
@@ -100,6 +123,44 @@ describe("M051 quest image Storage ownership hardening contract", () => {
     expect(migration).toContain(
       "p.polroles && ARRAY[0, v_anon_role, v_authenticated_role]::oid[]"
     );
+  });
+
+  it("normalizes only the known quest-table alias variants in the task owner SELECT predicate", () => {
+    const expected = extractTaggedPredicate("task_select");
+    const expectedNormalized = normalizeKnownTaskSelectExpression(expected);
+
+    expect(migration).toContain(
+      "'from(public[.])?quests(as)?parent_quest', 'frompublic.questsparent_quest', 'g'"
+    );
+
+    for (const fromClause of [
+      "from quests parent_quest",
+      "from quests as parent_quest",
+      "from public.quests parent_quest",
+      "from public.quests as parent_quest",
+    ]) {
+      expect(
+        normalizeKnownTaskSelectExpression(
+          expected.replace("from public.quests as parent_quest", fromClause)
+        )
+      ).toBe(expectedNormalized);
+    }
+
+    expect(
+      normalizeKnownTaskSelectExpression(
+        expected.replace("public.quests", "profiles")
+      )
+    ).not.toBe(expectedNormalized);
+    expect(
+      normalizeKnownTaskSelectExpression(
+        expected.replace("and parent_quest.author_id = auth.uid()", "")
+      )
+    ).not.toBe(expectedNormalized);
+    expect(
+      normalizeKnownTaskSelectExpression(
+        expected.replace("parent_quest.id = quest_tasks.quest_id", "parent_quest.id = quest_tasks.id")
+      )
+    ).not.toBe(expectedNormalized);
   });
 
   it("replaces only the four authenticated write policies and preserves public reads with no UPDATE policy", () => {
