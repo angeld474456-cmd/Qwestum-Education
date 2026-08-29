@@ -59,13 +59,13 @@ function extractTaggedPredicate(tag: string) {
 
 function normalizeKnownTaskSelectExpression(value: string) {
   return value
-    .toLowerCase()
     .replace(/[\s()]/g, "")
     .replaceAll("::text", "")
     .replace(
-      /from(public[.])?quests(as)?parent_quest/g,
+      /from(public[.])?quests(as)?parent_quest/gi,
       "frompublic.questsparent_quest"
-    );
+    )
+    .toLowerCase();
 }
 
 describe("M051 quest image Storage ownership hardening contract", () => {
@@ -130,10 +130,14 @@ describe("M051 quest image Storage ownership hardening contract", () => {
     const expectedNormalized = normalizeKnownTaskSelectExpression(expected);
 
     expect(migration).toContain(
-      "'from(public[.])?quests(as)?parent_quest', 'frompublic.questsparent_quest', 'g'"
+      "'from(public[.])?quests(as)?parent_quest', 'frompublic.questsparent_quest', 'gi'"
     );
 
     for (const fromClause of [
+      "FROM quests parent_quest",
+      "FROM quests AS parent_quest",
+      "FROM public.quests parent_quest",
+      "FROM public.quests AS parent_quest",
       "from quests parent_quest",
       "from quests as parent_quest",
       "from public.quests parent_quest",
