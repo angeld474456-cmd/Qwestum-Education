@@ -6,6 +6,7 @@ BEGIN;
 DO $$
 DECLARE
   v_authenticated_role oid;
+  v_anon_role oid;
   v_bucket_is_public boolean;
   v_file_size_limit bigint;
   v_allowed_mime_types text[];
@@ -17,11 +18,17 @@ BEGIN
   FROM pg_catalog.pg_roles AS r
   WHERE r.rolname = 'authenticated';
 
+  SELECT r.oid
+  INTO v_anon_role
+  FROM pg_catalog.pg_roles AS r
+  WHERE r.rolname = 'anon';
+
   IF pg_catalog.to_regclass('storage.objects') IS NULL
     OR pg_catalog.to_regclass('storage.buckets') IS NULL
     OR pg_catalog.to_regclass('public.quests') IS NULL
     OR pg_catalog.to_regclass('public.quest_tasks') IS NULL
     OR v_authenticated_role IS NULL
+    OR v_anon_role IS NULL
     OR pg_catalog.to_regprocedure('public.current_actor_can_author_storage()') IS NULL THEN
     RAISE EXCEPTION 'M051 Storage, ownership tables, authenticated role, and authoring predicate are required before applying';
   END IF;
@@ -71,22 +78,18 @@ BEGIN
   END IF;
 
   IF NOT pg_catalog.has_table_privilege('authenticated', 'public.quests', 'SELECT')
-    OR NOT pg_catalog.has_table_privilege('authenticated', 'public.quest_tasks', 'SELECT')
-    OR pg_catalog.has_table_privilege('anon', 'public.quests', 'SELECT')
-    OR pg_catalog.has_table_privilege('anon', 'public.quest_tasks', 'SELECT')
-    OR pg_catalog.has_table_privilege('authenticated', 'public.quests', 'INSERT')
-    OR pg_catalog.has_table_privilege('authenticated', 'public.quests', 'UPDATE')
-    OR pg_catalog.has_table_privilege('authenticated', 'public.quests', 'DELETE')
-    OR pg_catalog.has_table_privilege('authenticated', 'public.quest_tasks', 'INSERT')
-    OR pg_catalog.has_table_privilege('authenticated', 'public.quest_tasks', 'UPDATE')
-    OR pg_catalog.has_table_privilege('authenticated', 'public.quest_tasks', 'DELETE')
-    OR pg_catalog.has_table_privilege('anon', 'public.quests', 'INSERT')
-    OR pg_catalog.has_table_privilege('anon', 'public.quests', 'UPDATE')
-    OR pg_catalog.has_table_privilege('anon', 'public.quests', 'DELETE')
-    OR pg_catalog.has_table_privilege('anon', 'public.quest_tasks', 'INSERT')
-    OR pg_catalog.has_table_privilege('anon', 'public.quest_tasks', 'UPDATE')
-    OR pg_catalog.has_table_privilege('anon', 'public.quest_tasks', 'DELETE') THEN
-    RAISE EXCEPTION 'public quest/task SELECT grants have an unexpected contract before applying M051';
+    OR NOT pg_catalog.has_table_privilege('authenticated', 'public.quest_tasks', 'SELECT') THEN
+    RAISE EXCEPTION 'authenticated must retain SELECT on public quest/task rows for M051 ownership predicates';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.pg_policy AS p
+    WHERE p.polrelid IN ('public.quests'::pg_catalog.regclass, 'public.quest_tasks'::pg_catalog.regclass)
+      AND p.polcmd IN ('a', 'w', 'd', '*')
+      AND p.polroles && ARRAY[0, v_anon_role, v_authenticated_role]::oid[]
+  ) THEN
+    RAISE EXCEPTION 'public quest/task browser roles must not have INSERT, UPDATE, DELETE, or FOR ALL RLS policies before applying M051';
   END IF;
 
   IF EXISTS (

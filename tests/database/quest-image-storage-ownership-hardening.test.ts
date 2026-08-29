@@ -29,6 +29,22 @@ function policyBody(name: string) {
   return migration.slice(start, end === -1 ? migration.indexOf("\n\nCOMMIT;", start) : end);
 }
 
+function tablePrivilegePreflight() {
+  const start = migration.indexOf(
+    "IF NOT pg_catalog.has_table_privilege('authenticated', 'public.quests', 'SELECT')"
+  );
+  const end = migration.indexOf(
+    "END IF;",
+    start
+  );
+
+  if (start === -1 || end === -1) {
+    throw new Error("Missing M051 table-privilege preflight.");
+  }
+
+  return migration.slice(start, end + "END IF;".length);
+}
+
 describe("M051 quest image Storage ownership hardening contract", () => {
   it("is transactional and completes all predecessor checks before policy mutation", () => {
     const begin = migration.indexOf("BEGIN;");
@@ -54,12 +70,36 @@ describe("M051 quest image Storage ownership hardening contract", () => {
     expect(migration).toContain("v_file_size_limit IS DISTINCT FROM 5242880");
     expect(migration).toContain("ARRAY['image/jpeg', 'image/png', 'image/webp']::text[]");
     expect(migration).toContain("public.quests and public.quest_tasks must retain RLS before applying M051");
-    expect(migration).toContain("has_table_privilege('authenticated', 'public.quests', 'UPDATE')");
-    expect(migration).toContain("has_table_privilege('authenticated', 'public.quest_tasks', 'DELETE')");
-    expect(migration).toContain("has_table_privilege('anon', 'public.quests', 'INSERT')");
-    expect(migration).toContain("has_table_privilege('anon', 'public.quest_tasks', 'UPDATE')");
+    expect(migration).toContain("v_anon_role oid");
+    expect(migration).toContain("has_table_privilege('authenticated', 'public.quests', 'SELECT')");
+    expect(migration).toContain("has_table_privilege('authenticated', 'public.quest_tasks', 'SELECT')");
+    expect(migration).toContain("p.polcmd IN ('a', 'w', 'd', '*')");
+    expect(migration).toContain("p.polroles && ARRAY[0, v_anon_role, v_authenticated_role]::oid[]");
+    expect(migration).toContain("public quest/task browser roles must not have INSERT, UPDATE, DELETE, or FOR ALL RLS policies before applying M051");
+    expect(migration).not.toContain("has_table_privilege('anon'");
+    expect(migration).not.toContain("has_table_privilege('authenticated', 'public.quests', 'UPDATE')");
+    expect(migration).not.toContain("has_table_privilege('authenticated', 'public.quest_tasks', 'DELETE')");
     expect(migration).toContain("public quest/task owner-only SELECT policies have an unexpected contract before applying M051");
     expect(migration).toContain("current_actor_can_author_storage has an unexpected security or EXECUTE contract before applying M051");
+  });
+
+  it("permits broad predecessor table grants and uses only authenticated SELECT as the relation-preflight prerequisite", () => {
+    const actualPreflight = tablePrivilegePreflight();
+    const privilegeCalls = actualPreflight.match(/has_table_privilege\([^\n]+\)/g) ?? [];
+
+    expect(privilegeCalls).toEqual([
+      "has_table_privilege('authenticated', 'public.quests', 'SELECT')",
+      "has_table_privilege('authenticated', 'public.quest_tasks', 'SELECT')",
+    ]);
+    expect(migration.match(/has_table_privilege\([^\n]+\)/g)).toEqual(privilegeCalls);
+    expect(actualPreflight).not.toMatch(
+      /has_table_privilege\(\s*'(?:anon|authenticated)'\s*,\s*'public\.(?:quests|quest_tasks)'\s*,\s*'(?:INSERT|UPDATE|DELETE)'\s*\)/i
+    );
+    expect(migration).not.toContain("REVOKE ");
+    expect(migration).toContain("p.polcmd IN ('a', 'w', 'd', '*')");
+    expect(migration).toContain(
+      "p.polroles && ARRAY[0, v_anon_role, v_authenticated_role]::oid[]"
+    );
   });
 
   it("replaces only the four authenticated write policies and preserves public reads with no UPDATE policy", () => {
