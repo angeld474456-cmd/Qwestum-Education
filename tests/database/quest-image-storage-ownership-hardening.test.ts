@@ -68,6 +68,17 @@ function normalizeKnownTaskSelectExpression(value: string) {
     .toLowerCase();
 }
 
+function normalizePredecessorStorageExpression(value: string) {
+  return value
+    .replace(/[\s()]/g, "")
+    .replaceAll("::text", "")
+    .replace(
+      /(public[.])?current_actor_can_author_storage/gi,
+      "public.current_actor_can_author_storage"
+    )
+    .toLowerCase();
+}
+
 describe("M051 quest image Storage ownership hardening contract", () => {
   it("is transactional and completes all predecessor checks before policy mutation", () => {
     const begin = migration.indexOf("BEGIN;");
@@ -165,6 +176,63 @@ describe("M051 quest image Storage ownership hardening contract", () => {
         expected.replace("parent_quest.id = quest_tasks.quest_id", "parent_quest.id = quest_tasks.id")
       )
     ).not.toBe(expectedNormalized);
+  });
+
+  it("normalizes only the known authoring-wrapper qualification in all predecessor Storage policies", () => {
+    const functionNormalization =
+      "'(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi'";
+
+    expect(migration.split(functionNormalization)).toHaveLength(9);
+
+    for (const tag of [
+      "task_insert",
+      "task_delete",
+      "cover_insert",
+      "cover_delete",
+    ]) {
+      const expected = extractTaggedPredicate(tag);
+      const expectedNormalized = normalizePredecessorStorageExpression(expected);
+
+      expect(
+        normalizePredecessorStorageExpression(
+          expected.replace(
+            "public.current_actor_can_author_storage()",
+            "current_actor_can_author_storage()"
+          )
+        )
+      ).toBe(expectedNormalized);
+      expect(
+        normalizePredecessorStorageExpression(
+          expected.replace(
+            "public.current_actor_can_author_storage()",
+            "PUBLIC.current_actor_can_author_storage()"
+          )
+        )
+      ).toBe(expectedNormalized);
+      expect(
+        normalizePredecessorStorageExpression(
+          expected.replace("public.current_actor_can_author_storage()", "")
+        )
+      ).not.toBe(expectedNormalized);
+      expect(
+        normalizePredecessorStorageExpression(
+          expected.replace(
+            "public.current_actor_can_author_storage()",
+            "some_other_function()"
+          )
+        )
+      ).not.toBe(expectedNormalized);
+      expect(
+        normalizePredecessorStorageExpression(
+          expected.replace("bucket_id = 'quest-images'", "bucket_id = 'other-bucket'")
+        )
+      ).not.toBe(expectedNormalized);
+      expect(
+        normalizePredecessorStorageExpression(
+          expected.replace("(storage.foldername(name))[2] = auth.uid()::text", "")
+        )
+      ).not.toBe(expectedNormalized);
+    }
   });
 
   it("replaces only the four authenticated write policies and preserves public reads with no UPDATE policy", () => {

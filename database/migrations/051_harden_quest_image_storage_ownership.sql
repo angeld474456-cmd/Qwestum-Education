@@ -188,14 +188,14 @@ BEGIN
       AND p.polcmd = 'a'
       AND p.polroles = ARRAY[v_authenticated_role]::oid[]
       AND p.polqual IS NULL
-      AND lower(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polwithcheck, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g')) = lower(regexp_replace(regexp_replace($task_insert$
+      AND lower(regexp_replace(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polwithcheck, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi')) = lower(regexp_replace(regexp_replace(regexp_replace($task_insert$
         bucket_id = 'quest-images'
         and (storage.foldername(name))[1] = 'teachers'
         and (storage.foldername(name))[2] = auth.uid()::text
         and (storage.foldername(name))[3] = 'quests'
         and (storage.foldername(name))[5] = 'tasks'
         and public.current_actor_can_author_storage()
-      $task_insert$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))
+      $task_insert$, '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi'))
   ) THEN
     RAISE EXCEPTION 'task-image INSERT policy has an unexpected predecessor definition before applying M051';
   END IF;
@@ -207,14 +207,14 @@ BEGIN
       AND p.polcmd = 'd'
       AND p.polroles = ARRAY[v_authenticated_role]::oid[]
       AND p.polwithcheck IS NULL
-      AND lower(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polqual, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g')) = lower(regexp_replace(regexp_replace($task_delete$
+      AND lower(regexp_replace(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polqual, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi')) = lower(regexp_replace(regexp_replace(regexp_replace($task_delete$
         bucket_id = 'quest-images'
         and (storage.foldername(name))[1] = 'teachers'
         and (storage.foldername(name))[2] = auth.uid()::text
         and (storage.foldername(name))[3] = 'quests'
         and (storage.foldername(name))[5] = 'tasks'
         and public.current_actor_can_author_storage()
-      $task_delete$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))
+      $task_delete$, '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi'))
   ) THEN
     RAISE EXCEPTION 'task-image DELETE policy has an unexpected predecessor definition before applying M051';
   END IF;
@@ -226,7 +226,7 @@ BEGIN
       AND p.polcmd = 'a'
       AND p.polroles = ARRAY[v_authenticated_role]::oid[]
       AND p.polqual IS NULL
-      AND lower(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polwithcheck, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g')) = lower(regexp_replace(regexp_replace($cover_insert$
+      AND lower(regexp_replace(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polwithcheck, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi')) = lower(regexp_replace(regexp_replace(regexp_replace($cover_insert$
         bucket_id = 'quest-images'
         and (storage.foldername(name))[1] = 'teachers'
         and (storage.foldername(name))[2] = auth.uid()::text
@@ -239,7 +239,7 @@ BEGIN
           '/quests/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cover/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](jpg|png|webp)$'
         )
         and public.current_actor_can_author_storage()
-      $cover_insert$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))
+      $cover_insert$, '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi'))
   ) THEN
     RAISE EXCEPTION 'cover INSERT policy has an unexpected predecessor definition before applying M051';
   END IF;
@@ -251,7 +251,7 @@ BEGIN
       AND p.polcmd = 'd'
       AND p.polroles = ARRAY[v_authenticated_role]::oid[]
       AND p.polwithcheck IS NULL
-      AND lower(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polqual, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g')) = lower(regexp_replace(regexp_replace($cover_delete$
+      AND lower(regexp_replace(regexp_replace(regexp_replace(pg_catalog.pg_get_expr(p.polqual, p.polrelid), '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi')) = lower(regexp_replace(regexp_replace(regexp_replace($cover_delete$
         bucket_id = 'quest-images'
         and (storage.foldername(name))[1] = 'teachers'
         and (storage.foldername(name))[2] = auth.uid()::text
@@ -264,7 +264,7 @@ BEGIN
           '/quests/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/cover/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}[.](jpg|png|webp)$'
         )
         and public.current_actor_can_author_storage()
-      $cover_delete$, '[[:space:]()]', '', 'g'), '::text', '', 'g'))
+      $cover_delete$, '[[:space:]()]', '', 'g'), '::text', '', 'g'), '(public[.])?current_actor_can_author_storage', 'public.current_actor_can_author_storage', 'gi'))
   ) THEN
     RAISE EXCEPTION 'cover DELETE policy has an unexpected predecessor definition before applying M051';
   END IF;
