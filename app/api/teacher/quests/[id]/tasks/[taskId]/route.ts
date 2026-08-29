@@ -46,6 +46,11 @@ type OwnedTaskImage = {
   narrative_success: string | null;
 };
 
+type OwnedTaskImageForCleanup = {
+  id: string;
+  image_url: string | null;
+};
+
 async function getOwnedQuest(supabase: Awaited<ReturnType<typeof createClient>>, questId: string) {
   const {
     data: { user },
@@ -206,6 +211,31 @@ function getNarrativeValue(
 
   const value = updates[fieldName];
   return typeof value === "string" || value === null ? value : currentValue;
+}
+
+async function getOwnedTaskImageForCleanup(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  questId: string,
+  taskId: string
+) {
+  const { data, error } = await supabase
+    .from("quest_tasks")
+    .select("id, image_url")
+    .eq("id", taskId)
+    .eq("quest_id", questId)
+    .maybeSingle<OwnedTaskImageForCleanup>();
+
+  if (error) return { status: "error" as const };
+  if (!data) return { status: "not_found" as const };
+
+  if (
+    data.id !== taskId ||
+    (typeof data.image_url !== "string" && data.image_url !== null)
+  ) {
+    return { status: "error" as const };
+  }
+
+  return { status: "ok" as const, imageUrl: data.image_url };
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
@@ -386,6 +416,68 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     );
   }
 
+  let supabase: Awaited<ReturnType<typeof createClient>>;
+
+  try {
+    supabase = await createClient();
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to delete task." },
+      { status: 500 }
+    );
+  }
+
+  const taskImage = await getOwnedTaskImageForCleanup(supabase, id, taskId);
+
+  if (taskImage.status === "not_found") {
+    return NextResponse.json({ error: "Task not found." }, { status: 404 });
+  }
+
+  if (taskImage.status === "error") {
+    return NextResponse.json(
+      { error: "Unable to delete task." },
+      { status: 500 }
+    );
+  }
+
+  let storageDeleted = false;
+
+  if (taskImage.imageUrl) {
+    const objectPath = getSafeQuestImageObjectPath(
+      taskImage.imageUrl,
+      access.userId,
+      id,
+      taskId
+    );
+
+    if (!objectPath) {
+      return NextResponse.json(
+        { error: "Unable to delete task." },
+        { status: 500 }
+      );
+    }
+
+    try {
+      const { error: cleanupError } = await supabase.storage
+        .from(questImageBucketName)
+        .remove([objectPath]);
+
+      if (cleanupError) {
+        return NextResponse.json(
+          { error: "Unable to delete task." },
+          { status: 500 }
+        );
+      }
+
+      storageDeleted = true;
+    } catch {
+      return NextResponse.json(
+        { error: "Unable to delete task." },
+        { status: 500 }
+      );
+    }
+  }
+
   const result = await deleteOwnedQuestTask(id, taskId);
 
   if (result.status === "unauthorized") {
@@ -412,31 +504,6 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       { error: "Unable to delete task." },
       { status: 500 }
     );
-  }
-
-  let storageDeleted = false;
-
-  if (result.imageUrl) {
-    try {
-      const supabase = await createClient();
-      const objectPath = getSafeQuestImageObjectPath(
-        result.imageUrl,
-        result.userId,
-        id,
-        taskId
-      );
-
-      if (objectPath) {
-        const { error: cleanupError } = await supabase.storage
-          .from(questImageBucketName)
-          .remove([objectPath]);
-
-        storageDeleted = !cleanupError;
-      }
-    } catch {
-      // The database deletion is already final; cleanup remains best-effort.
-      storageDeleted = false;
-    }
   }
 
   return NextResponse.json({

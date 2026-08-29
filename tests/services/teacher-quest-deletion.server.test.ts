@@ -3,13 +3,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const questId = "11111111-1111-4111-8111-111111111111";
 const ownerId = "22222222-2222-4222-8222-222222222222";
 const taskId = "33333333-3333-4333-8333-333333333333";
-const fileId = "44444444-4444-4444-8444-444444444444";
+const otherTaskId = "44444444-4444-4444-8444-444444444444";
+const fileId = "55555555-5555-4555-8555-555555555555";
+const laterTaskId = "66666666-6666-4666-8666-666666666666";
+const otherOwnerId = "77777777-7777-4777-8777-777777777777";
+const otherQuestId = "88888888-8888-4888-8888-888888888888";
 const origin = "https://project.example";
 
 const mocks = vi.hoisted(() => ({
-  auth: vi.fn(),
   createClient: vi.fn(),
-  from: vi.fn(),
+  getTeacherAuthoringAccess: vi.fn(),
   remove: vi.fn(),
   rpc: vi.fn(),
   storageFrom: vi.fn(),
@@ -17,41 +20,96 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createClient: mocks.createClient }));
+vi.mock("@/services/teacher-authoring-access.server", () => ({
+  getTeacherAuthoringAccess: mocks.getTeacherAuthoringAccess,
+}));
 
 import { deleteOwnedQuest } from "@/services/teacher-quest-deletion.server";
 
-function taskImageUrl(id = taskId) {
-  return `${origin}/storage/v1/object/public/quest-images/teachers/${ownerId}/quests/${questId}/tasks/${id}/${fileId}.png`;
+function taskImageUrl(
+  id = taskId,
+  pathOwnerId = ownerId,
+  pathQuestId = questId
+) {
+  return `${origin}/storage/v1/object/public/quest-images/teachers/${pathOwnerId}/quests/${pathQuestId}/tasks/${id}/${fileId}.png`;
 }
 
-function deletedRow(overrides: Record<string, unknown> = {}) {
+function coverPath(pathOwnerId = ownerId, pathQuestId = questId) {
+  return `teachers/${pathOwnerId}/quests/${pathQuestId}/cover/${fileId}.png`;
+}
+
+function deletedRow() {
   return {
     outcome: "deleted",
     id: questId,
     cover_image_path: null,
     task_image_urls: [],
-    ...overrides,
   };
 }
 
+function singleQuery(result: { data: unknown; error?: unknown }) {
+  const builder = {
+    select: vi.fn(),
+    eq: vi.fn(),
+    maybeSingle: vi.fn().mockResolvedValue({
+      data: result.data,
+      error: result.error ?? null,
+    }),
+  };
+  builder.select.mockReturnValue(builder);
+  builder.eq.mockReturnValue(builder);
+  return builder;
+}
+
+function listQuery(result: { data: unknown; error?: unknown }) {
+  const builder = {
+    select: vi.fn(),
+    eq: vi.fn(),
+    order: vi.fn().mockResolvedValue({
+      data: result.data,
+      error: result.error ?? null,
+    }),
+  };
+  builder.select.mockReturnValue(builder);
+  builder.eq.mockReturnValue(builder);
+  return builder;
+}
+
 function configure(options?: {
-  data?: unknown;
-  error?: unknown;
+  access?: unknown;
+  quest?: unknown;
+  questError?: unknown;
+  taskImages?: unknown;
+  taskImagesError?: unknown;
+  rpcData?: unknown;
+  rpcError?: unknown;
   removeResult?: { error: unknown };
-  user?: { id: string } | null;
 }) {
-  mocks.auth.mockResolvedValue({
-    data: { user: options?.user === undefined ? { id: ownerId } : options.user },
+  const quest = singleQuery({
+    data:
+      options?.quest === undefined
+        ? { id: questId, cover_image_path: null }
+        : options.quest,
+    error: options?.questError,
   });
+  const taskImages = listQuery({
+    data: options?.taskImages === undefined ? [] : options.taskImages,
+    error: options?.taskImagesError,
+  });
+
+  mocks.getTeacherAuthoringAccess.mockResolvedValue(
+    options?.access === undefined
+      ? { status: "allowed", userId: ownerId }
+      : options.access
+  );
   mocks.rpc.mockResolvedValue({
-    data: options?.data === undefined ? [deletedRow()] : options.data,
-    error: options?.error ?? null,
+    data: options?.rpcData === undefined ? [deletedRow()] : options.rpcData,
+    error: options?.rpcError ?? null,
   });
   mocks.remove.mockResolvedValue(options?.removeResult ?? { error: null });
   mocks.storageFrom.mockReturnValue({ remove: mocks.remove });
   mocks.createClient.mockResolvedValue({
-    auth: { getUser: mocks.auth },
-    from: mocks.from,
+    from: vi.fn((table: string) => (table === "quests" ? quest : taskImages)),
     rpc: mocks.rpc,
     storage: { from: mocks.storageFrom },
   });
@@ -63,165 +121,160 @@ describe("deleteOwnedQuest", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = origin;
   });
 
-  it("calls the delete RPC once with only the quest ID and performs no direct reads or writes", async () => {
-    configure();
-
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
-
-    expect(mocks.rpc).toHaveBeenCalledOnce();
-    expect(mocks.rpc).toHaveBeenCalledWith("delete_owned_quest", {
-      p_quest_id: questId,
-    });
-    expect(mocks.from).not.toHaveBeenCalled();
-  });
-
-  it("returns unauthorized without calling the RPC", async () => {
-    configure({ user: null });
-
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({
-      status: "unauthorized",
-    });
-    expect(mocks.rpc).not.toHaveBeenCalled();
-    expect(mocks.storageFrom).not.toHaveBeenCalled();
-  });
-
-  it("maps zero RPC rows to owner-safe not_found without cleanup", async () => {
-    configure({ data: [] });
-
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({
-      status: "not_found",
-    });
-    expect(mocks.storageFrom).not.toHaveBeenCalled();
-  });
-
-  it("maps provider errors to a safe error without cleanup", async () => {
-    configure({ error: { message: "RAW_RPC_ERROR" } });
-
-    const result = await deleteOwnedQuest(questId);
-    expect(result).toEqual({ status: "error" });
-    expect(JSON.stringify(result)).not.toContain("RAW_RPC_ERROR");
-    expect(mocks.storageFrom).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    null,
-    {},
-    [deletedRow(), deletedRow()],
-    [{ ...deletedRow(), outcome: "not_found" }],
-    [{ ...deletedRow(), id: ownerId }],
-    [{ ...deletedRow(), cover_image_path: 1 }],
-    [{ ...deletedRow(), task_image_urls: null }],
-    [{ ...deletedRow(), task_image_urls: [null] }],
-    [{ ...deletedRow(), extra: true }],
-  ])("rejects malformed RPC result %# without cleanup", async (data) => {
-    configure({ data });
-
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({
-      status: "error",
-    });
-    expect(mocks.storageFrom).not.toHaveBeenCalled();
-  });
-
-  it("cleans only canonical RPC-returned cover and deduplicated task image paths", async () => {
-    const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
+  it("cleans trusted cover and task paths before the owner-safe quest delete RPC", async () => {
     configure({
-      data: [
-        deletedRow({
-          cover_image_path: coverPath,
-          task_image_urls: [taskImageUrl(), taskImageUrl()],
-        }),
+      quest: { id: questId, cover_image_path: coverPath() },
+      taskImages: [
+        { id: taskId, image_url: taskImageUrl() },
+        { id: otherTaskId, image_url: taskImageUrl(otherTaskId) },
       ],
     });
 
     await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
-    expect(mocks.storageFrom).toHaveBeenNthCalledWith(1, "quest-images");
-    expect(mocks.remove).toHaveBeenNthCalledWith(1, [coverPath]);
-    expect(mocks.storageFrom).toHaveBeenNthCalledWith(2, "quest-images");
+
+    expect(mocks.remove).toHaveBeenNthCalledWith(1, [coverPath()]);
     expect(mocks.remove).toHaveBeenNthCalledWith(2, [
       `teachers/${ownerId}/quests/${questId}/tasks/${taskId}/${fileId}.png`,
     ]);
+    expect(mocks.remove).toHaveBeenNthCalledWith(3, [
+      `teachers/${ownerId}/quests/${questId}/tasks/${otherTaskId}/${fileId}.png`,
+    ]);
+    expect(mocks.remove.mock.invocationCallOrder[2]).toBeLessThan(
+      mocks.rpc.mock.invocationCallOrder[0]
+    );
+    expect(mocks.rpc).toHaveBeenCalledWith("delete_owned_quest", {
+      p_quest_id: questId,
+    });
   });
 
-  it("ignores malformed and external RPC-returned cleanup references", async () => {
+  it("stops after a partial cleanup failure and preserves the quest row", async () => {
     configure({
-      data: [
-        deletedRow({
-          cover_image_path: "legacy-cover.png",
-          task_image_urls: [
-            "https://other.example/object.png",
-            `${origin}/storage/v1/object/public/quest-images/teachers/${ownerId}/quests/${questId}/tasks/not-a-uuid/${fileId}.png`,
-          ],
-        }),
+      quest: { id: questId, cover_image_path: coverPath() },
+      taskImages: [
+        { id: taskId, image_url: taskImageUrl() },
+        { id: otherTaskId, image_url: taskImageUrl(otherTaskId) },
+        { id: laterTaskId, image_url: taskImageUrl(laterTaskId) },
       ],
     });
+    mocks.remove
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: null })
+      .mockResolvedValueOnce({ error: { message: "RAW_SECOND_TASK_FAILURE" } });
 
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
-    expect(mocks.storageFrom).not.toHaveBeenCalled();
+    // Storage is not transactional with Postgres: the cover and first task
+    // are already gone, but the quest must remain when a later cleanup fails.
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "error" });
+
+    expect(mocks.remove).toHaveBeenCalledTimes(3);
+    expect(mocks.remove).toHaveBeenNthCalledWith(1, [coverPath()]);
+    expect(mocks.remove).toHaveBeenNthCalledWith(2, [
+      `teachers/${ownerId}/quests/${questId}/tasks/${taskId}/${fileId}.png`,
+    ]);
+    expect(mocks.remove).toHaveBeenNthCalledWith(3, [
+      `teachers/${ownerId}/quests/${questId}/tasks/${otherTaskId}/${fileId}.png`,
+    ]);
+    expect(mocks.remove).not.toHaveBeenCalledWith([
+      `teachers/${ownerId}/quests/${questId}/tasks/${laterTaskId}/${fileId}.png`,
+    ]);
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("keeps confirmed deletion successful when cleanup returns errors", async () => {
-    const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
+  it("deletes a quest with no media through the existing owner-safe RPC", async () => {
+    configure();
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledOnce();
+  });
+
+  it("does not call the database delete RPC when cover cleanup fails", async () => {
     configure({
-      data: [
-        deletedRow({
-          cover_image_path: coverPath,
-          task_image_urls: [taskImageUrl()],
-        }),
-      ],
+      quest: { id: questId, cover_image_path: coverPath() },
       removeResult: { error: { message: "RAW_STORAGE_ERROR" } },
     });
 
     const result = await deleteOwnedQuest(questId);
-    expect(result).toEqual({ status: "ok" });
+    expect(result).toEqual({ status: "error" });
     expect(JSON.stringify(result)).not.toContain("RAW_STORAGE_ERROR");
-    expect(mocks.remove).toHaveBeenCalledTimes(2);
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("still attempts task cleanup when cover cleanup throws", async () => {
-    const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
+  it("does not call the database delete RPC when any task image cleanup fails", async () => {
+    configure({ taskImages: [{ id: taskId, image_url: taskImageUrl() }] });
+    mocks.remove.mockRejectedValue(new Error("RAW_STORAGE_THROW"));
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "error" });
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects a noncanonical cover path from the owned database row", async () => {
     configure({
-      data: [
-        deletedRow({
-          cover_image_path: coverPath,
-          task_image_urls: [taskImageUrl()],
-        }),
+      quest: { id: questId, cover_image_path: "untrusted-cover.png" },
+    });
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "error" });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects a canonical-looking cover path owned by another teacher", async () => {
+    configure({
+      quest: { id: questId, cover_image_path: coverPath(otherOwnerId) },
+    });
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "error" });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects a noncanonical task path from the owned database row", async () => {
+    configure({
+      taskImages: [{ id: taskId, image_url: "https://attacker.example/path.png" }],
+    });
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "error" });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects a canonical-looking task path from another quest", async () => {
+    configure({
+      taskImages: [
+        { id: taskId, image_url: taskImageUrl(taskId, ownerId, otherQuestId) },
       ],
     });
-    mocks.remove
-      .mockRejectedValueOnce(new Error("RAW_COVER_CLEANUP_ERROR"))
-      .mockResolvedValueOnce({ error: null });
 
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
-    expect(mocks.remove).toHaveBeenCalledTimes(2);
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "error" });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 
-  it("still attempts task cleanup when cover bucket access throws", async () => {
-    const coverPath = `teachers/${ownerId}/quests/${questId}/cover/${fileId}.png`;
+  it("surfaces a database delete failure after successful media cleanup", async () => {
     configure({
-      data: [
-        deletedRow({
-          cover_image_path: coverPath,
-          task_image_urls: [taskImageUrl()],
-        }),
-      ],
+      quest: { id: questId, cover_image_path: coverPath() },
+      rpcError: { message: "RAW_RPC_ERROR" },
     });
-    mocks.storageFrom
-      .mockImplementationOnce(() => {
-        throw new Error("RAW_COVER_BUCKET_ERROR");
-      })
-      .mockReturnValueOnce({ remove: mocks.remove });
-
-    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "ok" });
-    expect(mocks.storageFrom).toHaveBeenCalledTimes(2);
-    expect(mocks.remove).toHaveBeenCalledOnce();
-  });
-
-  it("keeps confirmed deletion successful when task cleanup throws", async () => {
-    configure({ data: [deletedRow({ task_image_urls: [taskImageUrl()] })] });
-    mocks.remove.mockRejectedValueOnce(new Error("RAW_TASK_CLEANUP_ERROR"));
 
     const result = await deleteOwnedQuest(questId);
-    expect(result).toEqual({ status: "ok" });
-    expect(JSON.stringify(result)).not.toContain("RAW_TASK_CLEANUP_ERROR");
+    expect(result).toEqual({ status: "error" });
+    expect(mocks.remove).toHaveBeenCalledOnce();
+    expect(mocks.rpc).toHaveBeenCalledOnce();
+  });
+
+  it("does not begin cleanup without active teacher authoring access", async () => {
+    configure({ access: { status: "entitlement_inactive" } });
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "error" });
+    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("maps absent owned quest state without cleanup", async () => {
+    configure({ quest: null });
+
+    await expect(deleteOwnedQuest(questId)).resolves.toEqual({ status: "not_found" });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
   });
 });

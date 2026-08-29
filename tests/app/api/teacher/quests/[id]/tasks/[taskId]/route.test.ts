@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const questId = "11111111-1111-4111-8111-111111111111";
 const taskId = "22222222-2222-4222-8222-222222222222";
+const otherTaskId = "33333333-3333-4333-8333-333333333333";
 const mocks = vi.hoisted(() => ({
   createClient: vi.fn(),
   deleteOwnedQuestTask: vi.fn(),
@@ -58,9 +59,6 @@ function deleted(imageUrl: string | null) {
 function configureStorage(removeError: unknown = null) {
   mocks.remove.mockResolvedValue({ error: removeError });
   mocks.storageFrom.mockReturnValue({ remove: mocks.remove });
-  mocks.createClient.mockResolvedValue({
-    storage: { from: mocks.storageFrom },
-  });
 }
 
 function query(result: { data: unknown; error: unknown }) {
@@ -72,6 +70,16 @@ function query(result: { data: unknown; error: unknown }) {
   builder.select.mockReturnValue(builder);
   builder.eq.mockReturnValue(builder);
   return builder;
+}
+
+function configureDeleteTask(imageUrl: string | null = null) {
+  const task = query({ data: { id: taskId, image_url: imageUrl }, error: null });
+  mocks.remove.mockResolvedValue({ error: null });
+  mocks.storageFrom.mockReturnValue({ remove: mocks.remove });
+  mocks.createClient.mockResolvedValue({
+    from: vi.fn(() => task),
+    storage: { from: mocks.storageFrom },
+  });
 }
 
 function configurePatch(currentTask: Record<string, unknown>) {
@@ -111,6 +119,7 @@ describe("teacher task mutation route DELETE", () => {
       status: "allowed",
       userId: "owner",
     });
+    configureDeleteTask();
   });
 
   it("denies inactive authoring access before task deletion and Storage cleanup", async () => {
@@ -158,7 +167,7 @@ describe("teacher task mutation route DELETE", () => {
       await expect(response.json()).resolves.toEqual(body);
     }
 
-    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.createClient).toHaveBeenCalled();
     expect(mocks.getSafeQuestImageObjectPath).not.toHaveBeenCalled();
   });
 
@@ -180,24 +189,23 @@ describe("teacher task mutation route DELETE", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ ok: true, storageDeleted: false });
     expect(mocks.deleteOwnedQuestTask).toHaveBeenCalledWith(questId, taskId);
-    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.storageFrom).not.toHaveBeenCalled();
   });
 
-  it("performs canonical image cleanup only after a confirmed deletion", async () => {
-    mocks.deleteOwnedQuestTask.mockResolvedValue(
-      deleted("https://example.test/image.png")
-    );
+  it("cleans the canonical database image before the task delete RPC", async () => {
+    const imageUrl = "https://example.test/image.png";
+    configureDeleteTask(imageUrl);
+    mocks.deleteOwnedQuestTask.mockResolvedValue(deleted(null));
     mocks.getSafeQuestImageObjectPath.mockReturnValue(
       "teachers/owner/quests/quest/tasks/task/image.png"
     );
-    configureStorage();
 
     const response = await DELETE(deleteRequest(), context);
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ ok: true, storageDeleted: true });
     expect(mocks.getSafeQuestImageObjectPath).toHaveBeenCalledWith(
-      "https://example.test/image.png",
+      imageUrl,
       "owner",
       questId,
       taskId
@@ -206,12 +214,13 @@ describe("teacher task mutation route DELETE", () => {
     expect(mocks.remove).toHaveBeenCalledWith([
       "teachers/owner/quests/quest/tasks/task/image.png",
     ]);
+    expect(mocks.remove.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.deleteOwnedQuestTask.mock.invocationCallOrder[0]
+    );
   });
 
-  it("keeps confirmed deletion successful when canonical image cleanup fails", async () => {
-    mocks.deleteOwnedQuestTask.mockResolvedValue(
-      deleted("https://example.test/image.png")
-    );
+  it("keeps the task row when canonical image cleanup fails", async () => {
+    configureDeleteTask("https://example.test/image.png");
     mocks.getSafeQuestImageObjectPath.mockReturnValue(
       "teachers/owner/quests/quest/tasks/task/image.png"
     );
@@ -219,42 +228,72 @@ describe("teacher task mutation route DELETE", () => {
 
     const response = await DELETE(deleteRequest(), context);
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, storageDeleted: false });
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: "Unable to delete task." });
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
   });
 
-  it("keeps confirmed deletion successful when canonical image cleanup throws", async () => {
-    mocks.deleteOwnedQuestTask.mockResolvedValue(
-      deleted("https://example.test/image.png")
-    );
+  it("keeps the task row when canonical image cleanup throws", async () => {
+    configureDeleteTask("https://example.test/image.png");
     mocks.getSafeQuestImageObjectPath.mockReturnValue(
       "teachers/owner/quests/quest/tasks/task/image.png"
     );
-    configureStorage();
     mocks.remove.mockRejectedValue(new Error("RAW_STORAGE_THROW"));
 
     const response = await DELETE(deleteRequest(), context);
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, storageDeleted: false });
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: "Unable to delete task." });
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
   });
 
-  it("keeps confirmed deletion successful when Storage client access throws", async () => {
-    mocks.deleteOwnedQuestTask.mockResolvedValue(
-      deleted("https://example.test/image.png")
-    );
+  it("surfaces a database delete failure after successful cleanup", async () => {
+    configureDeleteTask("https://example.test/image.png");
     mocks.getSafeQuestImageObjectPath.mockReturnValue(
       "teachers/owner/quests/quest/tasks/task/image.png"
     );
-    mocks.createClient.mockRejectedValue(new Error("RAW_STORAGE_CLIENT_THROW"));
+    mocks.deleteOwnedQuestTask.mockResolvedValue({ status: "error" });
 
     const response = await DELETE(deleteRequest(), context);
 
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ ok: true, storageDeleted: false });
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: "Unable to delete task." });
+    expect(mocks.remove).toHaveBeenCalledOnce();
   });
 
-  it("does not perform Storage cleanup when the service does not confirm deletion", async () => {
+  it("does not accept a noncanonical database image path for cleanup", async () => {
+    configureDeleteTask("https://example.test/attacker-controlled.png");
+    mocks.getSafeQuestImageObjectPath.mockReturnValue(null);
+
+    const response = await DELETE(deleteRequest(), context);
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: "Unable to delete task." });
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
+  });
+
+  it("rejects a canonical-looking image path for another task", async () => {
+    configureDeleteTask(
+      `https://project.example/storage/v1/object/public/quest-images/teachers/owner/quests/${questId}/tasks/${otherTaskId}/image.png`
+    );
+    mocks.getSafeQuestImageObjectPath.mockReturnValue(null);
+
+    const response = await DELETE(deleteRequest(), context);
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({ error: "Unable to delete task." });
+    expect(mocks.getSafeQuestImageObjectPath).toHaveBeenCalledWith(
+      expect.stringContaining(`/tasks/${otherTaskId}/`),
+      "owner",
+      questId,
+      taskId
+    );
+    expect(mocks.remove).not.toHaveBeenCalled();
+    expect(mocks.deleteOwnedQuestTask).not.toHaveBeenCalled();
+  });
+
+  it("does not perform Storage cleanup when the task delete RPC does not confirm deletion", async () => {
     const outcomes = [
       { status: "not_found" },
       { status: "last_public_task" },
@@ -267,7 +306,7 @@ describe("teacher task mutation route DELETE", () => {
     }
 
     expect(mocks.getSafeQuestImageObjectPath).not.toHaveBeenCalled();
-    expect(mocks.createClient).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
   });
 
   it("leaves PATCH malformed-request behavior unchanged", async () => {
